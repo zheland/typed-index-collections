@@ -20,8 +20,9 @@ mod private {
 /// [`RangeInclusive<K>`] and [`RangeToInclusive<K>`].
 /// The [`RangeFull<K>`] trait is not currently supported.
 ///
-/// Trait implementations are only forwards to standard Rust `slice` operations.
+/// Trait implementations are only forwards to standard Rust [`slice`] operations.
 ///
+/// [`slice`]: https://doc.rust-lang.org/std/primitive.slice.html
 /// [`Range<K>`]: https://doc.rust-lang.org/std/ops/struct.Range.html
 /// [`RangeTo<K>`]: https://doc.rust-lang.org/std/ops/struct.RangeTo.html
 /// [`RangeFrom<K>`]: https://doc.rust-lang.org/std/ops/struct.RangeFrom.html

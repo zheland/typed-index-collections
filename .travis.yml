@@ -1,11 +1,11 @@
+os: linux
 language: rust
 
-matrix:
-  include:
-    - rust: 1.41.0
-    - rust: stable
-    - rust: beta
-    - rust: nightly
+rust:
+  - 1.41.0
+  - stable
+  - beta
+  - nightly
 
 branches:
   only:

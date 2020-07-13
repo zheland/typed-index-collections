@@ -1,0 +1,26 @@
+language: rust
+
+matrix:
+  include:
+    - rust: 1.41.0
+    - rust: stable
+    - rust: beta
+    - rust: nightly
+
+branches:
+  only:
+    - master
+
+jobs:
+  allow_failures:
+    - rust: nightly
+  fast_finish: true
+
+script:
+  - cargo test --no-default-features
+  - cargo test --no-default-features --features "serde-alloc"
+  - cargo test --no-default-features --features "serde-std"
+  - cargo test --no-default-features --features "impl-index-from"
+  - cargo test --no-default-features --features "impl-index-from serde-alloc"
+  - cargo test --no-default-features --features "impl-index-from serde-std"
+  - cargo test --all-features

@@ -1,0 +1,33 @@
+[package]
+name = "typed-index-collections"
+version = "0.0.1"
+authors = ["Andrey Zheleznov <zheland.net@gmail.com>"]
+edition = "2018"
+description = "Typed Index Collections"
+readme = "README.md"
+repository = "https://github.com/zheland/typed-index-collections"
+documentation = "https://docs.rs/typed-index-collection"
+license = "MIT OR Apache-2.0"
+categories = ["data-structures"]
+keywords = ["collection", "index", "no_std", "slice", "vec"]
+
+[dependencies.serde]
+version = "1.0"
+default-features = false
+features = ["derive"]
+optional = true
+
+[dev-dependencies]
+derive_more = "0.99"
+version-sync = "0.9"
+
+[features]
+default = ["alloc", "impl-index-from", "std"]
+alloc = []
+impl-index-from = []
+serde-alloc = ["alloc", "serde/alloc"]
+serde-std = ["std", "serde/std"]
+std = []
+
+[package.metadata.docs.rs]
+all-features = true

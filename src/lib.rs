@@ -123,15 +123,15 @@
 //!
 //! # Feature Flags
 //!
-//! - `impl-index-from` (enabled by default) &mdash; Enables automatic [`FromIndex`] and [`IntoIndex`]
+//! - `impl-index-from` (enabled by default) &mdash; Enables automatic [`Index`]
 //!   trait implementation for types that implement [`From<usize>`] and [`Into<usize>`].
 //! - `alloc` (enabled by default) &mdash; Enables types and functions
 //!   which require memory allocation.
-//! - `std` (enabled by default) &mdash; Enables all `std` features
-//!   such as memory allocations and `std::error::Error` trait.
-//! - `serde` &mdash; Implements `Serialize` and `Deserialize` traits for slice type.
-//! - `serde-alloc` &mdash; Enable `alloc` and `serde/alloc` features.
-//! - `serde-std` &mdash; Enable `std` and `serde/std` features.
+//! - `std` (enabled by default) &mdash; Enables all [`std`] features
+//!   such as memory allocations and [`std::error::Error`] trait.
+//! - `serde` &mdash; Implements [`Serialize`] and [`Deserialize`] traits for slice type.
+//! - `serde-alloc` &mdash; Enable [`alloc`] and `serde/alloc` features.
+//! - `serde-std` &mdash; Enable [`std`] and `serde/std` features.
 //!
 //! # Similar crates
 //!
@@ -172,8 +172,11 @@
 //! [`TiVec`]: struct.TiVec.html
 //! [`Index`]: trait.Index.html
 //! [API Documentation]: https://docs.rs/typed-index-collections
+//! [`std`]: https://doc.rust-lang.org/std/index.html
+//! [`alloc`]: https://doc.rust-lang.org/alloc/index.html
 //! [`slice`]: https://doc.rust-lang.org/std/primitive.slice.html
 //! [`std::vec::Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
+//! [`std::error::Error`]: https://doc.rust-lang.org/std/error/trait.Error.html
 //! [`From`]: https://doc.rust-lang.org/std/convert/trait.From.html
 //! [`Into`]: https://doc.rust-lang.org/std/convert/trait.Into.html
 //! [`From<usize>`]: https://doc.rust-lang.org/std/convert/trait.From.html
@@ -182,6 +185,8 @@
 //! [`typed_index_collection`]: https://crates.io/crates/typed_index_collection
 //! [`indexed_vec`]: https://crates.io/crates/indexed_vec
 //! [`index_vec`]: https://crates.io/crates/index_vec
+//! [`Serialize`]: https://docs.serde.rs/serde/trait.Serialize.html
+//! [`Deserialize`]: https://docs.serde.rs/serde/trait.Deserialize.html
 
 #![warn(
     clippy::all,

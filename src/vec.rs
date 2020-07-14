@@ -230,7 +230,7 @@ impl<K, V> TiVec<K, V> {
     /// See [`Vec::into_boxed_slice`].
     ///
     /// [`Vec::into_boxed_slice`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.into_boxed_slice
-    /// [`Box`]: ../../std/boxed/struct.Box.html
+    /// [`Box`]: https://doc.rust-lang.org/std/boxed/struct.Box.html
     pub fn into_boxed_slice(self) -> Box<TiSlice<K, V>> {
         self.raw.into_boxed_slice().into()
     }
@@ -574,10 +574,12 @@ impl<K, V> TiVec<K, V> {
         self.raw.extend_from_slice(&other.raw)
     }
 
+    /// Removes consecutive repeated elements in the vector according to the
     /// [`PartialEq`] trait implementation.
     ///
     /// See [`Vec::dedup`].
     ///
+    /// [`PartialEq`]: https://doc.rust-lang.org/std/cmp/trait.PartialEq.html
     /// [`Vec::dedup`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.dedup
     #[inline]
     pub fn dedup(&mut self)

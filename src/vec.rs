@@ -38,6 +38,13 @@ use crate::{Index, TiEnumerated, TiRangeBounds, TiSlice};
 /// `TiVec<K, V>` can be converted to [`std::vec::Vec<V>`] and back
 /// using [`From`] and [`Into`].
 ///
+/// Added methods:
+/// - [`push_and_get_key`] - Appends an element to the back of a collection and returns its index of type `K`.
+/// - [`pop_key_value`] - Removes the last element from a vector and returns it
+/// with its index of type `K`, or [`None`] if the vector is empty.
+/// - [`into_iter_enumerated`] - Converts the vector into iterator over all key-value pairs
+/// with `K` used for iteration indices.
+///
 #[cfg_attr(
     feature = "impl-index-from",
     doc = r#"
@@ -55,6 +62,9 @@ use crate::{Index, TiEnumerated, TiRangeBounds, TiSlice};
 
 "#
 )]
+/// [`push_and_get_key`]: #method.push_and_get_key
+/// [`pop_key_value`]: #method.pop_key_value
+/// [`into_iter_enumerated`]: #method.into_iter_enumerated
 /// [`Index`]: trait.Index.html
 /// [`std::vec::Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
 /// [`std::vec::Vec<V>`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
@@ -375,6 +385,43 @@ impl<K, V> TiVec<K, V> {
         self.raw.push(value)
     }
 
+    /// Appends an element to the back of a collection and returns its index of type `K`.
+    ///
+    /// Using of `{ vec.push(...); vec.last_key().unwrap() }` is not recommended,
+    /// because it is not well optimized and generates an unreachable panic call.
+    /// This function uses [`slice::next_key`] instead.
+    ///
+    /// See [`Vec::push`].
+    #[cfg_attr(
+        feature = "impl-index-from",
+        doc = r#"
+
+        # Example
+
+        ```
+        # use derive_more::{From, Into};
+        # use typed_index_collections::TiVec;
+        #[derive(Eq, Debug, From, Into, PartialEq)]
+        pub struct Id(usize);
+        let mut slice: TiVec<Id, usize> = vec![1, 2, 4].into();
+        assert_eq!(slice.push_and_get_key(8), Id(3));
+        assert_eq!(slice.push_and_get_key(16), Id(4));
+        assert_eq!(slice.push_and_get_key(32), Id(5));
+        ```
+    "#
+    )]
+    ///
+    /// [`Vec::push`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.push
+    #[inline]
+    pub fn push_and_get_key(&mut self, value: V) -> K
+    where
+        K: Index,
+    {
+        let key = self.next_key();
+        self.raw.push(value);
+        return key;
+    }
+
     /// Removes the last element from a vector and returns it, or [`None`] if it
     /// is empty.
     ///
@@ -384,6 +431,43 @@ impl<K, V> TiVec<K, V> {
     #[inline]
     pub fn pop(&mut self) -> Option<V> {
         self.raw.pop()
+    }
+
+    /// Removes the last element from a vector and returns it with
+    /// its index of type `K`, or [`None`] if the vector is empty.
+    ///
+    /// See [`Vec::pop`].
+    ///
+    /// [`Vec::pop`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.pop
+    #[cfg_attr(
+        feature = "impl-index-from",
+        doc = r#"
+
+        # Example
+
+        ```
+        # use derive_more::{From, Into};
+        # use typed_index_collections::TiVec;
+        #[derive(Eq, Debug, From, Into, PartialEq)]
+        pub struct Id(usize);
+        let mut slice: TiVec<Id, usize> = vec![1, 2, 4].into();
+        assert_eq!(slice.pop_key_value(), Some((Id(2), 4)));
+        assert_eq!(slice.pop_key_value(), Some((Id(1), 2)));
+        assert_eq!(slice.pop_key_value(), Some((Id(0), 1)));
+        assert_eq!(slice.pop_key_value(), None);
+        ```
+    "#
+    )]
+    ///
+    /// [`Vec::push`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.push
+    #[inline]
+    pub fn pop_key_value(&mut self) -> Option<(K, V)>
+    where
+        K: Index,
+    {
+        self.raw
+            .pop()
+            .map(|value| (K::from_usize(self.raw.len()), value))
     }
 
     /// Moves all the elements of `other` into `Self`, leaving `other` empty.

@@ -29,9 +29,10 @@ fn test_readme_docs_sync() {
     }
 
     let pkg_name = env!("CARGO_PKG_NAME");
+    let crate_author = "zheland";
     let pkg_name_underscore = pkg_name.replace("-", "_");
     let doc_root_url = format!("https://docs.rs/{}/*/{}/", pkg_name, pkg_name_underscore);
-    let mut has_badges_before = false;
+    let mut is_last_line_used = false;
 
     // The only transformation to README.md is removing badges and next line after then
     let readme_md = read_to_string("README.md").unwrap();
@@ -39,10 +40,11 @@ fn test_readme_docs_sync() {
         .split('\n')
         .enumerate()
         .filter_map(|(j, line)| {
-            let is_badges = line.starts_with("[![");
-            let is_used = !has_badges_before && !is_badges;
-            has_badges_before = is_badges;
-            if is_used {
+            is_last_line_used = (is_last_line_used || line != "")
+                && !line.starts_with("[![")
+                && line != "## Documentation"
+                && !line.starts_with("[API Documentation]");
+            if is_last_line_used {
                 Some((j + 1, line))
             } else {
                 None
@@ -109,6 +111,18 @@ fn test_readme_docs_sync() {
                 } else {
                     Some((LibRsDocsLine::No(j + 1), line.to_string()))
                 }
+            })
+            .map(|(j, line)| {
+                (
+                    j,
+                    line.replace(
+                        &format!(
+                            "https://github.com/{}/{}/blob/master/",
+                            crate_author, pkg_name
+                        ),
+                        "",
+                    ),
+                )
             }),
     );
 

@@ -54,10 +54,10 @@
 //! derive_more = "0.99"
 //! typed-index-collections = "0.0.2"
 //! ```
-//!
 #![cfg_attr(
     all(feature = "impl-index-from", any(feature = "alloc", feature = "std")),
     doc = r#"
+
     # Examples
 
     Simple example with [`derive_more`]:
@@ -114,12 +114,8 @@
     let _vec: std::vec::Vec<Foo> = typed_index_vec.into();
     let _boxed_slice: std::boxed::Box<[Foo]> = typed_index_boxed_slice.into();
     ```
-
 "#
 )]
-//! # Documentation
-//!
-//! [API Documentation]
 //!
 //! # Feature Flags
 //!
@@ -153,10 +149,11 @@
 //!
 //! Licensed under either of
 //!
-//! - Apache License, Version 2.0,
-//!   ([LICENSE-APACHE](LICENSE-APACHE) or
+//! - Apache License, Version 2.0
+//!   ([LICENSE-APACHE](https://github.com/zheland/typed-index-collections/blob/master/LICENSE-APACHE) or
 //!   [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0))
-//! - MIT license ([LICENSE-MIT](LICENSE-MIT) or
+//! - MIT license
+//!   ([LICENSE-MIT](https://github.com/zheland/typed-index-collections/blob/master/LICENSE-MIT) or
 //!   [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT))
 //!
 //! at your option.
@@ -171,7 +168,6 @@
 //! [`TiSlice`]: struct.TiSlice.html
 //! [`TiVec`]: struct.TiVec.html
 //! [`Index`]: trait.Index.html
-//! [API Documentation]: https://docs.rs/typed-index-collections
 //! [`std`]: https://doc.rust-lang.org/std/index.html
 //! [`alloc`]: https://doc.rust-lang.org/alloc/index.html
 //! [`slice`]: https://doc.rust-lang.org/std/primitive.slice.html

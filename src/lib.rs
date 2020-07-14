@@ -212,9 +212,6 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std as alloc;
 
-//#[cfg(feature = "serde")]
-//use serde::{Deserialize, Serialize};
-
 mod index;
 mod iter;
 mod range;

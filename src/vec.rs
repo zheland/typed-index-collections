@@ -520,7 +520,7 @@ impl<K, V> TiVec<K, V> {
         self.raw.splice(range.into_range(), replace_with)
     }
 
-    /// Converts the vector into iterator over all key-value pairs.
+    /// Converts the vector into iterator over all key-value pairs
     /// with `K` used for iteration indices.
     ///
     /// # Example

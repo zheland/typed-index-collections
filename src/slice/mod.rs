@@ -58,9 +58,14 @@ pub use slice_index::TiSliceIndex;
 /// And their implementation can be easily done
 /// with [`derive_more`] crate and `#[derive(From, Into)]`.
 ///
+/// There are also [`From`] and [`Into`] conversions available between types:
+/// - [`&[V]`][`slice`] and `&TiSlice<K, V>`,
+/// - [`&mut [V]`][`slice`] and `&mut TiSlice<K, V>`,
+/// - [`Box<[V]>`][`Box`] and `Box<TiSlice<K, V>>`.
+///
 /// Added methods:
-/// - [`from_ref`] - Converts a [`&[V]`][`slice`] into a `&TiSlice<K, V>`
-/// - [`from_mut`] - Converts a [`&mut [V]`][`slice`] into a `&mut TiSlice<K, V>`
+/// - [`from_ref`] - Converts a [`&[V]`][`slice`] into a `&TiSlice<K, V>`.
+/// - [`from_mut`] - Converts a [`&mut [V]`][`slice`] into a `&mut TiSlice<K, V>`.
 /// - [`keys`] - Returns an iterator over all keys.
 /// - [`next_key`] - Returns the index of the next slice element to be appended
 ///   and at the same time number of elements in the slice of type `K`.
@@ -90,15 +95,10 @@ pub use slice_index::TiSliceIndex;
 /// returning its index of type `K`.
 ///   It acts like `self.iter().rposition(...)`,
 ///   but instead of `usize` it returns index of type `K`.
-///
-/// There are also [`From`] and [`Into`] conversions available between types:
-/// - [`&[V]`][`slice`] and `&TiSlice<K, V>`
-/// - [`&mut [V]`][`slice`] and `&mut TiSlice<K, V>`
-/// - [`Box<[V]>`][`Box`] and `Box<TiSlice<K, V>>`.
-///
 #[cfg_attr(
     feature = "impl-index-from",
     doc = r#"
+
     # Example
 
     ```
@@ -111,9 +111,9 @@ pub use slice_index::TiSliceIndex;
     foos[FooId(2)] = 12;
     assert_eq!(foos[FooId(2)], 12);
     ```
-
 "#
 )]
+///
 /// [`from_ref`]: #method.from_ref
 /// [`from_mut`]: #method.from_mut
 /// [`keys`]: #method.keys
@@ -163,7 +163,7 @@ pub struct TiSlice<K, V> {
 }
 
 impl<K, V> TiSlice<K, V> {
-    /// Converts a `&[V]` into a `&TiSlice<K, V>`
+    /// Converts a `&[V]` into a `&TiSlice<K, V>`.
     ///
     /// # Example
     ///
@@ -180,7 +180,7 @@ impl<K, V> TiSlice<K, V> {
         unsafe { &*(raw as *const [V] as *const Self) }
     }
 
-    /// Converts a `&mut [V]` into a `&mut TiSlice<K, V>`
+    /// Converts a `&mut [V]` into a `&mut TiSlice<K, V>`.
     ///
     /// # Example
     ///
@@ -207,13 +207,12 @@ impl<K, V> TiSlice<K, V> {
         self.raw.len()
     }
 
-    ///   and at the same time number of elements in the slice of type `K`.
     /// Returns the index of the next slice element to be appended
     /// and at the same time number of elements in the slice of type `K`.
-    ///
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
+
         # Example
 
         ```
@@ -245,10 +244,10 @@ impl<K, V> TiSlice<K, V> {
     }
 
     /// Returns an iterator over all keys.
-    ///
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
+
         # Example
 
         ```
@@ -293,10 +292,10 @@ impl<K, V> TiSlice<K, V> {
     }
 
     /// Returns the first slice element index of type `K`, or `None` if the slice is empty.
-    ///
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
+
         # Example
 
         ```
@@ -327,10 +326,10 @@ impl<K, V> TiSlice<K, V> {
     /// or `None` if the slice is empty.
     ///
     /// See [`slice::first`].
-    ///
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
+
         # Example
 
         ```
@@ -343,9 +342,9 @@ impl<K, V> TiSlice<K, V> {
         assert_eq!(empty_slice.first_key_value(), None);
         assert_eq!(slice.first_key_value(), Some((Id(0), &1)));
         ```
-
     "#
     )]
+    ///
     /// [`slice::first`]: https://doc.rust-lang.org/std/primitive.slice.html#method.first
     #[inline]
     pub fn first_key_value(&self) -> Option<(K, &V)>
@@ -359,10 +358,10 @@ impl<K, V> TiSlice<K, V> {
     /// to the element itself, or `None` if the slice is empty.
     ///
     /// See [`slice::first_mut`].
-    ///
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
+
         # Example
 
         ```
@@ -378,9 +377,9 @@ impl<K, V> TiSlice<K, V> {
         *slice.first_key_value_mut().unwrap().1 = 123;
         assert_eq!(slice.raw, [123, 2, 4]);
         ```
-
     "#
     )]
+    ///
     /// [`slice::first_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.first_mut
     #[inline]
     pub fn first_key_value_mut(&mut self) -> Option<(K, &mut V)>
@@ -461,10 +460,10 @@ impl<K, V> TiSlice<K, V> {
     }
 
     /// Returns the last slice element index of type `K`, or `None` if the slice is empty.
-    ///
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
+
         # Example
 
         ```
@@ -495,10 +494,10 @@ impl<K, V> TiSlice<K, V> {
     /// or `None` if the slice is empty.
     ///
     /// See [`slice::last`].
-    ///
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
+
         # Example
 
         ```
@@ -511,9 +510,9 @@ impl<K, V> TiSlice<K, V> {
         assert_eq!(empty_slice.last_key_value(), None);
         assert_eq!(slice.last_key_value(), Some((Id(2), &4)));
         ```
-
     "#
     )]
+    ///
     /// [`slice::last`]: https://doc.rust-lang.org/std/primitive.slice.html#method.last
     #[inline]
     pub fn last_key_value(&self) -> Option<(K, &V)>
@@ -530,10 +529,10 @@ impl<K, V> TiSlice<K, V> {
     /// to the element itself, or `None` if the slice is empty.
     ///
     /// See [`slice::last_mut`].
-    ///
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
+
         # Example
 
         ```
@@ -549,9 +548,9 @@ impl<K, V> TiSlice<K, V> {
         *slice.last_key_value_mut().unwrap().1 = 123;
         assert_eq!(slice.raw, [1, 2, 123]);
         ```
-
     "#
     )]
+    ///
     /// [`slice::last_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.last_mut
     #[inline]
     pub fn last_key_value_mut(&mut self) -> Option<(K, &mut V)>
@@ -692,10 +691,10 @@ impl<K, V> TiSlice<K, V> {
     /// Returns an iterator over all key-value pairs.
     ///
     /// See [`slice::iter`].
-    ///
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
+
         # Example
 
         ```
@@ -710,9 +709,9 @@ impl<K, V> TiSlice<K, V> {
         assert_eq!(iterator.next(), Some((Id(2), &4)));
         assert_eq!(iterator.next(), None);
         ```
-
     "#
     )]
+    ///
     /// [`slice::iter`]: https://doc.rust-lang.org/std/primitive.slice.html#method.iter
     #[inline]
     pub fn iter_enumerated(&self) -> TiEnumerated<Iter<'_, V>, K, &V>
@@ -736,10 +735,10 @@ impl<K, V> TiSlice<K, V> {
     }
 
     /// Returns an iterator over all key-value pairs, with mutable references to the values.
-    ///
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
+
         # Example
 
         ```
@@ -754,9 +753,9 @@ impl<K, V> TiSlice<K, V> {
         }
         assert_eq!(array, [1, 3, 6]);
         ```
-
     "#
     )]
+    ///
     /// [`slice::iter_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.iter_mut
     #[inline]
     pub fn iter_mut_enumerated(&mut self) -> TiEnumerated<IterMut<'_, V>, K, &mut V>
@@ -772,10 +771,10 @@ impl<K, V> TiSlice<K, V> {
     /// Searches for an element in an iterator, returning its index of type `K`.
     ///
     /// See [`slice::iter`] and [`Iterator::position`].
-    ///
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
+
         # Example
 
         ```
@@ -789,9 +788,9 @@ impl<K, V> TiSlice<K, V> {
         assert_eq!(slice.position(|&value| value == 3), None);
         assert_eq!(slice.position(|&value| value == 4), Some(Id(2)));
         ```
-
     "#
     )]
+    ///
     /// [`slice::iter`]: https://doc.rust-lang.org/std/primitive.slice.html#method.iter
     /// [`Iterator::position`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.position
     #[inline]
@@ -806,10 +805,10 @@ impl<K, V> TiSlice<K, V> {
     /// Searches for an element in an iterator from the right, returning its index of type `K`.
     ///
     /// See [`slice::iter`] and [`Iterator::position`].
-    ///
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
+
         # Example
 
         ```
@@ -823,9 +822,9 @@ impl<K, V> TiSlice<K, V> {
         assert_eq!(slice.rposition(|&value| value == 3), None);
         assert_eq!(slice.rposition(|&value| value == 4), Some(Id(2)));
         ```
-
     "#
     )]
+    ///
     /// [`slice::iter`]: https://doc.rust-lang.org/std/primitive.slice.html#method.iter
     /// [`Iterator::position`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.position
     #[inline]

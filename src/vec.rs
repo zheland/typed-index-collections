@@ -65,7 +65,21 @@ use crate::{Index, TiEnumerated, TiRangeBounds, TiSlice};
 /// [`derive_more`]: https://crates.io/crates/derive_more
 #[derive(Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct TiVec<K, V> {
+    /// Raw slice property
     pub raw: Vec<V>,
+
+    /// Tied slice index type
+    ///
+    /// `fn(T) -> T` is *[PhantomData pattern][phantomdata patterns]*
+    /// used to relax auto trait implementations bounds for
+    /// [`Send`], [`Sync`], [`Unpin`], [`UnwindSafe`] and [`RefUnwindSafe`].
+    ///
+    /// [phantomdata patterns]: https://doc.rust-lang.org/nomicon/phantom-data.html#table-of-phantomdata-patterns
+    /// [`Send`]: https://doc.rust-lang.org/core/marker/trait.Send.html
+    /// [`Sync`]: https://doc.rust-lang.org/core/marker/trait.Sync.html
+    /// [`Unpin`]: https://doc.rust-lang.org/core/marker/trait.Unpin.html
+    /// [`UnwindSafe`]: https://doc.rust-lang.org/core/std/panic/trait.UnwindSafe.html
+    /// [`RefUnwindSafe`]: https://doc.rust-lang.org/core/std/panic/trait.RefUnwindSafe.html
     _marker: PhantomData<fn(K) -> K>,
 }
 

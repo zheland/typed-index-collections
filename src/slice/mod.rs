@@ -157,6 +157,7 @@ pub struct TiSlice<K, V> {
     /// [`UnwindSafe`]: https://doc.rust-lang.org/core/std/panic/trait.UnwindSafe.html
     /// [`RefUnwindSafe`]: https://doc.rust-lang.org/core/std/panic/trait.RefUnwindSafe.html
     _marker: PhantomData<fn(K) -> K>,
+
     /// Raw slice property
     pub raw: [V],
 }

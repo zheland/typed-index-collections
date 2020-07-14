@@ -168,9 +168,7 @@ impl<K, V> TiSlice<K, V> {
     /// # Example
     ///
     /// ```
-    /// # use derive_more::{From, Into};
     /// # use typed_index_collections::TiSlice;
-    /// #[derive(From, Into)]
     /// pub struct Id(usize);
     /// let slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[1, 2, 4]);
     /// ```
@@ -185,9 +183,7 @@ impl<K, V> TiSlice<K, V> {
     /// # Example
     ///
     /// ```
-    /// # use derive_more::{From, Into};
     /// # use typed_index_collections::TiSlice;
-    /// #[derive(From, Into)]
     /// pub struct Id(usize);
     /// let slice: &mut TiSlice<Id, usize> = TiSlice::from_mut(&mut [1, 2, 4]);
     /// ```

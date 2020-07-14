@@ -304,9 +304,9 @@ impl<K, V> TiVec<K, V> {
     #[inline]
     pub fn swap_remove(&mut self, index: K) -> V
     where
-        usize: From<K>,
+        K: Index,
     {
-        self.raw.swap_remove(index.into())
+        self.raw.swap_remove(index.into_usize())
     }
 
     /// Inserts an element at position `index` within the vector, shifting all
@@ -317,9 +317,9 @@ impl<K, V> TiVec<K, V> {
     /// [`Vec::insert`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.insert
     pub fn insert(&mut self, index: K, element: V)
     where
-        usize: From<K>,
+        K: Index,
     {
-        self.raw.insert(index.into(), element)
+        self.raw.insert(index.into_usize(), element)
     }
 
     /// Removes and returns the element at position `index` within the vector,
@@ -330,9 +330,9 @@ impl<K, V> TiVec<K, V> {
     /// [`Vec::remove`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.remove
     pub fn remove(&mut self, index: K) -> V
     where
-        usize: From<K>,
+        K: Index,
     {
-        self.raw.remove(index.into())
+        self.raw.remove(index.into_usize())
     }
 
     /// Retains only the elements specified by the predicate.
@@ -533,9 +533,9 @@ impl<K, V> TiVec<K, V> {
     #[must_use = "use `.truncate()` if you don't need the other half"]
     pub fn split_off(&mut self, at: K) -> Self
     where
-        usize: From<K>,
+        K: Index,
     {
-        self.raw.split_off(at.into()).into()
+        self.raw.split_off(at.into_usize()).into()
     }
 
     /// Resizes the `TiVec` in-place so that `len` is equal to `new_len`.
@@ -606,30 +606,35 @@ impl<K, V> TiVec<K, V> {
 
     /// Converts the vector into iterator over all key-value pairs
     /// with `K` used for iteration indices.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use derive_more::{From, Into};
-    /// # use typed_index_collections::TiVec;
-    /// #[derive(Eq, Debug, From, Into, PartialEq)]
-    /// pub struct Id(usize);
-    /// let vec: TiVec<Id, usize> = vec![1, 2, 4].into();
-    /// let mut iterator = vec.into_iter_enumerated();
-    /// assert_eq!(iterator.next(), Some((Id(0), 1)));
-    /// assert_eq!(iterator.next(), Some((Id(1), 2)));
-    /// assert_eq!(iterator.next(), Some((Id(2), 4)));
-    /// assert_eq!(iterator.next(), None);
-    /// ```
+    #[cfg_attr(
+        feature = "impl-index-from",
+        doc = r#"
+
+        # Example
+
+        ```
+        # use derive_more::{From, Into};
+        # use typed_index_collections::TiVec;
+        #[derive(Eq, Debug, From, Into, PartialEq)]
+        pub struct Id(usize);
+        let vec: TiVec<Id, usize> = vec![1, 2, 4].into();
+        let mut iterator = vec.into_iter_enumerated();
+        assert_eq!(iterator.next(), Some((Id(0), 1)));
+        assert_eq!(iterator.next(), Some((Id(1), 2)));
+        assert_eq!(iterator.next(), Some((Id(2), 4)));
+        assert_eq!(iterator.next(), None);
+        ```
+    "#
+    )]
     #[inline(always)]
     pub fn into_iter_enumerated(self) -> TiEnumerated<vec::IntoIter<V>, K, V>
     where
-        K: From<usize>,
+        K: Index,
     {
         self.raw
             .into_iter()
             .enumerate()
-            .map(|(key, value)| (key.into(), value))
+            .map(|(key, value)| (K::from_usize(key), value))
     }
 }
 

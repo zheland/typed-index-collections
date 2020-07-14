@@ -39,7 +39,7 @@ First, add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-typed-index-collections = "0.0.2"
+typed-index-collections = "0.0.3"
 ```
 
 This crate depends on the standard library by default that is useful
@@ -49,7 +49,7 @@ in your `Cargo.toml` as shown below:
 
 ```toml
 [dependencies.typed-index-collections]
-version = "0.0.2"
+version = "0.0.3"
 default-features = false
 features = ["alloc", "impl-index-from"]
 ```
@@ -60,7 +60,7 @@ add it to your `Cargo.toml` as shown below:
 ```toml
 [dependencies]
 derive_more = "0.99"
-typed-index-collections = "0.0.2"
+typed-index-collections = "0.0.3"
 ```
 
 ## Examples

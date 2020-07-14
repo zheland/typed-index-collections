@@ -31,7 +31,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! typed-index-collections = "0.0.2"
+//! typed-index-collections = "0.0.3"
 //! ```
 //!
 //! This crate depends on the standard library by default that is useful
@@ -41,7 +41,7 @@
 //!
 //! ```toml
 //! [dependencies.typed-index-collections]
-//! version = "0.0.2"
+//! version = "0.0.3"
 //! default-features = false
 //! features = ["alloc", "impl-index-from"]
 //! ```
@@ -52,7 +52,7 @@
 //! ```toml
 //! [dependencies]
 //! derive_more = "0.99"
-//! typed-index-collections = "0.0.2"
+//! typed-index-collections = "0.0.3"
 //! ```
 #![cfg_attr(
     all(feature = "impl-index-from", any(feature = "alloc", feature = "std")),

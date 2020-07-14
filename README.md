@@ -14,7 +14,7 @@ typed index version of the Rust [`slice`] and [`std::vec::Vec`] types.
 When dealing with slices and vectors it is not safe to index all arrays
 with type-unsafe usizes as indices.
 Using slice and vector indexing might be useful in Data Oriented Design,
-when using Struct of Arrays, or when `Rc` and `Weak` usage is undesirable.
+when using Struct of Arrays, or when [`Rc`] and [`Weak`] usage is undesirable.
 
 ## About
 
@@ -178,6 +178,8 @@ additional terms or conditions.
 [`std`]: https://doc.rust-lang.org/std/index.html
 [`alloc`]: https://doc.rust-lang.org/alloc/index.html
 [`slice`]: https://doc.rust-lang.org/std/primitive.slice.html
+[`Rc`]: https://doc.rust-lang.org/std/rc/struct.Rc.html
+[`Weak`]: https://doc.rust-lang.org/std/rc/struct.Weak.html
 [`std::vec::Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
 [`std::error::Error`]: https://doc.rust-lang.org/std/error/trait.Error.html
 [`From`]: https://doc.rust-lang.org/std/convert/trait.From.html

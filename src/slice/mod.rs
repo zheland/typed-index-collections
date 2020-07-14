@@ -2200,10 +2200,12 @@ mod test {
                 }
             }
             assert_eq_api!(arr => |&arr| {
+                #[allow(clippy::into_iter_on_ref)]
                 let mut iter = arr.as_ref().into_t().into_iter();
                 array_32_from(|| iter.next())
             });
             assert_eq_api!(arr => |&mut arr| {
+                #[allow(clippy::into_iter_on_ref)]
                 let mut iter: IterMut<'_, _> = arr.as_mut().into_t().into_iter();
                 array_32_from(|| iter.next())
             });

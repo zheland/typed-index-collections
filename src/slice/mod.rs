@@ -605,6 +605,7 @@ impl<K, V> TiSlice<K, V> {
     /// [`get`]: #method.get
     /// [`slice::get_unchecked`]: https://doc.rust-lang.org/std/primitive.slice.html#method.get_unchecked
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
+    #[allow(clippy::missing_safety_doc)]
     #[inline]
     pub unsafe fn get_unchecked<I>(&self, index: I) -> &I::Output
     where
@@ -626,6 +627,7 @@ impl<K, V> TiSlice<K, V> {
     /// [`get_mut`]: #method.get_mut
     /// [`slice::get_unchecked_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.get_unchecked_mut
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
+    #[allow(clippy::missing_safety_doc)]
     #[inline]
     pub unsafe fn get_unchecked_mut<I>(&mut self, index: I) -> &mut I::Output
     where
@@ -1305,6 +1307,7 @@ impl<K, V> TiSlice<K, V> {
     /// See [`slice::align_to`].
     ///
     /// [`slice::align_to`]: https://doc.rust-lang.org/std/primitive.slice.html#method.align_to
+    #[allow(clippy::missing_safety_doc)]
     pub unsafe fn align_to<U>(&self) -> (&Self, &TiSlice<K, U>, &Self) {
         let (first, mid, last) = self.raw.align_to();
         (first.into(), mid.into(), last.into())
@@ -1316,6 +1319,7 @@ impl<K, V> TiSlice<K, V> {
     /// See [`slice::align_to_mut`].
     ///
     /// [`slice::align_to_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.align_to_mut
+    #[allow(clippy::missing_safety_doc)]
     pub unsafe fn align_to_mut<U>(&mut self) -> (&mut Self, &mut TiSlice<K, U>, &mut Self) {
         let (first, mid, last) = self.raw.align_to_mut();
         (first.into(), mid.into(), last.into())

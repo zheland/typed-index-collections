@@ -47,6 +47,7 @@ pub trait TiSliceIndex<K, V>: private::Sealed<K> {
     /// even if the resulting reference is not used.
     ///
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
+    #[allow(clippy::missing_safety_doc)]
     unsafe fn get_unchecked(self, slice: &TiSlice<K, V>) -> &Self::Output;
 
     /// Returns a mutable reference to the output at this location, without
@@ -55,6 +56,7 @@ pub trait TiSliceIndex<K, V>: private::Sealed<K> {
     /// even if the resulting reference is not used.
     ///
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
+    #[allow(clippy::missing_safety_doc)]
     unsafe fn get_unchecked_mut(self, slice: &mut TiSlice<K, V>) -> &mut Self::Output;
 
     /// Returns a shared reference to the output at this location, panicking

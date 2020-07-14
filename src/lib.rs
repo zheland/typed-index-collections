@@ -202,8 +202,6 @@
     unused_qualifications,
     unused_results
 )]
-#![allow(clippy::missing_safety_doc)]
-#![allow(missing_docs)]
 #![no_std]
 
 #[cfg(all(feature = "alloc", not(feature = "std")))]

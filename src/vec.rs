@@ -125,6 +125,7 @@ impl<K, V> TiVec<K, V> {
     /// See [`Vec::from_raw_parts`].
     ///
     /// [`Vec::from_raw_parts`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.from_raw_parts
+    #[allow(clippy::missing_safety_doc)]
     pub unsafe fn from_raw_parts(ptr: *mut V, length: usize, capacity: usize) -> Self {
         Self {
             raw: Vec::from_raw_parts(ptr, length, capacity),
@@ -279,6 +280,7 @@ impl<K, V> TiVec<K, V> {
     /// See [`Vec::set_len`].
     ///
     /// [`Vec::set_len`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.set_len
+    #[allow(clippy::missing_safety_doc)]
     #[inline]
     pub unsafe fn set_len(&mut self, new_len: usize) {
         self.raw.set_len(new_len)

@@ -606,6 +606,9 @@ impl<K, V> TiVec<K, V> {
 
     /// Converts the vector into iterator over all key-value pairs
     /// with `K` used for iteration indices.
+    ///
+    /// It acts like `self.into_iter().enumerate()`,
+    /// but use `K` instead of `usize` for iteration indices.
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"

@@ -419,7 +419,7 @@ impl<K, V> TiVec<K, V> {
     {
         let key = self.next_key();
         self.raw.push(value);
-        return key;
+        key
     }
 
     /// Removes the last element from a vector and returns it, or [`None`] if it

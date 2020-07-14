@@ -106,10 +106,10 @@ pub use slice_index::TiSliceIndex;
     use derive_more::{From, Into};
     #[derive(From, Into)]
     struct FooId(usize);
-    let mut foos_raw = [10, 11, 11, 13];
+    let mut foos_raw = [1, 2, 5, 8];
     let foos: &mut TiSlice<FooId, usize> = TiSlice::from_mut(&mut foos_raw);
-    foos[FooId(2)] = 12;
-    assert_eq!(foos[FooId(2)], 12);
+    foos[FooId(2)] = 4;
+    assert_eq!(foos[FooId(2)], 4);
     ```
 "#
 )]

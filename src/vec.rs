@@ -72,7 +72,7 @@ use crate::{Index, TiEnumerated, TiRangeBounds, TiSlice};
 /// [`From<usize>`]: https://doc.rust-lang.org/std/convert/trait.From.html
 /// [`Into<usize>`]: https://doc.rust-lang.org/std/convert/trait.Into.html
 /// [`derive_more`]: https://crates.io/crates/derive_more
-#[derive(Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Default, Eq, Hash, Ord, PartialOrd)]
 pub struct TiVec<K, V> {
     /// Raw slice property
     pub raw: Vec<V>,
@@ -709,6 +709,36 @@ impl<K, V> FromIterator<V> for TiVec<K, V> {
             raw: Vec::from_iter(iter),
             _marker: PhantomData,
         }
+    }
+}
+
+impl<K, A, B> PartialEq<TiVec<K, B>> for TiVec<K, A>
+where
+    A: PartialEq<B>,
+{
+    #[inline]
+    fn eq(&self, other: &TiVec<K, B>) -> bool {
+        self.raw == other.raw
+    }
+}
+
+impl<'a, K, A, B> PartialEq<&'a TiSlice<K, B>> for TiVec<K, A>
+where
+    A: PartialEq<B>,
+{
+    #[inline]
+    fn eq(&self, other: &&'a TiSlice<K, B>) -> bool {
+        self.raw == &other.raw
+    }
+}
+
+impl<'a, K, A, B> PartialEq<&'a mut TiSlice<K, B>> for TiVec<K, A>
+where
+    A: PartialEq<B>,
+{
+    #[inline]
+    fn eq(&self, other: &&'a mut TiSlice<K, B>) -> bool {
+        self.raw == &other.raw
     }
 }
 

@@ -14,7 +14,6 @@ keywords = ["collection", "index", "no_std", "slice", "vec"]
 [dependencies.serde]
 version = "1.0"
 default-features = false
-features = ["derive"]
 optional = true
 
 [dev-dependencies]

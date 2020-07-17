@@ -1,6 +1,6 @@
 [package]
 name = "typed-index-collections"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Andrey Zheleznov <zheland.net@gmail.com>"]
 edition = "2018"
 description = "Typed index version of Rust slice and Vec containers"

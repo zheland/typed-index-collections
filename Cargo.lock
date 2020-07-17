@@ -127,7 +127,7 @@ dependencies = [
 
 [[package]]
 name = "typed-index-collections"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "derive_more 0.99.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.114 (registry+https://github.com/rust-lang/crates.io-index)",

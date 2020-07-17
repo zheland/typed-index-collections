@@ -142,7 +142,7 @@ pub use slice_index::TiSliceIndex;
 /// [`RangeToInclusive`]: https://doc.rust-lang.org/std/ops/struct.RangeToInclusive.html
 /// [`RangeFull`]: https://doc.rust-lang.org/std/ops/struct.RangeFull.html
 /// [`derive_more`]: https://crates.io/crates/derive_more
-#[derive(Eq, Hash, Ord, PartialOrd)]
+#[derive(Eq, Hash, Ord)]
 pub struct TiSlice<K, V> {
     /// Tied slice index type
     ///
@@ -1516,6 +1516,16 @@ where
 {
     fn eq(&self, other: &TiSlice<K, B>) -> bool {
         self.raw == other.raw
+    }
+}
+
+impl<K, V> PartialOrd<TiSlice<K, V>> for TiSlice<K, V>
+where
+    V: PartialOrd<V>,
+{
+    #[inline]
+    fn partial_cmp(&self, other: &TiSlice<K, V>) -> Option<Ordering> {
+        self.raw.partial_cmp(&other.raw)
     }
 }
 

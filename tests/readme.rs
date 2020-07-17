@@ -100,9 +100,9 @@ fn test_readme_docs_sync() {
                     } else {
                         Some((LibRsDocsLine::No(j + 1), line.to_string()))
                     }
-                } else if line.starts_with("#") {
+                } else if line.starts_with('#') {
                     Some((LibRsDocsLine::No(j + 1), "#".to_string() + line)) // Add extra "#" for titles
-                } else if line.starts_with("[") && !line.contains("]: http") {
+                } else if line.starts_with('[') && !line.contains("]: http") {
                     // Use full paths for documentation links
                     Some((
                         LibRsDocsLine::No(j + 1),

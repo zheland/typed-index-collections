@@ -1,5 +1,6 @@
 use core::{
     borrow::{Borrow, BorrowMut},
+    cmp::Ordering,
     fmt,
     iter::FromIterator,
     marker::PhantomData,
@@ -72,7 +73,7 @@ use crate::{Index, TiEnumerated, TiRangeBounds, TiSlice};
 /// [`From<usize>`]: https://doc.rust-lang.org/std/convert/trait.From.html
 /// [`Into<usize>`]: https://doc.rust-lang.org/std/convert/trait.Into.html
 /// [`derive_more`]: https://crates.io/crates/derive_more
-#[derive(Default, Eq, Hash, Ord, PartialOrd)]
+#[derive(Default, Eq, Hash, Ord)]
 pub struct TiVec<K, V> {
     /// Raw slice property
     pub raw: Vec<V>,
@@ -739,6 +740,16 @@ where
     #[inline]
     fn eq(&self, other: &&'a mut TiSlice<K, B>) -> bool {
         self.raw == &other.raw
+    }
+}
+
+impl<K, V> PartialOrd<TiVec<K, V>> for TiVec<K, V>
+where
+    V: PartialOrd<V>,
+{
+    #[inline]
+    fn partial_cmp(&self, other: &TiVec<K, V>) -> Option<Ordering> {
+        self.raw.partial_cmp(&other.raw)
     }
 }
 

@@ -7,7 +7,6 @@ use core::{
     slice::{self /*SliceIndex*/},
 };
 
-#[cfg(any(feature = "alloc", feature = "std"))]
 use alloc::{
     boxed::Box,
     vec::{self, Drain, Splice, Vec},

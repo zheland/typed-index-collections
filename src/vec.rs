@@ -753,6 +753,16 @@ where
     }
 }
 
+impl<K, V> Clone for TiVec<K, V>
+where
+    V: Clone,
+{
+    #[inline]
+    fn clone(&self) -> TiVec<K, V> {
+        self.raw.clone().into()
+    }
+}
+
 impl<K, V> Default for TiVec<K, V> {
     #[inline]
     fn default() -> Self {

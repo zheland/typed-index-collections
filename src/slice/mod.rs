@@ -12,6 +12,7 @@ mod slice_index;
 use core::{
     cmp::Ordering,
     fmt,
+    hash::{Hash, Hasher},
     marker::PhantomData,
     ops,
     slice::{
@@ -142,13 +143,15 @@ pub use slice_index::TiSliceIndex;
 /// [`RangeToInclusive`]: https://doc.rust-lang.org/std/ops/struct.RangeToInclusive.html
 /// [`RangeFull`]: https://doc.rust-lang.org/std/ops/struct.RangeFull.html
 /// [`derive_more`]: https://crates.io/crates/derive_more
-#[derive(Eq, Hash, Ord)]
 pub struct TiSlice<K, V> {
     /// Tied slice index type
     ///
     /// `fn(T) -> T` is *[PhantomData pattern][phantomdata patterns]*
     /// used to relax auto trait implementations bounds for
     /// [`Send`], [`Sync`], [`Unpin`], [`UnwindSafe`] and [`RefUnwindSafe`].
+    ///
+    /// Derive attribute is not used for trait implementations because it also requires
+    /// the same trait implemented for K that is an unnecessary requirement.
     ///
     /// [phantomdata patterns]: https://doc.rust-lang.org/nomicon/phantom-data.html#table-of-phantomdata-patterns
     /// [`Send`]: https://doc.rust-lang.org/core/marker/trait.Send.html
@@ -1540,6 +1543,27 @@ impl<K, V> Default for &mut TiSlice<K, V> {
     #[inline]
     fn default() -> Self {
         TiSlice::from_mut(&mut [])
+    }
+}
+
+impl<K, V> Eq for TiSlice<K, V> where V: Eq {}
+
+impl<K, V> Hash for TiSlice<K, V>
+where
+    V: Hash,
+{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.raw.hash(state)
+    }
+}
+
+impl<K, V> Ord for TiSlice<K, V>
+where
+    V: Ord,
+{
+    #[inline]
+    fn cmp(&self, other: &TiSlice<K, V>) -> Ordering {
+        self.raw.cmp(&other.raw)
     }
 }
 

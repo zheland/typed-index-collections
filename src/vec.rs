@@ -2,6 +2,7 @@ use core::{
     borrow::{Borrow, BorrowMut},
     cmp::Ordering,
     fmt,
+    hash::{Hash, Hasher},
     iter::FromIterator,
     marker::PhantomData,
     ops,
@@ -73,7 +74,6 @@ use crate::{Index, TiEnumerated, TiRangeBounds, TiSlice};
 /// [`From<usize>`]: https://doc.rust-lang.org/std/convert/trait.From.html
 /// [`Into<usize>`]: https://doc.rust-lang.org/std/convert/trait.Into.html
 /// [`derive_more`]: https://crates.io/crates/derive_more
-#[derive(Eq, Hash, Ord)]
 pub struct TiVec<K, V> {
     /// Raw slice property
     pub raw: Vec<V>,
@@ -83,6 +83,9 @@ pub struct TiVec<K, V> {
     /// `fn(T) -> T` is *[PhantomData pattern][phantomdata patterns]*
     /// used to relax auto trait implementations bounds for
     /// [`Send`], [`Sync`], [`Unpin`], [`UnwindSafe`] and [`RefUnwindSafe`].
+    ///
+    /// Derive attribute is not used for trait implementations because it also requires
+    /// the same trait implemented for K that is an unnecessary requirement.
     ///
     /// [phantomdata patterns]: https://doc.rust-lang.org/nomicon/phantom-data.html#table-of-phantomdata-patterns
     /// [`Send`]: https://doc.rust-lang.org/core/marker/trait.Send.html
@@ -767,6 +770,27 @@ impl<K, V> Default for TiVec<K, V> {
     #[inline]
     fn default() -> Self {
         Vec::default().into()
+    }
+}
+
+impl<K, V> Eq for TiVec<K, V> where V: Eq {}
+
+impl<K, V> Hash for TiVec<K, V>
+where
+    V: Hash,
+{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.raw.hash(state)
+    }
+}
+
+impl<K, V> Ord for TiVec<K, V>
+where
+    V: Ord,
+{
+    #[inline]
+    fn cmp(&self, other: &TiVec<K, V>) -> Ordering {
+        self.raw.cmp(&other.raw)
     }
 }
 

@@ -105,8 +105,10 @@ pub use slice_index::TiSliceIndex;
     ```
     use typed_index_collections::TiSlice;
     use derive_more::{From, Into};
+
     #[derive(From, Into)]
     struct FooId(usize);
+
     let mut foos_raw = [1, 2, 5, 8];
     let foos: &mut TiSlice<FooId, usize> = TiSlice::from_mut(&mut foos_raw);
     foos[FooId(2)] = 4;

@@ -54,8 +54,10 @@ use crate::{Index, TiEnumerated, TiRangeBounds, TiSlice};
     ```
     use typed_index_collections::TiVec;
     use derive_more::{From, Into};
+
     #[derive(From, Into)]
     struct FooId(usize);
+
     let mut foos: TiVec<FooId, usize> = std::vec![10, 11, 13].into();
     foos.insert(FooId(2), 12);
     assert_eq!(foos[FooId(2)], 12);

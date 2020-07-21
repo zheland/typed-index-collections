@@ -53,3 +53,20 @@ script:
     rustup default | grep -q "stable" && cargo clippy
     --no-default-features --features "impl-index-from serde-std" -- -D warnings
   - rustup default | grep -q "stable" && cargo clippy --all-features -- -D warnings
+  - rustup default | grep -q "stable" && cargo clippy --tests --no-default-features -- -D warnings
+  - >-
+    rustup default | grep -q "stable" && cargo clippy --tests
+    --no-default-features --features "serde-alloc" -- -D warnings
+  - >-
+    rustup default | grep -q "stable" && cargo clippy --tests
+    --no-default-features --features "serde-std" -- -D warnings
+  - >-
+    rustup default | grep -q "stable" && cargo clippy --tests
+    --no-default-features --features "impl-index-from" -- -D warnings
+  - >-
+    rustup default | grep -q "stable" && cargo clippy --tests
+    --no-default-features --features "impl-index-from serde-alloc" -- -D warnings
+  - >-
+    rustup default | grep -q "stable" && cargo clippy --tests
+    --no-default-features --features "impl-index-from serde-std" -- -D warnings
+  - rustup default | grep -q "stable" && cargo clippy --tests --all-features -- -D warnings

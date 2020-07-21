@@ -17,6 +17,13 @@ jobs:
   fast_finish: true
 
 script:
+  - cargo build --verbose --no-default-features
+  - cargo build --verbose --no-default-features --features "serde-alloc"
+  - cargo build --verbose --no-default-features --features "serde-std"
+  - cargo build --verbose --no-default-features --features "impl-index-from"
+  - cargo build --verbose --no-default-features --features "impl-index-from serde-alloc"
+  - cargo build --verbose --no-default-features --features "impl-index-from serde-std"
+  - cargo build --verbose --all-features
   - cargo test --verbose --no-default-features
   - cargo test --verbose --no-default-features --features "serde-alloc"
   - cargo test --verbose --no-default-features --features "serde-std"

@@ -17,8 +17,8 @@ jobs:
   fast_finish: true
 
 before_script:
-  - rustup component add rustfmt || ! rustup default | grep -q "stable"
-  - rustup component add clippy || ! rustup default | grep -q "stable"
+  - "! rustup default | grep -q \"stable\" || rustup component add rustfmt"
+  - "! rustup default | grep -q \"stable\" || rustup component add clippy"
 
 script:
   - cargo build --verbose --no-default-features
@@ -35,11 +35,21 @@ script:
   - cargo test --verbose --no-default-features --features "impl-index-from serde-alloc"
   - cargo test --verbose --no-default-features --features "impl-index-from serde-std"
   - cargo test --verbose --all-features
-  - cargo fmt -- --check
-  - cargo clippy --no-default-features -- -D warnings
-  - cargo clippy --no-default-features --features "serde-alloc" -- -D warnings
-  - cargo clippy --no-default-features --features "serde-std" -- -D warnings
-  - cargo clippy --no-default-features --features "impl-index-from" -- -D warnings
-  - cargo clippy --no-default-features --features "impl-index-from serde-alloc" -- -D warnings
-  - cargo clippy --no-default-features --features "impl-index-from serde-std" -- -D warnings
-  - cargo clippy --all-features -- -D warnings
+  - rustup default | grep -q "stable" && cargo fmt -- --check
+  - rustup default | grep -q "stable" && cargo clippy --no-default-features -- -D warnings
+  - >-
+    rustup default | grep -q "stable" && cargo clippy
+    --no-default-features --features "serde-alloc" -- -D warnings
+  - >-
+    rustup default | grep -q "stable" && cargo clippy
+    --no-default-features --features "serde-std" -- -D warnings
+  - >-
+    rustup default | grep -q "stable" && cargo clippy
+    --no-default-features --features "impl-index-from" -- -D warnings
+  - >-
+    rustup default | grep -q "stable" && cargo clippy
+    --no-default-features --features "impl-index-from serde-alloc" -- -D warnings
+  - >-
+    rustup default | grep -q "stable" && cargo clippy
+    --no-default-features --features "impl-index-from serde-std" -- -D warnings
+  - rustup default | grep -q "stable" && cargo clippy --all-features -- -D warnings

@@ -125,16 +125,6 @@ impl<K, V> TiVec<K, V> {
         }
     }
 
-    /// Decomposes a `TiVec<K, V>` into its raw components.
-    ///
-    /// See [`Vec::into_raw_parts`].
-    ///
-    /// [`Vec::into_raw_parts`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.into_raw_parts
-    #[cfg(feature = "unstable_vec_into_raw_parts")]
-    pub fn into_raw_parts(self) -> (*mut V, usize, usize) {
-        self.raw.into_raw_parts()
-    }
-
     /// Creates a `TiVec<K, V>` directly from the raw components of another vector.
     ///
     /// See [`Vec::from_raw_parts`].
@@ -184,33 +174,6 @@ impl<K, V> TiVec<K, V> {
         self.raw.reserve_exact(additional)
     }
 
-    /// Tries to reserve capacity for at least `additional` more elements to be inserted
-    /// in the given `TiVec<K, V>`. The collection may reserve more space to avoid
-    /// frequent reallocations. After calling `reserve`, capacity will be
-    /// greater than or equal to `self.len() + additional`. Does nothing if
-    /// capacity is already sufficient.
-    ///
-    /// See [`Vec::try_reserve`].
-    ///
-    /// [`Vec::try_reserve`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.try_reserve
-    #[cfg(feature = "unstable_try_reserve")]
-    pub fn try_reserve(&mut self, additional: usize) -> Result<(), TryReserveError> {
-        self.raw.try_reserve(additional)
-    }
-
-    /// Tries to reserves the minimum capacity for exactly `additional` more elements to
-    /// be inserted in the given `TiVec<K, V>`. After calling `reserve_exact`,
-    /// capacity will be greater than or equal to `self.len() + additional`.
-    /// Does nothing if the capacity is already sufficient.
-    ///
-    /// See [`Vec::try_reserve_exact`].
-    ///
-    /// [`Vec::try_reserve_exact`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.try_reserve_exact
-    #[cfg(feature = "unstable_try_reserve")]
-    pub fn try_reserve_exact(&mut self, additional: usize) -> Result<(), TryReserveError> {
-        self.raw.try_reserve_exact(additional)
-    }
-
     /// Shrinks the capacity of the vector as much as possible.
     ///
     /// See [`Vec::shrink_to_fit`].
@@ -218,16 +181,6 @@ impl<K, V> TiVec<K, V> {
     /// [`Vec::shrink_to_fit`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.shrink_to_fit
     pub fn shrink_to_fit(&mut self) {
         self.raw.shrink_to_fit()
-    }
-
-    /// Shrinks the capacity of the vector with a lower bound.
-    ///
-    /// See [`Vec::shrink_to`].
-    ///
-    /// [`Vec::shrink_to`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.shrink_to
-    #[cfg(feature = "unstable_shrink_to")]
-    pub fn shrink_to(&mut self, min_capacity: usize) {
-        self.raw.shrink_to()
     }
 
     /// Converts the vector into [`Box<TiSlice<K, V>>`][`Box`].

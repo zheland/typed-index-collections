@@ -17,10 +17,10 @@ jobs:
   fast_finish: true
 
 script:
-  - cargo test --no-default-features
-  - cargo test --no-default-features --features "serde-alloc"
-  - cargo test --no-default-features --features "serde-std"
-  - cargo test --no-default-features --features "impl-index-from"
-  - cargo test --no-default-features --features "impl-index-from serde-alloc"
-  - cargo test --no-default-features --features "impl-index-from serde-std"
-  - cargo test --all-features
+  - cargo test --verbose --no-default-features
+  - cargo test --verbose --no-default-features --features "serde-alloc"
+  - cargo test --verbose --no-default-features --features "serde-std"
+  - cargo test --verbose --no-default-features --features "impl-index-from"
+  - cargo test --verbose --no-default-features --features "impl-index-from serde-alloc"
+  - cargo test --verbose --no-default-features --features "impl-index-from serde-std"
+  - cargo test --verbose --all-features

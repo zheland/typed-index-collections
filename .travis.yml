@@ -16,6 +16,9 @@ jobs:
     - rust: nightly
   fast_finish: true
 
+before_script:
+  - rustup component add rustfmt || ! rustup default | grep -q "stable"
+
 script:
   - cargo build --verbose --no-default-features
   - cargo build --verbose --no-default-features --features "serde-alloc"
@@ -31,3 +34,4 @@ script:
   - cargo test --verbose --no-default-features --features "impl-index-from serde-alloc"
   - cargo test --verbose --no-default-features --features "impl-index-from serde-std"
   - cargo test --verbose --all-features
+  - cargo fmt -- --check

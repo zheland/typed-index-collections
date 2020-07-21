@@ -142,7 +142,7 @@
 //!   But it implicitly allows you to use `usize` for get methods and index expressions
 //!   that reduce type-safety,
 //!   and the macro `define_index_type!` which is used to generate a newtyped index struct,
-//!   implicitly implements a lot of traits that would be better implemented
+//!   implicitly implements a lot of traits that in my opinion would be better implemented
 //!   only when necessary using crates intended for this, such as [`derive_more`].
 //!
 //! # License

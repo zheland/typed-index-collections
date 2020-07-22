@@ -810,6 +810,34 @@ impl<K, V> From<TiVec<K, V>> for Vec<V> {
     }
 }
 
+impl<'a, K, V> From<&'a Vec<V>> for &'a TiVec<K, V> {
+    #[allow(trivial_casts)]
+    fn from(vec: &'a Vec<V>) -> Self {
+        TiVec::from_ref(vec)
+    }
+}
+
+impl<'a, K, V> From<&'a mut Vec<V>> for &'a mut TiVec<K, V> {
+    #[allow(trivial_casts)]
+    fn from(vec: &'a mut Vec<V>) -> Self {
+        TiVec::from_mut(vec)
+    }
+}
+
+impl<'a, K, V> From<&'a TiVec<K, V>> for &'a Vec<V> {
+    #[allow(trivial_casts)]
+    fn from(vec: &'a TiVec<K, V>) -> Self {
+        &vec.raw
+    }
+}
+
+impl<'a, K, V> From<&'a mut TiVec<K, V>> for &'a mut Vec<V> {
+    #[allow(trivial_casts)]
+    fn from(vec: &'a mut TiVec<K, V>) -> Self {
+        &mut vec.raw
+    }
+}
+
 impl<K, V> IntoIterator for TiVec<K, V> {
     type Item = V;
     type IntoIter = vec::IntoIter<V>;

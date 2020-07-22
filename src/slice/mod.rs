@@ -1617,7 +1617,7 @@ mod test {
     use crate::{test::Id, TiSlice};
 
     #[derive(Clone, Debug, Eq, PartialEq)]
-    pub struct NoCopy<T>(pub T);
+    pub struct NonCopy<T>(pub T);
 
     // Function used to avoid allocations for no_std and no_alloc targets
     #[rustfmt::skip]
@@ -1635,7 +1635,7 @@ mod test {
 
     #[test]
     fn no_std_api_compatibility() {
-        for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4]] {
+        for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {
             assert_eq_api!(arr => |arr| arr.as_ref().into_t().len());
             assert_eq_api!(arr => |arr| arr.as_ref().into_t().is_empty());
             assert_eq_api!(arr => |&arr| arr.as_ref().into_t().first());
@@ -1731,17 +1731,19 @@ mod test {
                 }
             }
         });
-        for_in!(for arr in [&[0; 0], &[1], &[1, 2], &[1, 2, 4]] {
-            assert_eq_api!(arr => |arr| arr.into_t().as_ptr());
-        });
-        for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4]] {
+        for_in!(
+            for arr in [&[0; 0], &[1], &[1, 2], &[1, 2, 4], &[1, 2, 4, 8]] {
+                assert_eq_api!(arr => |arr| arr.into_t().as_ptr());
+            }
+        );
+        for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {
             assert_ne_api!(arr => |&mut arr| arr.as_mut().into_t().as_mut_ptr());
         });
         assert_eq_api!([1u32, 2, 3] => |&mut arr| {
             arr.as_mut().into_t().swap(0.into_t(), 2.into_t());
             arr
         });
-        for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4]] {
+        for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {
             assert_eq_api!(arr => |&mut arr| {
                 arr.as_mut().into_t().reverse();
                 arr
@@ -1797,7 +1799,7 @@ mod test {
                 });
             }
         });
-        for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4], [1, 2, 3, 4]] {
+        for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {
             for mid in 0..arr.len() {
                 assert_eq_api!(arr => |&arr| {
                     arr.as_ref().into_t().split_at(mid.into_t()).into_t()
@@ -1896,19 +1898,19 @@ mod test {
             }
         );
         for_in!(for src in [
-            [NoCopy(0); 0],
-            [NoCopy(1)],
-            [NoCopy(1), NoCopy(3)],
-            [NoCopy(7), NoCopy(3), NoCopy(5)],
-            [NoCopy(10), NoCopy(6), NoCopy(35), NoCopy(4)]
+            [NonCopy(0); 0],
+            [NonCopy(1)],
+            [NonCopy(1), NonCopy(3)],
+            [NonCopy(7), NonCopy(3), NonCopy(5)],
+            [NonCopy(10), NonCopy(6), NonCopy(35), NonCopy(4)]
         ] {
             assert_eq_api!([
-                NoCopy(1),
-                NoCopy(2),
-                NoCopy(3),
-                NoCopy(4),
-                NoCopy(5),
-                NoCopy(6),
+                NonCopy(1),
+                NonCopy(2),
+                NonCopy(3),
+                NonCopy(4),
+                NonCopy(5),
+                NonCopy(6),
             ] => |&mut arr| {
                 arr.as_mut().into_t()[..src.len().into_t()]
                     .clone_from_slice(src.as_ref().into_t());
@@ -1998,7 +2000,7 @@ mod test {
     #[test]
     fn no_std_trait_api_compatibility() {
         use core::slice::IterMut;
-        for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4]] {
+        for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {
             assert_eq_api!(arr => |&arr| arr.as_ref().into_t().as_ref().into_t());
             assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t().as_mut().into_t());
             for index in 0..arr.len() {
@@ -2054,8 +2056,8 @@ mod test {
                 array_32_from(|| iter.next())
             });
         });
-        for_in!(for lhs in [[0; 0], [1], [1, 2], [1, 2, 4]] {
-            for_in!(for rhs in [[0; 0], [1], [1, 2], [1, 2, 4]] {
+        for_in!(for lhs in [[0; 0], [1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {
+            for_in!(for rhs in [[0; 0], [1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {
                 let arrays = (lhs, rhs);
                 assert_eq_api!(arrays => |arrays| arrays.0.as_ref().into_t() == arrays.1.as_ref().into_t());
             });
@@ -2072,7 +2074,7 @@ mod test {
     #[test]
     fn alloc_trait_api_compatibility() {
         use alloc::borrow::ToOwned;
-        for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4]] {
+        for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {
             assert_eq_api!(arr => |arr| arr.as_ref().into_t().to_owned().as_slice().into_t());
         });
     }

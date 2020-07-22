@@ -87,7 +87,7 @@ pub use slice_index::TiSliceIndex;
 ///   but use `K` instead of `usize` for iteration indices.
 /// - [`iter_mut_enumerated`] - Returns an iterator over all key-value pairs,
 ///   with mutable references to the values.
-///   It acts like `self.iter_mut().enumerated()`,
+///   It acts like `self.iter_mut().enumerate()`,
 ///   but use `K` instead of `usize` for iteration indices.
 /// - [`position`] - Searches for an element in an iterator, returning its index of type `K`.
 ///   It acts like `self.iter().position(...)`,

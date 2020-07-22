@@ -40,15 +40,18 @@ use crate::{Index, TiEnumerated, TiRangeBounds, TiSlice};
 /// using [`From`] and [`Into`].
 ///
 /// Added methods:
-/// - [`push_and_get_key`] - Appends an element to the back of a collection and returns its index of type `K`.
+/// - [`push_and_get_key`] - Appends an element to the back of a collection
+///   and returns its index of type `K`.
 /// - [`pop_key_value`] - Removes the last element from a vector and returns it
-/// with its index of type `K`, or [`None`] if the vector is empty.
+///   with its index of type `K`, or [`None`] if the vector is empty.
 /// - [`into_iter_enumerated`] - Converts the vector into iterator over all key-value pairs
-/// with `K` used for iteration indices.
-///
+///   with `K` used for iteration indices.
+///   It acts like `self.into_iter().enumerate()`,
+///   but use `K` instead of `usize` for iteration indices.
 #[cfg_attr(
     feature = "impl-index-from",
     doc = r#"
+
     # Example
 
     ```
@@ -62,9 +65,9 @@ use crate::{Index, TiEnumerated, TiRangeBounds, TiSlice};
     foos.insert(FooId(2), 12);
     assert_eq!(foos[FooId(2)], 12);
     ```
-
 "#
 )]
+///
 /// [`push_and_get_key`]: #method.push_and_get_key
 /// [`pop_key_value`]: #method.pop_key_value
 /// [`into_iter_enumerated`]: #method.into_iter_enumerated
@@ -447,7 +450,6 @@ impl<K, V> TiVec<K, V> {
     pub fn drain<R>(&mut self, range: R) -> Drain<'_, V>
     where
         R: TiRangeBounds<K>,
-        //R::Index: SliceIndex<[V], Output = [V]> + RangeBounds<usize>,
     {
         self.raw.drain(range.into_range())
     }
@@ -558,7 +560,6 @@ impl<K, V> TiVec<K, V> {
     pub fn splice<R, I>(&mut self, range: R, replace_with: I) -> Splice<'_, I::IntoIter>
     where
         R: TiRangeBounds<K>,
-        //R::Index: SliceIndex<[V], Output = [V]> + RangeBounds<usize>,
         I: IntoIterator<Item = V>,
     {
         self.raw.splice(range.into_range(), replace_with)

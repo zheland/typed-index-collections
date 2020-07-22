@@ -3,11 +3,12 @@ use core::{iter, ops};
 
 /// An iterator over all key-value pairs.
 ///
-/// This struct is created by the [`TiSlice::iter_enumerated`] and
-/// [`TiSlice::iter_mut_enumerated`] methods.
+/// This struct is created by the [`TiSlice::iter_enumerated`],
+/// [`TiSlice::iter_mut_enumerated`] and [`TiVec::drain_enumerated`] methods.
 ///
 /// [`TiSlice::iter_enumerated`]: struct.TiSlice.html#method.iter_enumerated
 /// [`TiSlice::iter_mut_enumerated`]: struct.TiSlice.html#method.iter_mut_enumerated
+/// [`TiVec::drain_enumerated`]: struct.TiVec.html#method.drain_enumerated
 pub type TiEnumerated<I, K, V> = iter::Map<iter::Enumerate<I>, fn((usize, V)) -> (K, V)>;
 
 /// An iterator over all keys.

@@ -46,6 +46,10 @@ use crate::{Index, TiEnumerated, TiRangeBounds, TiSlice};
 ///   and returns its index of type `K`.
 /// - [`pop_key_value`] - Removes the last element from a vector and returns it
 ///   with its index of type `K`, or [`None`] if the vector is empty.
+/// - [`drain_enumerated`] - Creates a draining iterator that removes the specified
+///   range in the vector and yields the current count and the removed items.
+///   It acts like `self.drain(range).enumerate()`,
+///   but instead of `usize` it returns index of type `K`.
 /// - [`into_iter_enumerated`] - Converts the vector into iterator over all key-value pairs
 ///   with `K` used for iteration indices.
 ///   It acts like `self.into_iter().enumerate()`,
@@ -74,6 +78,7 @@ use crate::{Index, TiEnumerated, TiRangeBounds, TiSlice};
 /// [`from_mut`]: #method.from_mut
 /// [`push_and_get_key`]: #method.push_and_get_key
 /// [`pop_key_value`]: #method.pop_key_value
+/// [`drain_enumerated`]: #method.drain_enumerated
 /// [`into_iter_enumerated`]: #method.into_iter_enumerated
 /// [`Index`]: trait.Index.html
 /// [`std::vec::Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
@@ -497,6 +502,52 @@ impl<K, V> TiVec<K, V> {
         R: TiRangeBounds<K>,
     {
         self.raw.drain(range.into_range())
+    }
+
+    /// Creates a draining iterator that removes the specified
+    /// range in the vector and yields the current count and the removed items.
+    ///
+    /// It acts like `self.drain(range).enumerate()`,
+    /// but instead of `usize` it returns index of type `K`.
+    ///
+    /// Note that the indices started from `K::from_usize(0)`,
+    /// regardless of the range starting point.
+    ///
+    /// See [`Vec::drain`].
+    #[cfg_attr(
+        feature = "impl-index-from",
+        doc = r#"
+
+        # Example
+
+        ```
+        # use derive_more::{From, Into};
+        # use typed_index_collections::{TiSlice, TiVec};
+        #[derive(Eq, Debug, From, Into, PartialEq)]
+        pub struct Id(usize);
+        let mut vec: TiVec<Id, usize> = vec![1, 2, 4].into();
+        {
+            let mut iterator = vec.drain_enumerated(Id(1)..);
+            assert_eq!(iterator.next(), Some((Id(0), 2)));
+            assert_eq!(iterator.next(), Some((Id(1), 4)));
+            assert_eq!(iterator.next(), None);
+        }
+        assert_eq!(vec.as_slice(), TiSlice::from_ref(&[1]));
+        ```
+    "#
+    )]
+    ///
+    /// [`Vec::drain`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.drain
+    #[inline]
+    pub fn drain_enumerated<R>(&mut self, range: R) -> TiEnumerated<Drain<'_, V>, K, V>
+    where
+        K: Index,
+        R: TiRangeBounds<K>,
+    {
+        self.raw
+            .drain(range.into_range())
+            .enumerate()
+            .map(|(key, value)| (Index::from_usize(key), value))
     }
 
     /// Clears the vector, removing all values.

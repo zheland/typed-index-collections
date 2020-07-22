@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Add `CHANGELOG.md`.
+- `TiVec::{from_ref, from_mut, drain_enumerated}` methods.
+- No-op convertions between `Vec` and `TiVec` references and mutable references.
+- `TiVec` API compatibility tests.
+- Format and clippy checks in Travis config.
+
+### Changed
+- Improve documentation examples readability.
 
 ### Fixed
-- Improve `TiSlice` and `TiVec` documentation examples readability.
+- Fix `TiSlice` and `TiVec` documentation typos.
 
 ## [0.1.2] - 2020-06-17
 ### Fixed

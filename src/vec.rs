@@ -932,3 +932,179 @@ impl<'de, K, V: Deserialize<'de>> Deserialize<'de> for TiVec<K, V> {
         Vec::deserialize(deserializer).map(Into::into)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::test::Id;
+
+    trait VecWithCapacity
+    where
+        Self: Sized,
+    {
+        fn and_capacity(self) -> (usize, Self);
+    }
+
+    impl<T> VecWithCapacity for alloc::vec::Vec<T> {
+        fn and_capacity(self) -> (usize, Self) {
+            (self.capacity(), self)
+        }
+    }
+
+    macro_rules! assert_eq_vec_api {
+        ($source:expr => |&$arg:ident| $expr:expr) => {
+            assert_eq_api!($source.clone() => |$arg| {
+                let $arg = $arg.into_t();
+                let value = $expr;
+                (value, $arg.into_t().and_capacity())
+            });
+        };
+        ($source:expr => |&mut $arg:ident| $expr:expr) => {
+            assert_eq_api!($source.clone() => |$arg| {
+                let mut $arg = $arg.into_t();
+                let value = $expr;
+                (value, $arg.into_t().and_capacity())
+            });
+        };
+    }
+
+    #[test]
+    fn api_compatibility() {
+        use crate::TiVec;
+        use alloc::vec;
+        use alloc::vec::Vec;
+
+        assert_eq_api!(UsizeVec::new().into_t().and_capacity());
+        for &j in &[0, 1, 2, 4] {
+            assert_eq_api!(UsizeVec::with_capacity(j).into_t().and_capacity());
+        }
+        for vec in &[
+            vec![0; 0],
+            vec![1],
+            vec![1, 2],
+            vec![1, 2, 4],
+            vec![1, 2, 4, 8],
+            vec![1, 3],
+            vec![7, 3, 5],
+            vec![10, 6, 35, 4],
+            vec![1, 3, 3, 2, 4, 4, 4],
+        ] {
+            assert_eq_api!(vec.clone() => |vec| {
+                let mut vec = core::mem::ManuallyDrop::new(vec);
+                unsafe {
+                    UsizeVec::from_raw_parts(vec.as_mut_ptr(), vec.len(), vec.capacity())
+                }.into_t()
+            });
+            assert_eq_api!(vec.clone() => |vec| vec.into_t().capacity());
+            for j in 0..8 {
+                assert_eq_vec_api!(vec => |&mut vec| vec.reserve(j));
+                assert_eq_vec_api!(vec => |&mut vec| vec.reserve_exact(j));
+                assert_eq_vec_api!(vec => |&mut vec| {
+                    vec.reserve(j);
+                    vec.shrink_to_fit();
+                });
+            }
+            assert_eq_api!(vec.clone() => |vec| vec.into_t().into_boxed_slice().into_t());
+            for j in 0..8 {
+                assert_eq_vec_api!(vec => |&mut vec| vec.truncate(j));
+            }
+            assert_eq_api!(vec.clone() => |vec| vec.into_t().as_slice().into_t());
+            assert_eq_api!(vec.clone() => |vec| vec.into_t().as_mut_slice().into_t());
+            assert_eq_api!(&vec => |vec| vec.into_t().as_ptr());
+            {
+                let mut vec = vec.clone();
+                let vec_ref_mut = &mut vec;
+                let vec_ptr_mut = vec_ref_mut.as_mut_ptr();
+                let ti_vec_ref_mut: &mut TiVec<Id, _> = vec_ref_mut.into();
+                let ti_vec_ptr_mut = ti_vec_ref_mut.as_mut_ptr();
+                assert_eq!(vec_ptr_mut, ti_vec_ptr_mut);
+            }
+            assert_eq_api!(vec.clone() => |vec| {
+                const NUM_ADDED_ITEMS: usize = 4;
+                let mut vec = vec.into_t();
+                let initial_len = vec.len();
+                vec.reserve(NUM_ADDED_ITEMS);
+                unsafe {
+                    for j in 0..NUM_ADDED_ITEMS {
+                        *vec.as_mut_slice().into_t().get_unchecked_mut(initial_len + j) = j;
+                    }
+                    vec.set_len(initial_len + NUM_ADDED_ITEMS);
+                }
+                vec.into_t().and_capacity()
+            });
+            for j in 0..vec.len() {
+                assert_eq_vec_api!(vec => |&mut vec| vec.swap_remove(j.into_t()));
+                assert_eq_vec_api!(vec => |&mut vec| vec.insert(j.into_t(), 123));
+                assert_eq_vec_api!(vec => |&mut vec| vec.remove(j.into_t()));
+            }
+            assert_eq_vec_api!(vec => |&mut vec|
+                vec.retain(|value| value % 3 == 0 || value % 4 == 0));
+            assert_eq_vec_api!(vec => |&mut vec|
+                vec.dedup_by_key(|value| *value % 3 == 0 || *value % 4 == 0));
+            assert_eq_vec_api!(vec => |&mut vec| vec.dedup_by(|lhs, rhs| lhs < rhs));
+            assert_eq_vec_api!(vec => |&mut vec| vec.push(123));
+            assert_eq_vec_api!(vec => |&mut vec| vec.pop());
+            for other_vec in &[
+                vec![0; 0],
+                vec![1],
+                vec![1, 2],
+                vec![1, 2, 4],
+                vec![1, 2, 4, 8],
+                vec![1, 3],
+                vec![7, 3, 5],
+                vec![10, 6, 35, 4],
+            ] {
+                assert_eq_api!({
+                    let mut vec = vec.clone().into_t();
+                    let mut other_vec = other_vec.clone().into_t();
+                    vec.append(&mut other_vec);
+                    vec.into_t().and_capacity()
+                });
+            }
+            for start in 0..vec.len() {
+                for end in start..vec.len() {
+                    assert_eq_vec_api!(vec => |&mut vec| {
+                        let iter = vec.drain(start.into_t()..end.into_t());
+                        let vec: Vec<_> = iter.collect();
+                        vec
+                    });
+                }
+            }
+
+            assert_eq_vec_api!(vec => |&mut vec| vec.clear());
+            assert_eq_vec_api!(vec => |&vec| vec.len());
+            assert_eq_vec_api!(vec => |&vec| vec.is_empty());
+            for j in 0..vec.len() {
+                assert_eq_vec_api!(vec => |&mut vec| vec.split_off(j.into_t()).into_t());
+            }
+            for j in 0..8 {
+                assert_eq_vec_api!(vec => |&mut vec| {
+                    let mut items = 0..;
+                    vec.resize_with(j, || items.next().unwrap())
+                });
+                assert_eq_vec_api!(vec => |&mut vec| vec.resize(j, 123));
+            }
+            for slice in &[
+                &[0; 0][..],
+                &[1],
+                &[1, 2],
+                &[1, 2, 4],
+                &[1, 2, 4, 8],
+                &[1, 3],
+                &[7, 3, 5],
+                &[10, 6, 35, 4],
+            ] {
+                assert_eq_vec_api!(vec => |&mut vec| vec.extend_from_slice(slice.into_t()));
+            }
+            assert_eq_vec_api!(vec => |&mut vec| vec.dedup());
+            for start in 0..vec.len() {
+                for end in start..vec.len() {
+                    assert_eq_vec_api!(vec => |&mut vec| {
+                        let iter = vec.splice(start.into_t()..end.into_t(), 10..20);
+                        let vec: Vec<_> = iter.collect();
+                        vec
+                    });
+                }
+            }
+        }
+    }
+}

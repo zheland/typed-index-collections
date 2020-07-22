@@ -2,7 +2,7 @@
 // TODO: More verbose
 
 #[cfg(any(feature = "alloc", feature = "std"))]
-use alloc::boxed::Box;
+use alloc::{boxed::Box, vec::Vec};
 
 #[cfg(feature = "impl-index-from")]
 use derive_more::{From, Into};
@@ -11,6 +11,9 @@ use crate::TiSlice;
 
 #[cfg(not(feature = "impl-index-from"))]
 use crate::Index;
+
+#[cfg(any(feature = "alloc", feature = "std"))]
+use crate::TiVec;
 
 #[cfg_attr(feature = "impl-index-from", derive(From, Into))]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -97,6 +100,21 @@ impl_convert!(for (V)
 impl_convert!(for (V)
     |self: Box<TiSlice<Id, V>>| -> Box<[V]> { self.into() });
 
+#[cfg(any(feature = "alloc", feature = "std"))]
+impl_convert!(for (T) |self: Vec<T>| -> TiVec<Id, T> { self.into() } );
+#[cfg(any(feature = "alloc", feature = "std"))]
+impl_convert!(for (T) |self: TiVec<Id, T>| -> Vec<T> { self.into() } );
+
+#[cfg(any(feature = "alloc", feature = "std"))]
+impl_convert!(for ('a, T) |self: &'a Vec<T>| -> &'a TiVec<Id, T> { self.into() } );
+#[cfg(any(feature = "alloc", feature = "std"))]
+impl_convert!(for ('a, T) |self: &'a TiVec<Id, T>| -> &'a Vec<T> { self.into() } );
+
+#[cfg(any(feature = "alloc", feature = "std"))]
+impl_convert!(for ('a, T) |self: &'a mut Vec<T>| -> &'a mut TiVec<Id, T> { self.into() } );
+#[cfg(any(feature = "alloc", feature = "std"))]
+impl_convert!(for ('a, T) |self: &'a mut TiVec<Id, T>| -> &'a mut Vec<T> { self.into() } );
+
 impl_convert!(for ('a, V)
     |self: (&'a V, &'a TiSlice<Id, V>)| -> (&'a V, &'a [V]) {
         (self.0, self.1.into())
@@ -159,12 +177,16 @@ macro_rules! assert_api_impl(
             #[deny(unused_imports)]
             use crate::test::TypedConvert;
             #[cfg(any(feature = "alloc", feature = "std"))]
+            #[allow(dead_code, unused_qualifications)]
+            type UsizeVec = crate::TiVec<Id, usize>;
             $($lhs_init)*
             $expr
         }, {
             #[deny(unused_imports)]
             use crate::test::DummyConvert;
             #[cfg(any(feature = "alloc", feature = "std"))]
+            #[allow(dead_code, unused_qualifications)]
+            type UsizeVec = alloc::vec::Vec<usize>;
             $($rhs_init)*
             $expr
         },

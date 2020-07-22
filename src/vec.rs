@@ -40,6 +40,8 @@ use crate::{Index, TiEnumerated, TiRangeBounds, TiSlice};
 /// using [`From`] and [`Into`].
 ///
 /// Added methods:
+/// - [`from_ref`] - Converts a [`&std::vec::Vec<V>`] into a `&TiVec<K, V>`.
+/// - [`from_mut`] - Converts a [`&mut std::vec::Vec<V>`] into a `&mut TiVec<K, V>`.
 /// - [`push_and_get_key`] - Appends an element to the back of a collection
 ///   and returns its index of type `K`.
 /// - [`pop_key_value`] - Removes the last element from a vector and returns it
@@ -68,12 +70,16 @@ use crate::{Index, TiEnumerated, TiRangeBounds, TiSlice};
 "#
 )]
 ///
+/// [`from_ref`]: #method.from_ref
+/// [`from_mut`]: #method.from_mut
 /// [`push_and_get_key`]: #method.push_and_get_key
 /// [`pop_key_value`]: #method.pop_key_value
 /// [`into_iter_enumerated`]: #method.into_iter_enumerated
 /// [`Index`]: trait.Index.html
 /// [`std::vec::Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
 /// [`std::vec::Vec<V>`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
+/// [`&std::vec::Vec<V>`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
+/// [`&mut std::vec::Vec<V>`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
 /// [`From`]: https://doc.rust-lang.org/std/convert/trait.From.html
 /// [`Into`]: https://doc.rust-lang.org/std/convert/trait.Into.html
 /// [`From<usize>`]: https://doc.rust-lang.org/std/convert/trait.From.html
@@ -139,6 +145,43 @@ impl<K, V> TiVec<K, V> {
             raw: Vec::from_raw_parts(ptr, length, capacity),
             _marker: PhantomData,
         }
+    }
+
+    /// Converts a [`&std::vec::Vec<V>`] into a `&TiVec<K, V>`.
+    ///
+    /// Vector reference is intentionally used in the argument
+    /// instead of slice reference for conversion with no-op.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use typed_index_collections::TiVec;
+    /// pub struct Id(usize);
+    /// let vec: &TiVec<Id, usize> = TiVec::from_ref(&vec![1, 2, 4]);
+    /// ```
+    ///
+    /// [`&std::vec::Vec<V>`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
+    #[allow(trivial_casts, clippy::ptr_arg)]
+    #[inline]
+    pub fn from_ref(raw: &Vec<V>) -> &Self {
+        unsafe { &*(raw as *const Vec<V> as *const Self) }
+    }
+
+    /// Converts a [`&mut std::vec::Vec<V>`] into a `&mut TiVec<K, V>`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use typed_index_collections::TiVec;
+    /// pub struct Id(usize);
+    /// let vec: &mut TiVec<Id, usize> = TiVec::from_mut(&mut vec![1, 2, 4]);
+    /// ```
+    ///
+    /// [`&std::vec::mut Vec<V>`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
+    #[allow(trivial_casts)]
+    #[inline]
+    pub fn from_mut(raw: &mut Vec<V>) -> &mut Self {
+        unsafe { &mut *(raw as *mut Vec<V> as *mut Self) }
     }
 
     /// Returns the number of elements the vector can hold without

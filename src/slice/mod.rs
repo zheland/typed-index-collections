@@ -691,6 +691,9 @@ impl<K, V> TiSlice<K, V> {
 
     /// Returns an iterator over all key-value pairs.
     ///
+    /// It acts like `self.iter().enumerate()`,
+    /// but use `K` instead of `usize` for iteration indices.
+    ///
     /// See [`slice::iter`].
     #[cfg_attr(
         feature = "impl-index-from",
@@ -736,6 +739,9 @@ impl<K, V> TiSlice<K, V> {
     }
 
     /// Returns an iterator over all key-value pairs, with mutable references to the values.
+    ///
+    /// It acts like `self.iter_mut().enumerate()`,
+    /// but use `K` instead of `usize` for iteration indices.
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
@@ -771,6 +777,9 @@ impl<K, V> TiSlice<K, V> {
 
     /// Searches for an element in an iterator, returning its index of type `K`.
     ///
+    /// It acts like `self.iter().position(...)`,
+    /// but instead of `usize` it returns index of type `K`.
+    ///
     /// See [`slice::iter`] and [`Iterator::position`].
     #[cfg_attr(
         feature = "impl-index-from",
@@ -804,6 +813,9 @@ impl<K, V> TiSlice<K, V> {
     }
 
     /// Searches for an element in an iterator from the right, returning its index of type `K`.
+    ///
+    /// It acts like `self.iter().rposition(...)`,
+    /// but instead of `usize` it returns index of type `K`.
     ///
     /// See [`slice::iter`] and [`Iterator::position`].
     #[cfg_attr(

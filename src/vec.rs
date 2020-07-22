@@ -259,6 +259,8 @@ impl<K, V> TiVec<K, V> {
 
     /// Removes an element from the vector and returns it.
     ///
+    /// The removed element is replaced by the last element of the vector.
+    ///
     /// See [`Vec::swap_remove`].
     ///
     /// [`Vec::swap_remove`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.swap_remove

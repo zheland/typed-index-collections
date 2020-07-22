@@ -206,6 +206,10 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std as alloc;
 
+#[cfg(test)]
+#[macro_use]
+mod test;
+
 mod index;
 mod iter;
 mod range;

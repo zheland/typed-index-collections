@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Add `CHANGELOG.md`.
+- Changelog.
 - `TiVec::{from_ref, from_mut, drain_enumerated}` methods.
 - No-op convertions between `Vec` and `TiVec` references and mutable references.
 - `TiVec` API compatibility tests.
@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2020-06-14
 ## [0.0.3] - 2020-06-14
 ### Added
-- Add `TiVec` `push_and_get_key` and `pop_key_value` methods.
+- `TiVec::{push_and_get_key, pop_key_value}` methods.
 
 ### Fixed
 - Fix previously disabled clippy lints.

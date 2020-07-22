@@ -409,10 +409,10 @@ impl<K, V> TiVec<K, V> {
         # use typed_index_collections::TiVec;
         #[derive(Eq, Debug, From, Into, PartialEq)]
         pub struct Id(usize);
-        let mut slice: TiVec<Id, usize> = vec![1, 2, 4].into();
-        assert_eq!(slice.push_and_get_key(8), Id(3));
-        assert_eq!(slice.push_and_get_key(16), Id(4));
-        assert_eq!(slice.push_and_get_key(32), Id(5));
+        let mut vec: TiVec<Id, usize> = vec![1, 2, 4].into();
+        assert_eq!(vec.push_and_get_key(8), Id(3));
+        assert_eq!(vec.push_and_get_key(16), Id(4));
+        assert_eq!(vec.push_and_get_key(32), Id(5));
         ```
     "#
     )]
@@ -456,11 +456,11 @@ impl<K, V> TiVec<K, V> {
         # use typed_index_collections::TiVec;
         #[derive(Eq, Debug, From, Into, PartialEq)]
         pub struct Id(usize);
-        let mut slice: TiVec<Id, usize> = vec![1, 2, 4].into();
-        assert_eq!(slice.pop_key_value(), Some((Id(2), 4)));
-        assert_eq!(slice.pop_key_value(), Some((Id(1), 2)));
-        assert_eq!(slice.pop_key_value(), Some((Id(0), 1)));
-        assert_eq!(slice.pop_key_value(), None);
+        let mut vec: TiVec<Id, usize> = vec![1, 2, 4].into();
+        assert_eq!(vec.pop_key_value(), Some((Id(2), 4)));
+        assert_eq!(vec.pop_key_value(), Some((Id(1), 2)));
+        assert_eq!(vec.pop_key_value(), Some((Id(0), 1)));
+        assert_eq!(vec.pop_key_value(), None);
         ```
     "#
     )]

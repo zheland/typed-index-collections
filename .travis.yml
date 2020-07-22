@@ -21,6 +21,7 @@ before_script:
   - "! rustup default | grep -q \"stable\" || rustup component add clippy"
 
 script:
+  - cargo build --verbose
   - cargo build --verbose --no-default-features
   - cargo build --verbose --no-default-features --features "serde-alloc"
   - cargo build --verbose --no-default-features --features "serde-std"
@@ -28,6 +29,7 @@ script:
   - cargo build --verbose --no-default-features --features "impl-index-from serde-alloc"
   - cargo build --verbose --no-default-features --features "impl-index-from serde-std"
   - cargo build --verbose --all-features
+  - cargo test --verbose
   - cargo test --verbose --no-default-features
   - cargo test --verbose --no-default-features --features "serde-alloc"
   - cargo test --verbose --no-default-features --features "serde-std"
@@ -36,6 +38,7 @@ script:
   - cargo test --verbose --no-default-features --features "impl-index-from serde-std"
   - cargo test --verbose --all-features
   - ! rustup default | grep -q "stable" || cargo fmt -- --check
+  - ! rustup default | grep -q "stable" || cargo clippy -- -D warnings
   - ! rustup default | grep -q "stable" || cargo clippy --no-default-features -- -D warnings
   - >-
     ! rustup default | grep -q "stable" || cargo clippy
@@ -53,6 +56,7 @@ script:
     ! rustup default | grep -q "stable" || cargo clippy
     --no-default-features --features "impl-index-from serde-std" -- -D warnings
   - ! rustup default | grep -q "stable" || cargo clippy --all-features -- -D warnings
+  - ! rustup default | grep -q "stable" || cargo clippy --tests -- -D warnings
   - ! rustup default | grep -q "stable" || cargo clippy --tests --no-default-features -- -D warnings
   - >-
     ! rustup default | grep -q "stable" || cargo clippy --tests

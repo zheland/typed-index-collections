@@ -10,9 +10,11 @@ rust:
 env:
   - FEATURES=""
   - FEATURES="--no-default-features"
+  - FEATURES="--no-default-features --features \"serde\""
   - FEATURES="--no-default-features --features \"serde-alloc\""
   - FEATURES="--no-default-features --features \"serde-std\""
   - FEATURES="--no-default-features --features \"impl-index-from\""
+  - FEATURES="--no-default-features --features \"impl-index-from serde\""
   - FEATURES="--no-default-features --features \"impl-index-from serde-alloc\""
   - FEATURES="--no-default-features --features \"impl-index-from serde-std\""
   - FEATURES="--all-features"

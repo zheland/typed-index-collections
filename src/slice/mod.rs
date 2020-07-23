@@ -1617,11 +1617,11 @@ mod test {
     use crate::{test::Id, TiSlice};
 
     #[derive(Clone, Debug, Eq, PartialEq)]
-    pub struct NonCopy<T>(pub T);
+    struct NonCopy<T>(pub T);
 
     // Function used to avoid allocations for no_std and no_alloc targets
     #[rustfmt::skip]
-    pub fn array_32_from<T, F>(mut func: F) -> [T; 32]
+    fn array_32_from<T, F>(mut func: F) -> [T; 32]
     where
         F: FnMut() -> T,
     {
@@ -2085,7 +2085,7 @@ mod test {
         use core::num::NonZeroUsize;
 
         #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-        pub struct Id(NonZeroUsize);
+        struct Id(NonZeroUsize);
 
         impl Index for Id {
             fn from_usize(value: usize) -> Self {

@@ -7,6 +7,16 @@ rust:
   - beta
   - nightly
 
+env:
+  - FEATURES=""
+  - FEATURES="--no-default-features"
+  - FEATURES="--no-default-features --features \"serde-alloc\""
+  - FEATURES="--no-default-features --features \"serde-std\""
+  - FEATURES="--no-default-features --features \"impl-index-from\""
+  - FEATURES="--no-default-features --features \"impl-index-from serde-alloc\""
+  - FEATURES="--no-default-features --features \"impl-index-from serde-std\""
+  - FEATURES="--all-features"
+
 branches:
   only:
     - master
@@ -21,69 +31,14 @@ before_script:
   - "! rustup default | grep -q \"stable\" || rustup component add clippy"
 
 script:
-  - cargo build --verbose
-  - cargo build --verbose --no-default-features
-  - cargo build --verbose --no-default-features --features "serde-alloc"
-  - cargo build --verbose --no-default-features --features "serde-std"
-  - cargo build --verbose --no-default-features --features "impl-index-from"
-  - cargo build --verbose --no-default-features --features "impl-index-from serde-alloc"
-  - cargo build --verbose --no-default-features --features "impl-index-from serde-std"
-  - cargo build --verbose --all-features
-  - cargo test --verbose
-  - cargo test --verbose --no-default-features
-  - cargo test --verbose --no-default-features --features "serde-alloc"
-  - cargo test --verbose --no-default-features --features "serde-std"
-  - cargo test --verbose --no-default-features --features "impl-index-from"
-  - cargo test --verbose --no-default-features --features "impl-index-from serde-alloc"
-  - cargo test --verbose --no-default-features --features "impl-index-from serde-std"
-  - cargo test --verbose --all-features
+  - eval "cargo build --verbose --all $FEATURES"
+  - eval "cargo test --verbose --all $FEATURES"
   - >-
-    ! rustup default | grep -q "stable" || cargo fmt -- --check
+    eval "[ \"$TRAVIS_RUST_VERSION\" != \"stable\" ] || [ \"$FEATURES\" != \"\" ]
+    || cargo fmt --all -- --check"
   - >-
-    ! rustup default | grep -q "stable" || cargo clippy
-    -- -D warnings
+    eval "[ \"$TRAVIS_RUST_VERSION\" != \"stable\" ]
+    || cargo clippy --all $FEATURES -- -D warnings"
   - >-
-    ! rustup default | grep -q "stable" || cargo clippy
-    --no-default-features -- -D warnings
-  - >-
-    ! rustup default | grep -q "stable" || cargo clippy
-    --no-default-features --features "serde-alloc" -- -D warnings
-  - >-
-    ! rustup default | grep -q "stable" || cargo clippy
-    --no-default-features --features "serde-std" -- -D warnings
-  - >-
-    ! rustup default | grep -q "stable" || cargo clippy
-    --no-default-features --features "impl-index-from" -- -D warnings
-  - >-
-    ! rustup default | grep -q "stable" || cargo clippy
-    --no-default-features --features "impl-index-from serde-alloc" -- -D warnings
-  - >-
-    ! rustup default | grep -q "stable" || cargo clippy
-    --no-default-features --features "impl-index-from serde-std" -- -D warnings
-  - >-
-    ! rustup default | grep -q "stable" || cargo clippy
-    --all-features -- -D warnings
-  - >-
-    ! rustup default | grep -q "stable" || cargo clippy --tests
-    -- -D warnings
-  - >-
-    ! rustup default | grep -q "stable" || cargo clippy --tests
-    --no-default-features -- -D warnings
-  - >-
-    ! rustup default | grep -q "stable" || cargo clippy --tests
-    --no-default-features --features "serde-alloc" -- -D warnings
-  - >-
-    ! rustup default | grep -q "stable" || cargo clippy --tests
-    --no-default-features --features "serde-std" -- -D warnings
-  - >-
-    ! rustup default | grep -q "stable" || cargo clippy --tests
-    --no-default-features --features "impl-index-from" -- -D warnings
-  - >-
-    ! rustup default | grep -q "stable" || cargo clippy --tests
-    --no-default-features --features "impl-index-from serde-alloc" -- -D warnings
-  - >-
-    ! rustup default | grep -q "stable" || cargo clippy --tests
-    --no-default-features --features "impl-index-from serde-std" -- -D warnings
-  - >-
-    ! rustup default | grep -q "stable" || cargo clippy --tests
-    --all-features -- -D warnings
+    eval "[ \"$TRAVIS_RUST_VERSION\" != \"stable\" ]
+    || cargo clippy --all --tests $FEATURES -- -D warnings"

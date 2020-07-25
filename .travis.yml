@@ -29,8 +29,8 @@ jobs:
   fast_finish: true
 
 before_script:
-  - "! rustup default | grep -q \"stable\" || rustup component add rustfmt"
-  - "! rustup default | grep -q \"stable\" || rustup component add clippy"
+  - "[ \"$TRAVIS_RUST_VERSION\" != \"stable\" ] || rustup component add rustfmt"
+  - "[ \"$TRAVIS_RUST_VERSION\" != \"stable\" ] || rustup component add clippy"
 
 script:
   - eval "cargo build --verbose --all $FEATURES"

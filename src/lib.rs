@@ -92,16 +92,13 @@
     //         ^^^^^^^^^^^^^^^^ the trait ... is not implemented for `main::BarId`
     ```
 
-    Another example with [`derive_more`]:
+    Another more detailed example with [`derive_more`]:
     ```rust
     use typed_index_collections::{TiSlice, TiVec};
     use derive_more::{From, Into};
 
     #[derive(Clone, Copy, Debug, From, Into, Eq, PartialEq)]
     struct FooId(usize);
-
-    #[derive(Clone, Copy, Debug, From, Into, Eq, PartialEq)]
-    struct BarId(usize);
 
     #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     struct Foo {
@@ -115,23 +112,19 @@
     let vec = std::vec![first, second];
     let boxed_slice = std::vec![first, second].into_boxed_slice();
 
-    let typed_index_slice_ref: &TiSlice<FooId, Foo> = slice_ref.into();
-    let typed_index_vec: TiVec<FooId, Foo> = vec.into();
-    let typed_index_boxed_slice: std::boxed::Box<TiSlice<FooId, Foo>> = boxed_slice.into();
+    let ti_slice_ref: &TiSlice<FooId, Foo> = slice_ref.into();
+    let ti_vec: TiVec<FooId, Foo> = vec.into();
+    let ti_boxed_slice: std::boxed::Box<TiSlice<FooId, Foo>> = boxed_slice.into();
 
-    assert_eq!(typed_index_vec[FooId(1)], second);
-    // assert_eq!(typed_index_vec[BarId(1)], second); // won't compile with incompable index
-    assert_eq!(typed_index_vec.raw[1], second);
-    assert_eq!(typed_index_vec.last(), Some(&second));
-    assert_eq!(typed_index_vec.last_key_value(), Some((FooId(1), &second)));
-    assert_eq!(
-        typed_index_vec.iter_enumerated().next(),
-        Some((FooId(0), &first))
-    );
+    assert_eq!(ti_vec[FooId(1)], second);
+    assert_eq!(ti_vec.raw[1], second);
+    assert_eq!(ti_vec.last(), Some(&second));
+    assert_eq!(ti_vec.last_key_value(), Some((FooId(1), &second)));
+    assert_eq!(ti_vec.iter_enumerated().next(), Some((FooId(0), &first)));
 
-    let _slice_ref: &[Foo] = typed_index_slice_ref.into();
-    let _vec: std::vec::Vec<Foo> = typed_index_vec.into();
-    let _boxed_slice: std::boxed::Box<[Foo]> = typed_index_boxed_slice.into();
+    let _slice_ref: &[Foo] = ti_slice_ref.into();
+    let _vec: std::vec::Vec<Foo> = ti_vec.into();
+    let _boxed_slice: std::boxed::Box<[Foo]> = ti_boxed_slice.into();
     ```
 "#
 )]

@@ -73,9 +73,28 @@ use derive_more::{From, Into};
 #[derive(From, Into)]
 struct FooId(usize);
 
-let mut foos: TiVec<FooId, usize> = std::vec![10, 11, 13].into();
-foos.insert(FooId(2), 12);
-assert_eq!(foos[FooId(2)], 12);
+let mut ti_vec: TiVec<FooId, usize> = std::vec![10, 11, 13].into();
+ti_vec.insert(FooId(2), 12);
+assert_eq!(ti_vec[FooId(2)], 12);
+```
+
+If a wrong index type is used, compilation will fail:
+```rust
+use typed_index_collections::TiVec;
+use derive_more::{From, Into};
+
+#[derive(From, Into)]
+struct FooId(usize);
+
+#[derive(From, Into)]
+struct BarId(usize);
+
+let mut ti_vec: TiVec<FooId, usize> = std::vec![10, 11, 13].into();
+
+ti_vec.insert(BarId(2), 12);
+//            ^^^^^^^^ expected struct `FooId`, found struct `BarId`
+assert_eq!(ti_vec[BarId(2)], 12);
+//         ^^^^^^^^^^^^^^^^ the trait ... is not implemented for `main::BarId`
 ```
 
 Another example with [`derive_more`]:
@@ -106,6 +125,7 @@ let typed_index_vec: TiVec<FooId, Foo> = vec.into();
 let typed_index_boxed_slice: std::boxed::Box<TiSlice<FooId, Foo>> = boxed_slice.into();
 
 assert_eq!(typed_index_vec[FooId(1)], second);
+// assert_eq!(typed_index_vec[BarId(1)], second); // won't compile with incompable index
 assert_eq!(typed_index_vec.raw[1], second);
 assert_eq!(typed_index_vec.last(), Some(&second));
 assert_eq!(typed_index_vec.last_key_value(), Some((FooId(1), &second)));
@@ -113,7 +133,6 @@ assert_eq!(
     typed_index_vec.iter_enumerated().next(),
     Some((FooId(0), &first))
 );
-// assert_eq!(vec[BarId(1)], second); // won't compile with incompable index
 
 let _slice_ref: &[Foo] = typed_index_slice_ref.into();
 let _vec: std::vec::Vec<Foo> = typed_index_vec.into();

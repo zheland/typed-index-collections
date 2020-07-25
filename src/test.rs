@@ -1,5 +1,4 @@
-// This module is used only for tests
-// TODO: More verbose
+// This module is used only for tests.
 
 #[cfg(any(feature = "alloc", feature = "std"))]
 use alloc::{boxed::Box, vec::Vec};

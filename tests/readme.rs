@@ -91,11 +91,14 @@ fn test_readme_docs_sync() {
                     .map(|line| (j, line))
             })
             .filter_map(|(j, line)| {
-                if line.starts_with("```") {
+                if line == "```compile_fail" {
+                    is_code_block = true;
+                    Some((LibRsDocsLine::No(j + 1), "```rust".to_string()))
+                } else if line.starts_with("```") {
                     is_code_block = !is_code_block;
                     Some((LibRsDocsLine::No(j + 1), line.to_string()))
                 } else if is_code_block {
-                    if line.starts_with("# ") {
+                    if line.starts_with("# ") || line == "#" {
                         None // Skip hidden code blocks parts
                     } else {
                         Some((LibRsDocsLine::No(j + 1), line.to_string()))

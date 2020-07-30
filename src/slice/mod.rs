@@ -2065,6 +2065,29 @@ mod test {
     }
 
     #[test]
+    fn no_std_u8_api_compatibility() {
+        for_in!(
+            for arr in [*b"abc", *b"aBc", *b"ABC", *b"abd", *b"\x80\x81"] {
+                assert_eq_api!(arr => |&arr| arr.into_t().is_ascii());
+                assert_eq_api!(arr => |&arr| arr.into_t().eq_ignore_ascii_case(b"aBc".into_t()));
+                assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t().make_ascii_uppercase());
+                assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t().make_ascii_lowercase());
+            }
+        );
+    }
+
+    #[cfg(any(feature = "alloc", feature = "std"))]
+    #[test]
+    fn std_u8_api_compatibility() {
+        for_in!(
+            for arr in [*b"abc", *b"aBc", *b"ABC", *b"abd", *b"\x80\x81"] {
+                assert_eq_api!(arr => |&arr| arr.into_t().to_ascii_uppercase().into_t());
+                assert_eq_api!(arr => |&arr| arr.into_t().to_ascii_lowercase().into_t());
+            }
+        );
+    }
+
+    #[test]
     fn no_std_trait_api_compatibility() {
         use core::slice::IterMut;
         for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {

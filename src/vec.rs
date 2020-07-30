@@ -115,7 +115,7 @@ pub struct TiVec<K, V> {
 impl<K, V> TiVec<K, V> {
     /// Constructs a new, empty `TiVec<K, V>`.
     ///
-    /// See [`Vec::new`].
+    /// See [`Vec::new`] for more details.
     ///
     /// [`Vec::new`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.new
     #[inline]
@@ -128,7 +128,7 @@ impl<K, V> TiVec<K, V> {
 
     /// Constructs a new, empty `TiVec<K, V>` with the specified capacity.
     ///
-    /// See [`Vec::with_capacity`].
+    /// See [`Vec::with_capacity`] for more details.
     ///
     /// [`Vec::with_capacity`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.with_capacity
     #[inline]
@@ -141,7 +141,7 @@ impl<K, V> TiVec<K, V> {
 
     /// Creates a `TiVec<K, V>` directly from the raw components of another vector.
     ///
-    /// See [`Vec::from_raw_parts`].
+    /// See [`Vec::from_raw_parts`] for more details.
     ///
     /// [`Vec::from_raw_parts`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.from_raw_parts
     #[allow(clippy::missing_safety_doc)]
@@ -192,7 +192,7 @@ impl<K, V> TiVec<K, V> {
     /// Returns the number of elements the vector can hold without
     /// reallocating.
     ///
-    /// See [`Vec::capacity`].
+    /// See [`Vec::capacity`] for more details.
     ///
     /// [`Vec::capacity`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.capacity
     #[inline]
@@ -206,7 +206,7 @@ impl<K, V> TiVec<K, V> {
     /// greater than or equal to `self.len() + additional`. Does nothing if
     /// capacity is already sufficient.
     ///
-    /// See [`Vec::reserve`].
+    /// See [`Vec::reserve`] for more details.
     ///
     /// [`Vec::reserve`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.reserve
     pub fn reserve(&mut self, additional: usize) {
@@ -218,7 +218,7 @@ impl<K, V> TiVec<K, V> {
     /// capacity will be greater than or equal to `self.len() + additional`.
     /// Does nothing if the capacity is already sufficient.
     ///
-    /// See [`Vec::reserve_exact`].
+    /// See [`Vec::reserve_exact`] for more details.
     ///
     /// [`Vec::reserve_exact`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.reserve_exact
     pub fn reserve_exact(&mut self, additional: usize) {
@@ -227,7 +227,7 @@ impl<K, V> TiVec<K, V> {
 
     /// Shrinks the capacity of the vector as much as possible.
     ///
-    /// See [`Vec::shrink_to_fit`].
+    /// See [`Vec::shrink_to_fit`] for more details.
     ///
     /// [`Vec::shrink_to_fit`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.shrink_to_fit
     pub fn shrink_to_fit(&mut self) {
@@ -236,7 +236,7 @@ impl<K, V> TiVec<K, V> {
 
     /// Converts the vector into [`Box<TiSlice<K, V>>`][`Box`].
     ///
-    /// See [`Vec::into_boxed_slice`].
+    /// See [`Vec::into_boxed_slice`] for more details.
     ///
     /// [`Vec::into_boxed_slice`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.into_boxed_slice
     /// [`Box`]: https://doc.rust-lang.org/std/boxed/struct.Box.html
@@ -247,7 +247,7 @@ impl<K, V> TiVec<K, V> {
     /// Shortens the vector, keeping the first `len` elements and dropping
     /// the rest.
     ///
-    /// See [`Vec::truncate`].
+    /// See [`Vec::truncate`] for more details.
     ///
     /// [`Vec::truncate`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.truncate
     pub fn truncate(&mut self, len: usize) {
@@ -256,7 +256,7 @@ impl<K, V> TiVec<K, V> {
 
     /// Extracts a slice containing the entire vector.
     ///
-    /// See [`Vec::as_slice`].
+    /// See [`Vec::as_slice`] for more details.
     ///
     /// [`Vec::as_slice`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.as_slice
     #[inline]
@@ -266,7 +266,7 @@ impl<K, V> TiVec<K, V> {
 
     /// Extracts a mutable slice of the entire vector.
     ///
-    /// See [`Vec::as_mut_slice`].
+    /// See [`Vec::as_mut_slice`] for more details.
     ///
     /// [`Vec::as_mut_slice`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.as_mut_slice
     #[inline]
@@ -276,7 +276,7 @@ impl<K, V> TiVec<K, V> {
 
     /// Returns a raw pointer to the vector's buffer.
     ///
-    /// See [`Vec::as_ptr`].
+    /// See [`Vec::as_ptr`] for more details.
     ///
     /// [`Vec::as_ptr`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.as_ptr
     #[inline]
@@ -286,7 +286,7 @@ impl<K, V> TiVec<K, V> {
 
     /// Returns an unsafe mutable pointer to the vector's buffer.
     ///
-    /// See [`Vec::as_mut_ptr`].
+    /// See [`Vec::as_mut_ptr`] for more details.
     ///
     /// [`Vec::as_mut_ptr`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.as_mut_ptr
     #[inline]
@@ -296,7 +296,7 @@ impl<K, V> TiVec<K, V> {
 
     /// Forces the length of the vector to `new_len`.
     ///
-    /// See [`Vec::set_len`].
+    /// See [`Vec::set_len`] for more details.
     ///
     /// [`Vec::set_len`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.set_len
     #[allow(clippy::missing_safety_doc)]
@@ -309,7 +309,7 @@ impl<K, V> TiVec<K, V> {
     ///
     /// The removed element is replaced by the last element of the vector.
     ///
-    /// See [`Vec::swap_remove`].
+    /// See [`Vec::swap_remove`] for more details.
     ///
     /// [`Vec::swap_remove`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.swap_remove
     #[inline]
@@ -323,7 +323,7 @@ impl<K, V> TiVec<K, V> {
     /// Inserts an element at position `index` within the vector, shifting all
     /// elements after it to the right.
     ///
-    /// See [`Vec::insert`].
+    /// See [`Vec::insert`] for more details.
     ///
     /// [`Vec::insert`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.insert
     pub fn insert(&mut self, index: K, element: V)
@@ -336,7 +336,7 @@ impl<K, V> TiVec<K, V> {
     /// Removes and returns the element at position `index` within the vector,
     /// shifting all elements after it to the left.
     ///
-    /// See [`Vec::remove`].
+    /// See [`Vec::remove`] for more details.
     ///
     /// [`Vec::remove`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.remove
     pub fn remove(&mut self, index: K) -> V
@@ -348,7 +348,7 @@ impl<K, V> TiVec<K, V> {
 
     /// Retains only the elements specified by the predicate.
     ///
-    /// See [`Vec::retain`].
+    /// See [`Vec::retain`] for more details.
     ///
     /// [`Vec::retain`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.retain
     pub fn retain<F>(&mut self, f: F)
@@ -361,7 +361,7 @@ impl<K, V> TiVec<K, V> {
     /// Removes all but the first of consecutive elements in the vector that resolve to the same
     /// key.
     ///
-    /// See [`Vec::dedup_by_key`].
+    /// See [`Vec::dedup_by_key`] for more details.
     ///
     /// [`Vec::dedup_by_key`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.dedup_by_key
     #[inline]
@@ -376,7 +376,7 @@ impl<K, V> TiVec<K, V> {
     /// Removes all but the first of consecutive elements in the vector satisfying a given equality
     /// relation.
     ///
-    /// See [`Vec::dedup_by`].
+    /// See [`Vec::dedup_by`] for more details.
     ///
     /// [`Vec::dedup_by`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.dedup_by
     pub fn dedup_by<F>(&mut self, same_bucket: F)
@@ -388,7 +388,7 @@ impl<K, V> TiVec<K, V> {
 
     /// Appends an element to the back of a collection.
     ///
-    /// See [`Vec::push`].
+    /// See [`Vec::push`] for more details.
     ///
     /// [`Vec::push`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.push
     #[inline]
@@ -402,7 +402,7 @@ impl<K, V> TiVec<K, V> {
     /// because it is not well optimized and generates an unreachable panic call.
     /// This function uses [`slice::next_key`] instead.
     ///
-    /// See [`Vec::push`].
+    /// See [`Vec::push`] for more details.
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
@@ -436,7 +436,7 @@ impl<K, V> TiVec<K, V> {
     /// Removes the last element from a vector and returns it, or [`None`] if it
     /// is empty.
     ///
-    /// See [`Vec::pop`].
+    /// See [`Vec::pop`] for more details.
     ///
     /// [`Vec::pop`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.pop
     #[inline]
@@ -447,7 +447,7 @@ impl<K, V> TiVec<K, V> {
     /// Removes the last element from a vector and returns it with
     /// its index of type `K`, or [`None`] if the vector is empty.
     ///
-    /// See [`Vec::pop`].
+    /// See [`Vec::pop`] for more details.
     ///
     /// [`Vec::pop`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.pop
     #[cfg_attr(
@@ -483,7 +483,7 @@ impl<K, V> TiVec<K, V> {
 
     /// Moves all the elements of `other` into `Self`, leaving `other` empty.
     ///
-    /// See [`Vec::append`].
+    /// See [`Vec::append`] for more details.
     ///
     /// [`Vec::append`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.append
     #[inline]
@@ -494,7 +494,7 @@ impl<K, V> TiVec<K, V> {
     /// Creates a draining iterator that removes the specified range in the vector
     /// and yields the removed items.
     ///
-    /// See [`Vec::drain`].
+    /// See [`Vec::drain`] for more details.
     ///
     /// [`Vec::drain`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.drain
     pub fn drain<R>(&mut self, range: R) -> Drain<'_, V>
@@ -513,7 +513,7 @@ impl<K, V> TiVec<K, V> {
     /// Note that the indices started from `K::from_usize(0)`,
     /// regardless of the range starting point.
     ///
-    /// See [`Vec::drain`].
+    /// See [`Vec::drain`] for more details.
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
@@ -552,7 +552,7 @@ impl<K, V> TiVec<K, V> {
 
     /// Clears the vector, removing all values.
     ///
-    /// See [`Vec::clear`].
+    /// See [`Vec::clear`] for more details.
     ///
     /// [`Vec::clear`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.clear
     #[inline]
@@ -563,7 +563,7 @@ impl<K, V> TiVec<K, V> {
     /// Returns the number of elements in the vector, also referred to
     /// as its 'length'.
     ///
-    /// See [`Vec::len`].
+    /// See [`Vec::len`] for more details.
     ///
     /// [`Vec::len`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.len
     #[inline]
@@ -573,7 +573,7 @@ impl<K, V> TiVec<K, V> {
 
     /// Returns `true` if the vector contains no elements.
     ///
-    /// See [`Vec::is_empty`].
+    /// See [`Vec::is_empty`] for more details.
     ///
     /// [`Vec::is_empty`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.is_empty
     pub fn is_empty(&self) -> bool {
@@ -582,7 +582,7 @@ impl<K, V> TiVec<K, V> {
 
     /// Splits the collection into two at the given index.
     ///
-    /// See [`Vec::split_off`].
+    /// See [`Vec::split_off`] for more details.
     ///
     /// [`Vec::split_off`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.split_off
     #[inline]
@@ -596,7 +596,7 @@ impl<K, V> TiVec<K, V> {
 
     /// Resizes the `TiVec` in-place so that `len` is equal to `new_len`.
     ///
-    /// See [`Vec::resize_with`].
+    /// See [`Vec::resize_with`] for more details.
     ///
     /// [`Vec::resize_with`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.resize_with
     pub fn resize_with<F>(&mut self, new_len: usize, f: F)
@@ -608,7 +608,7 @@ impl<K, V> TiVec<K, V> {
 
     /// Resizes the `TiVec` in-place so that `len` is equal to `new_len`.
     ///
-    /// See [`Vec::resize`].
+    /// See [`Vec::resize`] for more details.
     ///
     /// [`Vec::resize`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.resize
     pub fn resize(&mut self, new_len: usize, value: V)
@@ -620,7 +620,7 @@ impl<K, V> TiVec<K, V> {
 
     /// Clones and appends all elements in a slice to the `TiVec`.
     ///
-    /// See [`Vec::extend_from_slice`].
+    /// See [`Vec::extend_from_slice`] for more details.
     ///
     /// [`Vec::extend_from_slice`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.extend_from_slice
     pub fn extend_from_slice(&mut self, other: &TiSlice<K, V>)
@@ -633,7 +633,7 @@ impl<K, V> TiVec<K, V> {
     /// Removes consecutive repeated elements in the vector according to the
     /// [`PartialEq`] trait implementation.
     ///
-    /// See [`Vec::dedup`].
+    /// See [`Vec::dedup`] for more details.
     ///
     /// [`PartialEq`]: https://doc.rust-lang.org/std/cmp/trait.PartialEq.html
     /// [`Vec::dedup`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.dedup
@@ -649,7 +649,7 @@ impl<K, V> TiVec<K, V> {
     /// with the given `replace_with` iterator and yields the removed items.
     /// `replace_with` does not need to be the same length as `range`.
     ///
-    /// See [`Vec::splice`].
+    /// See [`Vec::splice`] for more details.
     ///
     /// [`Vec::splice`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.splice
     #[inline]

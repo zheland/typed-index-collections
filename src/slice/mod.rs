@@ -200,7 +200,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Returns the number of elements in the slice.
     ///
-    /// See [`slice::len`].
+    /// See [`slice::len`] for more details.
     ///
     /// [`slice::len`]: https://doc.rust-lang.org/std/primitive.slice.html#method.len
     #[inline]
@@ -236,7 +236,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Returns `true` if the slice has a length of 0.
     ///
-    /// See [`slice::is_empty`].
+    /// See [`slice::is_empty`] for more details.
     ///
     /// [`slice::is_empty`]: https://doc.rust-lang.org/std/primitive.slice.html#method.is_empty
     #[inline]
@@ -274,7 +274,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Returns the first element of the slice, or `None` if it is empty.
     ///
-    /// See [`slice::first`].
+    /// See [`slice::first`] for more details.
     ///
     /// [`slice::first`]: https://doc.rust-lang.org/std/primitive.slice.html#method.first
     #[inline]
@@ -284,7 +284,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Returns a mutable reference to the first element of the slice, or `None` if it is empty.
     ///
-    /// See [`slice::first_mut`].
+    /// See [`slice::first_mut`] for more details.
     ///
     /// [`slice::first_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.first_mut
     #[inline]
@@ -326,7 +326,7 @@ impl<K, V> TiSlice<K, V> {
     /// Returns the first slice element index of type `K` and the element itself,
     /// or `None` if the slice is empty.
     ///
-    /// See [`slice::first`].
+    /// See [`slice::first`] for more details.
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
@@ -358,7 +358,7 @@ impl<K, V> TiSlice<K, V> {
     /// Returns the first slice element index of type `K` and a mutable reference
     /// to the element itself, or `None` if the slice is empty.
     ///
-    /// See [`slice::first_mut`].
+    /// See [`slice::first_mut`] for more details.
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
@@ -394,7 +394,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Returns the first and all the rest of the elements of the slice, or `None` if it is empty.
     ///
-    /// See [`slice::split_first`].
+    /// See [`slice::split_first`] for more details.
     ///
     /// [`slice::split_first`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_first
     #[inline]
@@ -406,7 +406,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Returns the first and all the rest of the elements of the slice, or `None` if it is empty.
     ///
-    /// See [`slice::split_first_mut`].
+    /// See [`slice::split_first_mut`] for more details.
     ///
     /// [`slice::split_first_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_first_mut
     #[inline]
@@ -418,7 +418,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Returns the last and all the rest of the elements of the slice, or `None` if it is empty.
     ///
-    /// See [`slice::split_last`].
+    /// See [`slice::split_last`] for more details.
     ///
     /// [`slice::split_last`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_last
     #[inline]
@@ -430,7 +430,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Returns the last and all the rest of the elements of the slice, or `None` if it is empty.
     ///
-    /// See [`slice::split_last_mut`].
+    /// See [`slice::split_last_mut`] for more details.
     ///
     /// [`slice::split_last_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_last_mut
     #[inline]
@@ -442,7 +442,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Returns the last element of the slice of type `K`, or `None` if it is empty.
     ///
-    /// See [`slice::last`].
+    /// See [`slice::last`] for more details.
     ///
     /// [`slice::last`]: https://doc.rust-lang.org/std/primitive.slice.html#method.last
     #[inline]
@@ -452,7 +452,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Returns a mutable reference to the last item in the slice.
     ///
-    /// See [`slice::last_mut`].
+    /// See [`slice::last_mut`] for more details.
     ///
     /// [`slice::last_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.last_mut
     #[inline]
@@ -494,7 +494,7 @@ impl<K, V> TiSlice<K, V> {
     /// Returns the last slice element index of type `K` and the element itself,
     /// or `None` if the slice is empty.
     ///
-    /// See [`slice::last`].
+    /// See [`slice::last`] for more details.
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
@@ -529,7 +529,7 @@ impl<K, V> TiSlice<K, V> {
     /// Returns the last slice element index of type `K` and a mutable reference
     /// to the element itself, or `None` if the slice is empty.
     ///
-    /// See [`slice::last_mut`].
+    /// See [`slice::last_mut`] for more details.
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
@@ -567,7 +567,7 @@ impl<K, V> TiSlice<K, V> {
     /// Returns a reference to an element or subslice
     /// depending on the type of index or `None` if the index is out of bounds.
     ///
-    /// See [`slice::get`].
+    /// See [`slice::get`] for more details.
     ///
     /// [`slice::get`]: https://doc.rust-lang.org/std/primitive.slice.html#method.get
     #[inline]
@@ -581,7 +581,7 @@ impl<K, V> TiSlice<K, V> {
     /// Returns a mutable reference to an element or subslice
     /// depending on the type of index or `None` if the index is out of bounds.
     ///
-    /// See [`slice::get_mut`].
+    /// See [`slice::get_mut`] for more details.
     ///
     /// [`slice::get_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.get_mut
     #[inline]
@@ -600,7 +600,7 @@ impl<K, V> TiSlice<K, V> {
     /// even if the resulting reference is not used.
     /// For a safe alternative see [`get`].
     ///
-    /// See [`slice::get_unchecked`].
+    /// See [`slice::get_unchecked`] for more details.
     ///
     /// [`get`]: #method.get
     /// [`slice::get_unchecked`]: https://doc.rust-lang.org/std/primitive.slice.html#method.get_unchecked
@@ -622,7 +622,7 @@ impl<K, V> TiSlice<K, V> {
     /// even if the resulting reference is not used.
     /// For a safe alternative see [`get_mut`].
     ///
-    /// See [`slice::get_unchecked_mut`].
+    /// See [`slice::get_unchecked_mut`] for more details.
     ///
     /// [`get_mut`]: #method.get_mut
     /// [`slice::get_unchecked_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.get_unchecked_mut
@@ -638,7 +638,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Returns a raw pointer to the slice's buffer.
     ///
-    /// See [`slice::as_ptr`].
+    /// See [`slice::as_ptr`] for more details.
     ///
     /// [`slice::as_ptr`]: https://doc.rust-lang.org/std/primitive.slice.html#method.as_ptr
     #[inline]
@@ -648,7 +648,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Returns an unsafe mutable reference to the slice's buffer.
     ///
-    /// See [`slice::as_mut_ptr`].
+    /// See [`slice::as_mut_ptr`] for more details.
     ///
     /// [`slice::as_mut_ptr`]: https://doc.rust-lang.org/std/primitive.slice.html#method.as_mut_ptr
     #[inline]
@@ -658,7 +658,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Swaps two elements in the slice.
     ///
-    /// See [`slice::swap`].
+    /// See [`slice::swap`] for more details.
     ///
     /// [`slice::swap`]: https://doc.rust-lang.org/std/primitive.slice.html#method.swap
     #[inline]
@@ -671,7 +671,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Reverses the order of elements in the slice, in place.
     ///
-    /// See [`slice::reverse`].
+    /// See [`slice::reverse`] for more details.
     ///
     /// [`slice::reverse`]: https://doc.rust-lang.org/std/primitive.slice.html#method.reverse
     #[inline]
@@ -681,7 +681,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Returns an iterator over the slice.
     ///
-    /// See [`slice::iter`].
+    /// See [`slice::iter`] for more details.
     ///
     /// [`slice::iter`]: https://doc.rust-lang.org/std/primitive.slice.html#method.iter
     #[inline]
@@ -694,7 +694,7 @@ impl<K, V> TiSlice<K, V> {
     /// It acts like `self.iter().enumerate()`,
     /// but use `K` instead of `usize` for iteration indices.
     ///
-    /// See [`slice::iter`].
+    /// See [`slice::iter`] for more details.
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
@@ -730,7 +730,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Returns an iterator that allows modifying each value.
     ///
-    /// See [`slice::iter_mut`].
+    /// See [`slice::iter_mut`] for more details.
     ///
     /// [`slice::iter_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.iter_mut
     #[inline]
@@ -780,7 +780,7 @@ impl<K, V> TiSlice<K, V> {
     /// It acts like `self.iter().position(...)`,
     /// but instead of `usize` it returns index of type `K`.
     ///
-    /// See [`slice::iter`] and [`Iterator::position`].
+    /// See [`slice::iter`] and [`Iterator::position`] for more details.
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
@@ -817,7 +817,7 @@ impl<K, V> TiSlice<K, V> {
     /// It acts like `self.iter().rposition(...)`,
     /// but instead of `usize` it returns index of type `K`.
     ///
-    /// See [`slice::iter`] and [`Iterator::position`].
+    /// See [`slice::iter`] and [`Iterator::position`] for more details.
     #[cfg_attr(
         feature = "impl-index-from",
         doc = r#"
@@ -853,7 +853,7 @@ impl<K, V> TiSlice<K, V> {
     /// `size`. The windows overlap. If the slice is shorter than
     /// `size`, the iterator returns no values.
     ///
-    /// See [`slice::windows`].
+    /// See [`slice::windows`] for more details.
     ///
     /// [`slice::windows`]: https://doc.rust-lang.org/std/primitive.slice.html#method.windows
     #[inline]
@@ -864,7 +864,7 @@ impl<K, V> TiSlice<K, V> {
     /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the
     /// beginning of the slice.
     ///
-    /// See [`slice::chunks`].
+    /// See [`slice::chunks`] for more details.
     ///
     /// [`slice::chunks`]: https://doc.rust-lang.org/std/primitive.slice.html#method.chunks
     #[inline]
@@ -875,7 +875,7 @@ impl<K, V> TiSlice<K, V> {
     /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the
     /// beginning of the slice.
     ///
-    /// See [`slice::chunks_mut`].
+    /// See [`slice::chunks_mut`] for more details.
     ///
     /// [`slice::chunks_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.chunks_mut
     #[inline]
@@ -886,7 +886,7 @@ impl<K, V> TiSlice<K, V> {
     /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the
     /// beginning of the slice.
     ///
-    /// See [`slice::chunks_exact`].
+    /// See [`slice::chunks_exact`] for more details.
     ///
     /// [`slice::chunks_exact`]: https://doc.rust-lang.org/std/primitive.slice.html#method.chunks_exact
     #[inline]
@@ -897,7 +897,7 @@ impl<K, V> TiSlice<K, V> {
     /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the
     /// beginning of the slice.
     ///
-    /// See [`slice::chunks_exact_mut`].
+    /// See [`slice::chunks_exact_mut`] for more details.
     ///
     /// [`slice::chunks_exact_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.chunks_exact_mut
     #[inline]
@@ -911,7 +911,7 @@ impl<K, V> TiSlice<K, V> {
     /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the end
     /// of the slice.
     ///
-    /// See [`slice::rchunks`].
+    /// See [`slice::rchunks`] for more details.
     ///
     /// [`slice::rchunks`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rchunks
     #[inline]
@@ -922,7 +922,7 @@ impl<K, V> TiSlice<K, V> {
     /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the end
     /// of the slice.
     ///
-    /// See [`slice::rchunks_mut`].
+    /// See [`slice::rchunks_mut`] for more details.
     ///
     /// [`slice::rchunks_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rchunks_mut
     #[inline]
@@ -933,7 +933,7 @@ impl<K, V> TiSlice<K, V> {
     /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the
     /// end of the slice.
     ///
-    /// See [`slice::rchunks_exact`].
+    /// See [`slice::rchunks_exact`] for more details.
     ///
     /// [`slice::rchunks_exact`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rchunks_exact
     #[inline]
@@ -944,7 +944,7 @@ impl<K, V> TiSlice<K, V> {
     /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the end
     /// of the slice.
     ///
-    /// See [`slice::rchunks_exact_mut`].
+    /// See [`slice::rchunks_exact_mut`] for more details.
     ///
     /// [`slice::rchunks_exact_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rchunks_exact_mut
     #[inline]
@@ -959,7 +959,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Divides one slice into two at an index.
     ///
-    /// See [`slice::split_at`].
+    /// See [`slice::split_at`] for more details.
     ///
     /// [`slice::split_at`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_at
     #[inline]
@@ -973,7 +973,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Divides one mutable slice into two at an index.
     ///
-    /// See [`slice::split_at_mut`].
+    /// See [`slice::split_at_mut`] for more details.
     ///
     /// [`slice::split_at_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_at_mut
     #[inline]
@@ -988,7 +988,7 @@ impl<K, V> TiSlice<K, V> {
     /// Returns an iterator over subslices separated by elements that match
     /// `pred`. The matched element is not contained in the subslices.
     ///
-    /// See [`slice::split`].
+    /// See [`slice::split`] for more details.
     ///
     /// [`slice::split`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split
     #[inline]
@@ -1002,7 +1002,7 @@ impl<K, V> TiSlice<K, V> {
     /// Returns an iterator over mutable subslices separated by elements that
     /// match `pred`. The matched element is not contained in the subslices.
     ///
-    /// See [`slice::split_mut`].
+    /// See [`slice::split_mut`] for more details.
     ///
     /// [`slice::split_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_mut
     #[inline]
@@ -1017,7 +1017,7 @@ impl<K, V> TiSlice<K, V> {
     /// `pred`, starting at the end of the slice and working backwards.
     /// The matched element is not contained in the subslices.
     ///
-    /// See [`slice::rsplit`].
+    /// See [`slice::rsplit`] for more details.
     ///
     /// [`slice::rsplit`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rsplit
     #[inline]
@@ -1032,7 +1032,7 @@ impl<K, V> TiSlice<K, V> {
     /// match `pred`, starting at the end of the slice and working
     /// backwards. The matched element is not contained in the subslices.
     ///
-    /// See [`slice::rsplit_mut`].
+    /// See [`slice::rsplit_mut`] for more details.
     ///
     /// [`slice::rsplit_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rsplit_mut
     #[inline]
@@ -1047,7 +1047,7 @@ impl<K, V> TiSlice<K, V> {
     /// `pred`, limited to returning at most `n` items. The matched element is
     /// not contained in the subslices.
     ///
-    /// See [`slice::splitn`].
+    /// See [`slice::splitn`] for more details.
     ///
     /// [`slice::splitn`]: https://doc.rust-lang.org/std/primitive.slice.html#method.splitn
     #[inline]
@@ -1062,7 +1062,7 @@ impl<K, V> TiSlice<K, V> {
     /// `pred`, limited to returning at most `n` items. The matched element is
     /// not contained in the subslices.
     ///
-    /// See [`slice::splitn_mut`].
+    /// See [`slice::splitn_mut`] for more details.
     ///
     /// [`slice::splitn_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.splitn_mut
     #[inline]
@@ -1078,7 +1078,7 @@ impl<K, V> TiSlice<K, V> {
     /// the slice and works backwards. The matched element is not contained in
     /// the subslices.
     ///
-    /// See [`slice::rsplitn`].
+    /// See [`slice::rsplitn`] for more details.
     ///
     /// [`slice::rsplitn`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rsplitn
     #[inline]
@@ -1094,7 +1094,7 @@ impl<K, V> TiSlice<K, V> {
     /// the slice and works backwards. The matched element is not contained in
     /// the subslices.
     ///
-    /// See [`slice::rsplitn_mut`].
+    /// See [`slice::rsplitn_mut`] for more details.
     ///
     /// [`slice::rsplitn_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rsplitn_mut
     #[inline]
@@ -1107,7 +1107,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Returns `true` if the slice contains an element with the given value.
     ///
-    /// See [`slice::contains`].
+    /// See [`slice::contains`] for more details.
     ///
     /// [`slice::contains`]: https://doc.rust-lang.org/std/primitive.slice.html#method.contains
     pub fn contains(&self, x: &V) -> bool
@@ -1119,7 +1119,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Returns `true` if `needle` is a prefix of the slice.
     ///
-    /// See [`slice::starts_with`].
+    /// See [`slice::starts_with`] for more details.
     ///
     /// [`slice::starts_with`]: https://doc.rust-lang.org/std/primitive.slice.html#method.starts_with
     pub fn starts_with(&self, needle: &Self) -> bool
@@ -1131,7 +1131,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Returns `true` if `needle` is a suffix of the slice.
     ///
-    /// See [`slice::ends_with`].
+    /// See [`slice::ends_with`] for more details.
     ///
     /// [`slice::ends_with`]: https://doc.rust-lang.org/std/primitive.slice.html#method.ends_with
     pub fn ends_with(&self, needle: &Self) -> bool
@@ -1143,7 +1143,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Binary searches this sorted slice for a given element.
     ///
-    /// See [`slice::binary_search`].
+    /// See [`slice::binary_search`] for more details.
     ///
     /// [`slice::binary_search`]: https://doc.rust-lang.org/std/primitive.slice.html#method.binary_search
     pub fn binary_search(&self, x: &V) -> Result<K, K>
@@ -1159,7 +1159,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Binary searches this sorted slice with a comparator function.
     ///
-    /// See [`slice::binary_search_by`].
+    /// See [`slice::binary_search_by`] for more details.
     ///
     /// [`slice::binary_search_by`]: https://doc.rust-lang.org/std/primitive.slice.html#method.binary_search_by
     #[inline]
@@ -1176,7 +1176,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Binary searches this sorted slice with a key extraction function.
     ///
-    /// See [`slice::binary_search_by_key`].
+    /// See [`slice::binary_search_by_key`] for more details.
     ///
     /// [`slice::binary_search_by_key`]: https://doc.rust-lang.org/std/primitive.slice.html#method.binary_search_by_key
     #[inline]
@@ -1194,7 +1194,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Sorts the slice, but may not preserve the order of equal elements.
     ///
-    /// See [`slice::sort_unstable`].
+    /// See [`slice::sort_unstable`] for more details.
     ///
     /// [`slice::sort_unstable`]: https://doc.rust-lang.org/std/primitive.slice.html#method.sort_unstable
     #[inline]
@@ -1208,7 +1208,7 @@ impl<K, V> TiSlice<K, V> {
     /// Sorts the slice with a comparator function, but may not preserve the order of equal
     /// elements.
     ///
-    /// See [`slice::sort_unstable_by`].
+    /// See [`slice::sort_unstable_by`] for more details.
     ///
     /// [`slice::sort_unstable_by`]: https://doc.rust-lang.org/std/primitive.slice.html#method.sort_unstable_by
     #[inline]
@@ -1222,7 +1222,7 @@ impl<K, V> TiSlice<K, V> {
     /// Sorts the slice with a key extraction function, but may not preserve the order of equal
     /// elements.
     ///
-    /// See [`slice::sort_unstable_by_key`].
+    /// See [`slice::sort_unstable_by_key`] for more details.
     ///
     /// [`slice::sort_unstable_by_key`]: https://doc.rust-lang.org/std/primitive.slice.html#method.sort_unstable_by_key
     #[inline]
@@ -1239,7 +1239,7 @@ impl<K, V> TiSlice<K, V> {
     /// the front. After calling `rotate_left`, the element previously at index
     /// `mid` will become the first element in the slice.
     ///
-    /// See [`slice::rotate_left`].
+    /// See [`slice::rotate_left`] for more details.
     ///
     /// [`slice::rotate_left`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rotate_left
     pub fn rotate_left(&mut self, mid: K)
@@ -1254,7 +1254,7 @@ impl<K, V> TiSlice<K, V> {
     /// to the front. After calling `rotate_right`, the element previously at
     /// index `self.next_key() - k` will become the first element in the slice.
     ///
-    /// See [`slice::rotate_right`].
+    /// See [`slice::rotate_right`] for more details.
     ///
     /// [`slice::rotate_right`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rotate_right
     pub fn rotate_right(&mut self, k: K)
@@ -1266,7 +1266,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Copies the elements from `src` into `self`.
     ///
-    /// See [`slice::clone_from_slice`].
+    /// See [`slice::clone_from_slice`] for more details.
     ///
     /// [`slice::clone_from_slice`]: https://doc.rust-lang.org/std/primitive.slice.html#method.clone_from_slice
     pub fn clone_from_slice(&mut self, src: &Self)
@@ -1278,7 +1278,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Copies all elements from `src` into `self`, using a memcpy.
     ///
-    /// See [`slice::copy_from_slice`].
+    /// See [`slice::copy_from_slice`] for more details.
     ///
     /// [`slice::copy_from_slice`]: https://doc.rust-lang.org/std/primitive.slice.html#method.copy_from_slice
     pub fn copy_from_slice(&mut self, src: &Self)
@@ -1291,7 +1291,7 @@ impl<K, V> TiSlice<K, V> {
     /// Copies elements from one part of the slice to another part of itself,
     /// using a memmove.
     ///
-    /// See [`slice::copy_within`].
+    /// See [`slice::copy_within`] for more details.
     ///
     /// [`slice::copy_within`]: https://doc.rust-lang.org/std/primitive.slice.html#method.copy_within
     pub fn copy_within<R>(&mut self, src: R, dest: K)
@@ -1306,7 +1306,7 @@ impl<K, V> TiSlice<K, V> {
     /// Swaps all elements in `self` with those in `other`.
     ///
     ///
-    /// See [`slice::swap_with_slice`].
+    /// See [`slice::swap_with_slice`] for more details.
     ///
     /// [`slice::swap_with_slice`]: https://doc.rust-lang.org/std/primitive.slice.html#method.swap_with_slice
     pub fn swap_with_slice(&mut self, other: &mut Self) {
@@ -1316,7 +1316,7 @@ impl<K, V> TiSlice<K, V> {
     /// Transmute the slice to a slice of another type, ensuring alignment of the types is
     /// maintained.
     ///
-    /// See [`slice::align_to`].
+    /// See [`slice::align_to`] for more details.
     ///
     /// [`slice::align_to`]: https://doc.rust-lang.org/std/primitive.slice.html#method.align_to
     #[allow(clippy::missing_safety_doc)]
@@ -1328,7 +1328,7 @@ impl<K, V> TiSlice<K, V> {
     /// Transmute the slice to a slice of another type, ensuring alignment of the types is
     /// maintained.
     ///
-    /// See [`slice::align_to_mut`].
+    /// See [`slice::align_to_mut`] for more details.
     ///
     /// [`slice::align_to_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.align_to_mut
     #[allow(clippy::missing_safety_doc)]
@@ -1342,7 +1342,7 @@ impl<K, V> TiSlice<K, V> {
 impl<K, V> TiSlice<K, V> {
     /// Sorts the slice.
     ///
-    /// See [`slice::sort`].
+    /// See [`slice::sort`] for more details.
     ///
     /// [`slice::sort`]: https://doc.rust-lang.org/std/primitive.slice.html#method.sort
     #[inline]
@@ -1355,7 +1355,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Sorts the slice with a comparator function.
     ///
-    /// See [`slice::sort_by`].
+    /// See [`slice::sort_by`] for more details.
     ///
     /// [`slice::sort_by`]: https://doc.rust-lang.org/std/primitive.slice.html#method.sort_by
     #[inline]
@@ -1368,7 +1368,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Sorts the slice with a key extraction function.
     ///
-    /// See [`slice::sort_by_key`].
+    /// See [`slice::sort_by_key`] for more details.
     ///
     /// [`slice::sort_by_key`]: https://doc.rust-lang.org/std/primitive.slice.html#method.sort_by_key
     #[inline]
@@ -1382,7 +1382,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Sorts the slice with a key extraction function.
     ///
-    /// See [`slice::sort_by_cached_key`].
+    /// See [`slice::sort_by_cached_key`] for more details.
     ///
     /// [`slice::sort_by_cached_key`]: https://doc.rust-lang.org/std/primitive.slice.html#method.sort_by_cached_key
     #[inline]
@@ -1396,7 +1396,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Copies `self` into a new `TiVec`.
     ///
-    /// See [`slice::to_vec`].
+    /// See [`slice::to_vec`] for more details.
     ///
     /// [`slice::to_vec`]: https://doc.rust-lang.org/std/primitive.slice.html#method.to_vec
     #[inline]
@@ -1409,7 +1409,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Converts `self` into a vector without clones or allocation.
     ///
-    /// See [`slice::into_vec`].
+    /// See [`slice::into_vec`] for more details.
     ///
     /// [`slice::into_vec`]: https://doc.rust-lang.org/std/primitive.slice.html#method.into_vec
     #[inline]
@@ -1419,7 +1419,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Creates a vector by repeating a slice `n` times.
     ///
-    /// See [`slice::repeat`].
+    /// See [`slice::repeat`] for more details.
     ///
     /// [`slice::repeat`]: https://doc.rust-lang.org/std/primitive.slice.html#method.repeat
     pub fn repeat(&self, n: usize) -> TiVec<K, V>
@@ -1431,7 +1431,7 @@ impl<K, V> TiSlice<K, V> {
 
     /// Flattens a slice of `T` into a single value `Self::Output`.
     ///
-    /// See [`slice::concat`].
+    /// See [`slice::concat`] for more details.
     ///
     /// [`slice::concat`]: https://doc.rust-lang.org/std/primitive.slice.html#method.concat
     pub fn concat<Item: ?Sized>(&self) -> <Self as Concat<Item>>::Output
@@ -1444,7 +1444,7 @@ impl<K, V> TiSlice<K, V> {
     /// Flattens a slice of `T` into a single value `Self::Output`, placing a
     /// given separator between each.
     ///
-    /// See [`slice::join`].
+    /// See [`slice::join`] for more details.
     ///
     /// [`slice::join`]: https://doc.rust-lang.org/std/primitive.slice.html#method.join
     pub fn join<Separator>(&self, sep: Separator) -> <Self as Join<Separator>>::Output

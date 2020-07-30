@@ -1431,9 +1431,9 @@ impl<K, V> TiSlice<K, V> {
 
     /// Flattens a slice of `T` into a single value `Self::Output`.
     ///
-    /// See [`slice::Concat`].
+    /// See [`slice::concat`].
     ///
-    /// [`slice::concat`]: https://doc.rust-lang.org/std/primitive.slice.html#method.repeat
+    /// [`slice::concat`]: https://doc.rust-lang.org/std/primitive.slice.html#method.concat
     pub fn concat<Item: ?Sized>(&self) -> <Self as Concat<Item>>::Output
     where
         Self: Concat<Item>,
@@ -1446,7 +1446,7 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::join`].
     ///
-    /// [`slice::join`]: https://doc.rust-lang.org/std/primitive.slice.html#method.repeat
+    /// [`slice::join`]: https://doc.rust-lang.org/std/primitive.slice.html#method.join
     pub fn join<Separator>(&self, sep: Separator) -> <Self as Join<Separator>>::Output
     where
         Self: Join<Separator>,

@@ -1338,6 +1338,48 @@ impl<K, V> TiSlice<K, V> {
     }
 }
 
+impl<K> TiSlice<K, u8> {
+    /// Checks if all bytes in this slice are within the ASCII range.
+    ///
+    /// See [`slice::is_ascii`] for more details.
+    ///
+    /// [`slice::is_ascii`]: https://doc.rust-lang.org/std/primitive.slice.html#method.is_ascii
+    #[inline]
+    pub fn is_ascii(&self) -> bool {
+        self.raw.is_ascii()
+    }
+
+    /// Checks that two slices are an ASCII case-insensitive match.
+    ///
+    /// See [`slice::eq_ignore_ascii_case`] for more details.
+    ///
+    /// [`slice::eq_ignore_ascii_case`]: https://doc.rust-lang.org/std/primitive.slice.html#method.eq_ignore_ascii_case
+    #[inline]
+    pub fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
+        self.raw.eq_ignore_ascii_case(other.into())
+    }
+
+    /// Converts this slice to its ASCII upper case equivalent in-place.
+    ///
+    /// See [`slice::make_ascii_uppercase`] for more details.
+    ///
+    /// [`slice::make_ascii_uppercase`]: https://doc.rust-lang.org/std/primitive.slice.html#method.make_ascii_uppercase
+    #[inline]
+    pub fn make_ascii_uppercase(&mut self) {
+        self.raw.make_ascii_uppercase()
+    }
+
+    /// Converts this slice to its ASCII lower case equivalent in-place.
+    ///
+    /// See [`slice::make_ascii_lowercase`] for more details.
+    ///
+    /// [`slice::make_ascii_lowercase`]: https://doc.rust-lang.org/std/primitive.slice.html#method.make_ascii_lowercase
+    #[inline]
+    pub fn make_ascii_lowercase(&mut self) {
+        self.raw.make_ascii_lowercase()
+    }
+}
+
 #[cfg(any(feature = "alloc", feature = "std"))]
 impl<K, V> TiSlice<K, V> {
     /// Sorts the slice.
@@ -1452,6 +1494,31 @@ impl<K, V> TiSlice<K, V> {
         Self: Join<Separator>,
     {
         Join::join(self, sep)
+    }
+}
+
+#[cfg(any(feature = "alloc", feature = "std"))]
+impl<K> TiSlice<K, u8> {
+    /// Returns a vector containing a copy of this slice where each byte
+    /// is mapped to its ASCII upper case equivalent.
+    ///
+    /// See [`slice::to_ascii_uppercase`] for more details.
+    ///
+    /// [`slice::to_ascii_uppercase`]: https://doc.rust-lang.org/std/primitive.slice.html#method.to_ascii_uppercase
+    #[inline]
+    pub fn to_ascii_uppercase(&self) -> TiVec<K, u8> {
+        self.raw.to_ascii_uppercase().into()
+    }
+
+    /// Returns a vector containing a copy of this slice where each byte
+    /// is mapped to its ASCII lower case equivalent.
+    ///
+    /// See [`slice::to_ascii_lowercase`] for more details.
+    ///
+    /// [`slice::to_ascii_lowercase`]: https://doc.rust-lang.org/std/primitive.slice.html#method.to_ascii_lowercase
+    #[inline]
+    pub fn to_ascii_lowercase(&self) -> TiVec<K, u8> {
+        self.raw.to_ascii_lowercase().into()
     }
 }
 

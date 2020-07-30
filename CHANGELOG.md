@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2020-06-30
+### Added
+- `TiSlice<K, u8>` methods.
+
 ## [1.0.1] - 2020-06-25
 ### Added
 - Example with a wrong index type that should not compile.
@@ -64,7 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `TiSlice` API compatibility tests.
 - Crate API documentation with examples.
 
-[Unreleased]: https://github.com/zheland/typed-index-collections/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/zheland/typed-index-collections/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/zheland/typed-index-collections/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/zheland/typed-index-collections/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/zheland/typed-index-collections/compare/v0.1.2...v1.0.0
 [0.1.2]: https://github.com/zheland/typed-index-collections/compare/v0.1.1...v0.1.2

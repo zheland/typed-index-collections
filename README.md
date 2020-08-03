@@ -22,14 +22,15 @@ This crate provides typed index version of [`slice`] and [`std::vec::Vec`]
 types with custom index type.
 Containers only require the index to implement [`Index`] trait.
 If default feature `impl-index-from` is enabled, this trait is automatically implemented
-when [`From<usize>`] and [`Into<usize>`] are implemented.
+when [`From<usize>`][`From`] and [`Into<usize>`][`Into`] are implemented.
 And their implementation can be easily done
 with [`derive_more`] crate and `#[derive(From, Into)]`.
 
 The [`TiSlice`] and [`TiVec`] structs are only wrappers
 around Rust [`slice`] and [`std::vec::Vec`] structs with custom index type
 and exposed `raw` property with original struct.
-They can be easily converted to matched Rust containers using [`From`] and [`Into`] traits.
+They can be easily converted to matched Rust containers using
+[`From`], [`Into`], [`AsRef`] and [`AsMut`] traits.
 The structs mirrors the stable API of Rust [`slice`] and [`std::vec::Vec`]
 and forwards to it as much as possible.
 
@@ -54,7 +55,8 @@ default-features = false
 features = ["alloc", "impl-index-from"]
 ```
 
-If you want to use [`derive_more`] for [`From<usize>`] and [`Into<usize>`] implementation
+If you want to use [`derive_more`] for
+[`From<usize>`][`From`] and [`Into<usize>`][`Into`] implementation
 add it to your `Cargo.toml` as shown below:
 
 ```toml
@@ -139,7 +141,8 @@ let _boxed_slice: std::boxed::Box<[Foo]> = ti_boxed_slice.into();
 ## Feature Flags
 
 - `impl-index-from` (enabled by default) &mdash; Enables automatic [`Index`]
-  trait implementation for types that implement [`From<usize>`] and [`Into<usize>`].
+  trait implementation for types that implement
+  [`From<usize>`][`From`] and [`Into<usize>`][`Into`].
 - `alloc` (enabled by default) &mdash; Enables types and functions
   which require memory allocation.
 - `std` (enabled by default) &mdash; Enables all [`std`] features
@@ -197,8 +200,8 @@ additional terms or conditions.
 [`std::error::Error`]: https://doc.rust-lang.org/std/error/trait.Error.html
 [`From`]: https://doc.rust-lang.org/std/convert/trait.From.html
 [`Into`]: https://doc.rust-lang.org/std/convert/trait.Into.html
-[`From<usize>`]: https://doc.rust-lang.org/std/convert/trait.From.html
-[`Into<usize>`]: https://doc.rust-lang.org/std/convert/trait.Into.html
+[`AsRef`]: https://doc.rust-lang.org/std/convert/trait.AsRef.html
+[`AsMut`]: https://doc.rust-lang.org/std/convert/trait.AsMut.html
 [`derive_more`]: https://crates.io/crates/derive_more
 [`typed_index_collection`]: https://crates.io/crates/typed_index_collection
 [`indexed_vec`]: https://crates.io/crates/indexed_vec

@@ -6,11 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.1.0] - 2020-06-30
+## [1.1.0] - 2020-07-30
 ### Added
 - `TiSlice<K, u8>` methods.
 
-## [1.0.1] - 2020-06-25
+## [1.0.1] - 2020-07-25
 ### Added
 - Example with a wrong index type that should not compile.
 
@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Travis config simplified.
 - Simplify var names in examples.
 
-## [1.0.0] - 2020-06-22
+## [1.0.0] - 2020-07-22
 ### Added
 - Changelog.
 - `TiVec::{from_ref, from_mut, drain_enumerated}` methods.
@@ -32,19 +32,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fix `TiSlice` and `TiVec` documentation typos.
 
-## [0.1.2] - 2020-06-17
+## [0.1.2] - 2020-07-17
 ### Fixed
 - Ignore `Cargo.lock` in repository.
 - Relax `TiSlice` and `TiVec` requirements for traits
   `Default`, `Eq`, `Hash`, `Ord`, `PartialEq` and `PartialOrd`.
 - Add skipped `Clone` trait implementation for `TiVec`.
 
-## [0.1.1] - 2020-06-17
+## [0.1.1] - 2020-07-17
 ### Fixed
 - Fix manifest documentation link.
 
-## [0.1.0] - 2020-06-14
-## [0.0.3] - 2020-06-14
+## [0.1.0] - 2020-07-14
+## [0.0.3] - 2020-07-14
 ### Added
 - `TiVec::{push_and_get_key, pop_key_value}` methods.
 
@@ -54,13 +54,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix formatting in documentation.
 - Fix `Index` trait requirement instead of `From` for some `TiVec` methods.
 
-## [0.0.2] - 2020-06-13
+## [0.0.2] - 2020-07-13
 ### Fixed
 - Fix typos in documentation.
 - Fix skipped links in documentation.
 - Fix Travis config.
 
-## [0.0.1] - 2020-06-13
+## [0.0.1] - 2020-07-13
 ### Added
 - Index trait.
 - `TiSlice` wrapper for Rust `slice`.

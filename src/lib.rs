@@ -89,7 +89,7 @@
     ti_vec.insert(BarId(2), 12);
     //            ^^^^^^^^ expected struct `FooId`, found struct `BarId`
     assert_eq!(ti_vec[BarId(2)], 12);
-    //         ^^^^^^^^^^^^^^^^ the trait ... is not implemented for `main::BarId`
+    //         ^^^^^^^^^^^^^^^^ the trait ... is not implemented for `BarId`
     ```
 
     Another more detailed example with [`derive_more`]:

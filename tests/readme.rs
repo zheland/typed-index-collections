@@ -42,6 +42,7 @@ fn test_readme_docs_sync() {
         .filter_map(|(j, line)| {
             is_last_line_used = (is_last_line_used || line != "")
                 && !line.starts_with("[![")
+                && !line.starts_with("![")
                 && line != "## Documentation"
                 && !line.starts_with("[API Documentation]");
             if is_last_line_used {

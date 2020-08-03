@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2020-08-03
+### Changed
+- Use `AsRef::as_ref()` and `AsMut::as_mut()` instead `Into::into()`
+  for zero-cost conversions between `&slice` and `&TiSlice`, `&mut slice` and `&mut TiSlice`,
+  `&std::Vec` and `&TiVec`, `&mut std::Vec` and `&TiVec`.
+- Migrate from Travis CI to GitHub actions.
+
 ## [1.1.0] - 2020-07-30
 ### Added
 - `TiSlice<K, u8>` methods.
@@ -68,7 +75,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `TiSlice` API compatibility tests.
 - Crate API documentation with examples.
 
-[Unreleased]: https://github.com/zheland/typed-index-collections/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/zheland/typed-index-collections/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/zheland/typed-index-collections/compare/v1.1.0...v2.0.0
 [1.1.0]: https://github.com/zheland/typed-index-collections/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/zheland/typed-index-collections/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/zheland/typed-index-collections/compare/v0.1.2...v1.0.0

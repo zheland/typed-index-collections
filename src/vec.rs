@@ -25,7 +25,7 @@ use crate::{Index, TiEnumerated, TiRangeBounds, TiSlice};
 /// A contiguous growable array type
 /// that only accepts keys of the type `K`.
 ///
-/// `TiVec<K, V>` is a wrapper around Rust primitive type [`std::vec::Vec`].
+/// `TiVec<K, V>` is a wrapper around Rust container type [`std::vec::Vec`].
 /// The struct mirrors the stable API of Rust [`std::vec::Vec`]
 /// and forwards to it as much as possible.
 ///

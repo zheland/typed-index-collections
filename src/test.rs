@@ -83,14 +83,14 @@ impl_convert!(|self: Id| -> usize { self.into_usize() });
 impl_convert!(|self: Id| -> usize { self.into() });
 
 impl_convert!(for ('a, V)
-    |self: &'a [V]| -> &'a TiSlice<Id, V> { self.into() });
+    |self: &'a [V]| -> &'a TiSlice<Id, V> { self.as_ref() });
 impl_convert!(for ('a, V)
-    |self: &'a TiSlice<Id, V>| -> &'a [V] { self.into() });
+    |self: &'a TiSlice<Id, V>| -> &'a [V] { self.as_ref() });
 
 impl_convert!(for ('a, V)
-    |self: &'a mut [V]| -> &'a mut TiSlice<Id, V> { self.into() });
+    |self: &'a mut [V]| -> &'a mut TiSlice<Id, V> { self.as_mut() });
 impl_convert!(for ('a, V)
-    |self: &'a mut TiSlice<Id, V>| -> &'a mut [V] { self.into() });
+    |self: &'a mut TiSlice<Id, V>| -> &'a mut [V] { self.as_mut() });
 
 #[cfg(any(feature = "alloc", feature = "std"))]
 impl_convert!(for (V)
@@ -105,34 +105,34 @@ impl_convert!(for (T) |self: Vec<T>| -> TiVec<Id, T> { self.into() } );
 impl_convert!(for (T) |self: TiVec<Id, T>| -> Vec<T> { self.into() } );
 
 #[cfg(any(feature = "alloc", feature = "std"))]
-impl_convert!(for ('a, T) |self: &'a Vec<T>| -> &'a TiVec<Id, T> { self.into() } );
+impl_convert!(for ('a, T) |self: &'a Vec<T>| -> &'a TiVec<Id, T> { self.as_ref() } );
 #[cfg(any(feature = "alloc", feature = "std"))]
-impl_convert!(for ('a, T) |self: &'a TiVec<Id, T>| -> &'a Vec<T> { self.into() } );
+impl_convert!(for ('a, T) |self: &'a TiVec<Id, T>| -> &'a Vec<T> { self.as_ref() } );
 
 #[cfg(any(feature = "alloc", feature = "std"))]
-impl_convert!(for ('a, T) |self: &'a mut Vec<T>| -> &'a mut TiVec<Id, T> { self.into() } );
+impl_convert!(for ('a, T) |self: &'a mut Vec<T>| -> &'a mut TiVec<Id, T> { self.as_mut() } );
 #[cfg(any(feature = "alloc", feature = "std"))]
-impl_convert!(for ('a, T) |self: &'a mut TiVec<Id, T>| -> &'a mut Vec<T> { self.into() } );
+impl_convert!(for ('a, T) |self: &'a mut TiVec<Id, T>| -> &'a mut Vec<T> { self.as_mut() } );
 
 impl_convert!(for ('a, V)
     |self: (&'a V, &'a TiSlice<Id, V>)| -> (&'a V, &'a [V]) {
-        (self.0, self.1.into())
+        (self.0, self.1.as_ref())
     }
 );
 impl_convert!(for ('a, V)
     |self: (&'a mut V, &'a mut TiSlice<Id, V>)| -> (&'a mut V, &'a mut [V]) {
-        (self.0, self.1.into())
+        (self.0, self.1.as_mut())
     }
 );
 
 impl_convert!(for ('a, V, U)
     |self: (&'a TiSlice<Id, V>, &'a TiSlice<Id, U>)| -> (&'a [V], &'a [U]) {
-        (self.0.into(), self.1.into())
+        (self.0.as_ref(), self.1.as_ref())
     }
 );
 impl_convert!(for ('a, V, U)
     |self: (&'a mut TiSlice<Id, V>, &'a mut TiSlice<Id, U>)| -> (&'a mut [V], &'a mut [U]) {
-        (self.0.into(), self.1.into())
+        (self.0.as_mut(), self.1.as_mut())
     }
 );
 
@@ -140,13 +140,13 @@ impl_convert!(for ('a, V, U, W)
     |self: (&'a TiSlice<Id, V>, &'a TiSlice<Id, U>, &'a TiSlice<Id, W>)|
         -> (&'a [V], &'a [U], &'a [W])
     {
-        (self.0.into(), self.1.into(), self.2.into())
+        (self.0.as_ref(), self.1.as_ref(), self.2.as_ref())
     }
 );
 impl_convert!(for ('a, V, U, W) |
     self: (&'a mut TiSlice<Id, V>, &'a mut TiSlice<Id, U>, &'a mut TiSlice<Id, W>
 )| -> (&'a mut [V], &'a mut [U], &'a mut [W]) {
-        (self.0.into(), self.1.into(), self.2.into())
+        (self.0.as_mut(), self.1.as_mut(), self.2.as_mut())
     }
 );
 
@@ -175,6 +175,8 @@ macro_rules! assert_api_impl(
         $fn!({
             #[deny(unused_imports)]
             use crate::test::TypedConvert;
+            #[allow(dead_code, unused_qualifications)]
+            type UsizeSlice = crate::TiSlice<Id, usize>;
             #[cfg(any(feature = "alloc", feature = "std"))]
             #[allow(dead_code, unused_qualifications)]
             type UsizeVec = crate::TiVec<Id, usize>;
@@ -183,6 +185,8 @@ macro_rules! assert_api_impl(
         }, {
             #[deny(unused_imports)]
             use crate::test::DummyConvert;
+            #[allow(dead_code, unused_qualifications)]
+            type UsizeSlice = [usize];
             #[cfg(any(feature = "alloc", feature = "std"))]
             #[allow(dead_code, unused_qualifications)]
             type UsizeVec = alloc::vec::Vec<usize>;

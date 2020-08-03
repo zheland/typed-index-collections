@@ -55,14 +55,14 @@ pub use slice_index::TiSliceIndex;
 ///
 /// `TiSlice<K, V>` require the index to implement [`Index`] trait.
 /// If default feature `impl-index-from` is not disabled, this trait is automatically implemented
-/// when [`From<usize>`] and [`Into<usize>`] are implemented.
+/// when [`From<usize>`][`From`] and [`Into<usize>`][`Into`] are implemented.
 /// And their implementation can be easily done
 /// with [`derive_more`] crate and `#[derive(From, Into)]`.
 ///
-/// There are also [`From`] and [`Into`] conversions available between types:
-/// - [`&[V]`][`slice`] and `&TiSlice<K, V>`,
-/// - [`&mut [V]`][`slice`] and `&mut TiSlice<K, V>`,
-/// - [`Box<[V]>`][`Box`] and `Box<TiSlice<K, V>>`.
+/// There are zero-cost conversions available between types and references:
+/// - [`&[V]`][`slice`] and `&TiSlice<K, V>` with [`AsRef`],
+/// - [`&mut [V]`][`slice`] and `&mut TiSlice<K, V>` with [`AsMut`],
+/// - [`Box<[V]>`][`Box`] and `Box<TiSlice<K, V>>` with [`From`] and [`Into`].
 ///
 /// Added methods:
 /// - [`from_ref`] - Converts a [`&[V]`][`slice`] into a `&TiSlice<K, V>`.
@@ -135,8 +135,8 @@ pub use slice_index::TiSliceIndex;
 /// [`slice`]: https://doc.rust-lang.org/std/primitive.slice.html
 /// [`From`]: https://doc.rust-lang.org/std/convert/trait.From.html
 /// [`Into`]: https://doc.rust-lang.org/std/convert/trait.Into.html
-/// [`From<usize>`]: https://doc.rust-lang.org/std/convert/trait.From.html
-/// [`Into<usize>`]: https://doc.rust-lang.org/std/convert/trait.Into.html
+/// [`AsRef`]: https://doc.rust-lang.org/std/convert/trait.AsRef.html
+/// [`AsMut`]: https://doc.rust-lang.org/std/convert/trait.AsMut.html
 /// [`Box`]: https://doc.rust-lang.org/std/boxed/struct.Box.html
 /// [`Range`]: https://doc.rust-lang.org/std/ops/struct.Range.html
 /// [`RangeTo`]: https://doc.rust-lang.org/std/ops/struct.RangeTo.html
@@ -401,7 +401,7 @@ impl<K, V> TiSlice<K, V> {
     pub fn split_first(&self) -> Option<(&V, &TiSlice<K, V>)> {
         self.raw
             .split_first()
-            .map(|(first, rest)| (first, rest.into()))
+            .map(|(first, rest)| (first, rest.as_ref()))
     }
 
     /// Returns the first and all the rest of the elements of the slice, or `None` if it is empty.
@@ -413,7 +413,7 @@ impl<K, V> TiSlice<K, V> {
     pub fn split_first_mut(&mut self) -> Option<(&mut V, &mut TiSlice<K, V>)> {
         self.raw
             .split_first_mut()
-            .map(|(first, rest)| (first, rest.into()))
+            .map(|(first, rest)| (first, rest.as_mut()))
     }
 
     /// Returns the last and all the rest of the elements of the slice, or `None` if it is empty.
@@ -425,7 +425,7 @@ impl<K, V> TiSlice<K, V> {
     pub fn split_last(&self) -> Option<(&V, &TiSlice<K, V>)> {
         self.raw
             .split_last()
-            .map(|(last, rest)| (last, rest.into()))
+            .map(|(last, rest)| (last, rest.as_ref()))
     }
 
     /// Returns the last and all the rest of the elements of the slice, or `None` if it is empty.
@@ -437,7 +437,7 @@ impl<K, V> TiSlice<K, V> {
     pub fn split_last_mut(&mut self) -> Option<(&mut V, &mut TiSlice<K, V>)> {
         self.raw
             .split_last_mut()
-            .map(|(last, rest)| (last, rest.into()))
+            .map(|(last, rest)| (last, rest.as_mut()))
     }
 
     /// Returns the last element of the slice of type `K`, or `None` if it is empty.
@@ -968,7 +968,7 @@ impl<K, V> TiSlice<K, V> {
         K: Index,
     {
         let (left, right) = self.raw.split_at(mid.into_usize());
-        (left.into(), right.into())
+        (left.as_ref(), right.as_ref())
     }
 
     /// Divides one mutable slice into two at an index.
@@ -982,7 +982,7 @@ impl<K, V> TiSlice<K, V> {
         K: Index,
     {
         let (left, right) = self.raw.split_at_mut(mid.into_usize());
-        (left.into(), right.into())
+        (left.as_mut(), right.as_mut())
     }
 
     /// Returns an iterator over subslices separated by elements that match
@@ -1126,7 +1126,7 @@ impl<K, V> TiSlice<K, V> {
     where
         V: PartialEq,
     {
-        self.raw.starts_with(needle.into())
+        self.raw.starts_with(needle.as_ref())
     }
 
     /// Returns `true` if `needle` is a suffix of the slice.
@@ -1138,7 +1138,7 @@ impl<K, V> TiSlice<K, V> {
     where
         V: PartialEq,
     {
-        self.raw.ends_with(needle.into())
+        self.raw.ends_with(needle.as_ref())
     }
 
     /// Binary searches this sorted slice for a given element.
@@ -1310,7 +1310,7 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// [`slice::swap_with_slice`]: https://doc.rust-lang.org/std/primitive.slice.html#method.swap_with_slice
     pub fn swap_with_slice(&mut self, other: &mut Self) {
-        self.raw.swap_with_slice(other.into())
+        self.raw.swap_with_slice(other.as_mut())
     }
 
     /// Transmute the slice to a slice of another type, ensuring alignment of the types is
@@ -1322,7 +1322,7 @@ impl<K, V> TiSlice<K, V> {
     #[allow(clippy::missing_safety_doc)]
     pub unsafe fn align_to<U>(&self) -> (&Self, &TiSlice<K, U>, &Self) {
         let (first, mid, last) = self.raw.align_to();
-        (first.into(), mid.into(), last.into())
+        (first.as_ref(), mid.as_ref(), last.as_ref())
     }
 
     /// Transmute the slice to a slice of another type, ensuring alignment of the types is
@@ -1334,7 +1334,7 @@ impl<K, V> TiSlice<K, V> {
     #[allow(clippy::missing_safety_doc)]
     pub unsafe fn align_to_mut<U>(&mut self) -> (&mut Self, &mut TiSlice<K, U>, &mut Self) {
         let (first, mid, last) = self.raw.align_to_mut();
-        (first.into(), mid.into(), last.into())
+        (first.as_mut(), mid.as_mut(), last.as_mut())
     }
 }
 
@@ -1356,7 +1356,7 @@ impl<K> TiSlice<K, u8> {
     /// [`slice::eq_ignore_ascii_case`]: https://doc.rust-lang.org/std/primitive.slice.html#method.eq_ignore_ascii_case
     #[inline]
     pub fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
-        self.raw.eq_ignore_ascii_case(other.into())
+        self.raw.eq_ignore_ascii_case(other.as_ref())
     }
 
     /// Converts this slice to its ASCII upper case equivalent in-place.
@@ -1544,6 +1544,30 @@ impl<K, V> AsMut<TiSlice<K, V>> for TiSlice<K, V> {
     }
 }
 
+impl<K, V> AsRef<[V]> for TiSlice<K, V> {
+    fn as_ref(&self) -> &[V] {
+        &self.raw
+    }
+}
+
+impl<K, V> AsMut<[V]> for TiSlice<K, V> {
+    fn as_mut(&mut self) -> &mut [V] {
+        &mut self.raw
+    }
+}
+
+impl<K, V> AsRef<TiSlice<K, V>> for [V] {
+    fn as_ref(&self) -> &TiSlice<K, V> {
+        TiSlice::from_ref(self)
+    }
+}
+
+impl<K, V> AsMut<TiSlice<K, V>> for [V] {
+    fn as_mut(&mut self) -> &mut TiSlice<K, V> {
+        TiSlice::from_mut(self)
+    }
+}
+
 impl<I, K, V> ops::Index<I> for TiSlice<K, V>
 where
     I: TiSliceIndex<K, V>,
@@ -1645,30 +1669,6 @@ where
     #[inline]
     fn cmp(&self, other: &TiSlice<K, V>) -> Ordering {
         self.raw.cmp(&other.raw)
-    }
-}
-
-impl<'a, K, V> From<&'a [V]> for &'a TiSlice<K, V> {
-    fn from(slice: &'a [V]) -> Self {
-        TiSlice::from_ref(slice)
-    }
-}
-
-impl<'a, K, V> From<&'a mut [V]> for &'a mut TiSlice<K, V> {
-    fn from(slice: &'a mut [V]) -> Self {
-        TiSlice::from_mut(slice)
-    }
-}
-
-impl<'a, K, V> From<&'a TiSlice<K, V>> for &'a [V] {
-    fn from(slice: &'a TiSlice<K, V>) -> Self {
-        &slice.raw
-    }
-}
-
-impl<'a, K, V> From<&'a mut TiSlice<K, V>> for &'a mut [V] {
-    fn from(slice: &'a mut TiSlice<K, V>) -> Self {
-        &mut slice.raw
     }
 }
 
@@ -2091,8 +2091,8 @@ mod test {
     fn no_std_trait_api_compatibility() {
         use core::slice::IterMut;
         for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {
-            assert_eq_api!(arr => |&arr| arr.as_ref().into_t().as_ref().into_t());
-            assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t().as_mut().into_t());
+            assert_eq_api!(arr => |&arr| AsRef::<UsizeSlice>::as_ref(arr.as_ref().into_t()).into_t());
+            assert_eq_api!(arr => |&mut arr| AsMut::<UsizeSlice>::as_mut(arr.as_mut().into_t()).into_t());
             for index in 0..arr.len() {
                 assert_eq_api!(arr => |&arr| &arr.as_ref().into_t()[index.into_t()]);
                 assert_eq_api!(arr => |&mut arr| &mut arr.as_mut().into_t()[index.into_t()]);

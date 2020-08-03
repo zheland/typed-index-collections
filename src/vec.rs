@@ -32,16 +32,22 @@ use crate::{Index, TiEnumerated, TiRangeBounds, TiSlice};
 /// `TiVec<K, V>` uses `K` instead of `usize` for element indices and
 /// require the index to implement [`Index`] trait.
 /// If default feature `impl-index-from` is not disabled, this trait is automatically implemented
-/// when [`From<usize>`] and [`Into<usize>`] are implemented.
+/// when [`From<usize>`][`From`] and [`Into<usize>`][`Into`] are implemented.
 /// And their implementation can be easily done
 /// with [`derive_more`] crate and `#[derive(From, Into)]`.
 ///
-/// `TiVec<K, V>` can be converted to [`std::vec::Vec<V>`] and back
+/// `TiVec<K, V>` can be converted to [`std::vec::Vec<V>`][`std::vec::Vec`] and back
 /// using [`From`] and [`Into`].
 ///
+/// There are also zero-cost conversions available between references:
+/// - [`&std::vec::Vec<V>`][`std::vec::Vec`] and `&TiVec<K, V>` with [`AsRef`],
+/// - [`&mut std::vec::Vec<V>`][`std::vec::Vec`] and `&mut TiVec<K, V>` with [`AsMut`],
+///
 /// Added methods:
-/// - [`from_ref`] - Converts a [`&std::vec::Vec<V>`] into a `&TiVec<K, V>`.
-/// - [`from_mut`] - Converts a [`&mut std::vec::Vec<V>`] into a `&mut TiVec<K, V>`.
+/// - [`from_ref`] - Converts a [`&std::vec::Vec<V>`][`std::vec::Vec`]
+///   into a `&TiVec<K, V>`.
+/// - [`from_mut`] - Converts a [`&mut std::vec::Vec<V>`][`std::vec::Vec`]
+///   into a `&mut TiVec<K, V>`.
 /// - [`push_and_get_key`] - Appends an element to the back of a collection
 ///   and returns its index of type `K`.
 /// - [`pop_key_value`] - Removes the last element from a vector and returns it
@@ -82,13 +88,10 @@ use crate::{Index, TiEnumerated, TiRangeBounds, TiSlice};
 /// [`into_iter_enumerated`]: #method.into_iter_enumerated
 /// [`Index`]: trait.Index.html
 /// [`std::vec::Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
-/// [`std::vec::Vec<V>`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
-/// [`&std::vec::Vec<V>`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
-/// [`&mut std::vec::Vec<V>`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
 /// [`From`]: https://doc.rust-lang.org/std/convert/trait.From.html
 /// [`Into`]: https://doc.rust-lang.org/std/convert/trait.Into.html
-/// [`From<usize>`]: https://doc.rust-lang.org/std/convert/trait.From.html
-/// [`Into<usize>`]: https://doc.rust-lang.org/std/convert/trait.Into.html
+/// [`AsRef`]: https://doc.rust-lang.org/std/convert/trait.AsRef.html
+/// [`AsMut`]: https://doc.rust-lang.org/std/convert/trait.AsMut.html
 /// [`derive_more`]: https://crates.io/crates/derive_more
 pub struct TiVec<K, V> {
     /// Raw slice property
@@ -261,7 +264,7 @@ impl<K, V> TiVec<K, V> {
     /// [`Vec::as_slice`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.as_slice
     #[inline]
     pub fn as_slice(&self) -> &TiSlice<K, V> {
-        self.raw.as_slice().into()
+        self.raw.as_slice().as_ref()
     }
 
     /// Extracts a mutable slice of the entire vector.
@@ -271,7 +274,7 @@ impl<K, V> TiVec<K, V> {
     /// [`Vec::as_mut_slice`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.as_mut_slice
     #[inline]
     pub fn as_mut_slice(&mut self) -> &mut TiSlice<K, V> {
-        self.raw.as_mut_slice().into()
+        self.raw.as_mut_slice().as_mut()
     }
 
     /// Returns a raw pointer to the vector's buffer.
@@ -732,6 +735,42 @@ impl<K, V> AsMut<TiSlice<K, V>> for TiVec<K, V> {
     }
 }
 
+impl<K, V> AsRef<Vec<V>> for TiVec<K, V> {
+    fn as_ref(&self) -> &Vec<V> {
+        &self.raw
+    }
+}
+
+impl<K, V> AsMut<Vec<V>> for TiVec<K, V> {
+    fn as_mut(&mut self) -> &mut Vec<V> {
+        &mut self.raw
+    }
+}
+
+impl<K, V> AsRef<[V]> for TiVec<K, V> {
+    fn as_ref(&self) -> &[V] {
+        &self.raw
+    }
+}
+
+impl<K, V> AsMut<[V]> for TiVec<K, V> {
+    fn as_mut(&mut self) -> &mut [V] {
+        &mut self.raw
+    }
+}
+
+impl<K, V> AsRef<TiVec<K, V>> for Vec<V> {
+    fn as_ref(&self) -> &TiVec<K, V> {
+        TiVec::from_ref(self)
+    }
+}
+
+impl<K, V> AsMut<TiVec<K, V>> for Vec<V> {
+    fn as_mut(&mut self) -> &mut TiVec<K, V> {
+        TiVec::from_mut(self)
+    }
+}
+
 impl<K, V> Borrow<TiSlice<K, V>> for TiVec<K, V> {
     fn borrow(&self) -> &TiSlice<K, V> {
         self.as_slice()
@@ -861,34 +900,6 @@ impl<K, V> From<TiVec<K, V>> for Vec<V> {
     }
 }
 
-impl<'a, K, V> From<&'a Vec<V>> for &'a TiVec<K, V> {
-    #[allow(trivial_casts)]
-    fn from(vec: &'a Vec<V>) -> Self {
-        TiVec::from_ref(vec)
-    }
-}
-
-impl<'a, K, V> From<&'a mut Vec<V>> for &'a mut TiVec<K, V> {
-    #[allow(trivial_casts)]
-    fn from(vec: &'a mut Vec<V>) -> Self {
-        TiVec::from_mut(vec)
-    }
-}
-
-impl<'a, K, V> From<&'a TiVec<K, V>> for &'a Vec<V> {
-    #[allow(trivial_casts)]
-    fn from(vec: &'a TiVec<K, V>) -> Self {
-        &vec.raw
-    }
-}
-
-impl<'a, K, V> From<&'a mut TiVec<K, V>> for &'a mut Vec<V> {
-    #[allow(trivial_casts)]
-    fn from(vec: &'a mut TiVec<K, V>) -> Self {
-        &mut vec.raw
-    }
-}
-
 impl<K, V> IntoIterator for TiVec<K, V> {
     type Item = V;
     type IntoIter = vec::IntoIter<V>;
@@ -1014,7 +1025,7 @@ mod test {
                 let mut vec = vec.clone();
                 let vec_ref_mut = &mut vec;
                 let vec_ptr_mut = vec_ref_mut.as_mut_ptr();
-                let ti_vec_ref_mut: &mut TiVec<Id, _> = vec_ref_mut.into();
+                let ti_vec_ref_mut: &mut TiVec<Id, _> = vec_ref_mut.as_mut();
                 let ti_vec_ptr_mut = ti_vec_ref_mut.as_mut_ptr();
                 assert_eq!(vec_ptr_mut, ti_vec_ptr_mut);
             }

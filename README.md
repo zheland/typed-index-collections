@@ -117,7 +117,7 @@ let slice_ref = &[first, second][..];
 let vec = std::vec![first, second];
 let boxed_slice = std::vec![first, second].into_boxed_slice();
 
-let ti_slice_ref: &TiSlice<FooId, Foo> = slice_ref.into();
+let ti_slice_ref: &TiSlice<FooId, Foo> = slice_ref.as_ref();
 let ti_vec: TiVec<FooId, Foo> = vec.into();
 let ti_boxed_slice: std::boxed::Box<TiSlice<FooId, Foo>> = boxed_slice.into();
 
@@ -127,7 +127,7 @@ assert_eq!(ti_vec.last(), Some(&second));
 assert_eq!(ti_vec.last_key_value(), Some((FooId(1), &second)));
 assert_eq!(ti_vec.iter_enumerated().next(), Some((FooId(0), &first)));
 
-let _slice_ref: &[Foo] = ti_slice_ref.into();
+let _slice_ref: &[Foo] = ti_slice_ref.as_ref();
 let _vec: std::vec::Vec<Foo> = ti_vec.into();
 let _boxed_slice: std::boxed::Box<[Foo]> = ti_boxed_slice.into();
 ```

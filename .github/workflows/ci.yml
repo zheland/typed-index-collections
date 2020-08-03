@@ -102,12 +102,14 @@ jobs:
 
       - name: Build
         uses: actions-rs/cargo@v1
+        continue-on-error: ${{ matrix.toolchain == "nightly" }}
         with:
           command: build
           args: --verbose --all ${{ matrix.cargo_flags }}
 
       - name: Test
         uses: actions-rs/cargo@v1
+        continue-on-error: ${{ matrix.toolchain == "nightly" }}
         with:
           command: test
           args: --verbose --all ${{ matrix.cargo_flags }}

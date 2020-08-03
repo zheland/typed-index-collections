@@ -1,6 +1,6 @@
 # typed-index-collections
 
-![build status](https://github.com/zheland/typed-index-collections/workflows/CI/badge.svg?branch=test)
+![CI](https://github.com/zheland/typed-index-collections/workflows/CI/badge.svg)
 [![Latest Version](https://img.shields.io/crates/v/typed-index-collections.svg)](https://crates.io/crates/typed-index-collections)
 [![docs.rs](https://docs.rs/typed-index-collections/badge.svg)](https://docs.rs/typed-index-collections)
 [![GitHub license](https://img.shields.io/crates/l/typed-index-collections)](https://github.com/zheland/typed-index-collections/#license)

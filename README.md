@@ -146,10 +146,14 @@ let _boxed_slice: std::boxed::Box<[Foo]> = ti_boxed_slice.into();
 - `alloc` (enabled by default) &mdash; Enables types and functions
   which require memory allocation.
 - `std` (enabled by default) &mdash; Enables all [`std`] features
-  such as memory allocations and [`std::error::Error`] trait.
-- `serde` &mdash; Implements [`Serialize`] and [`Deserialize`] traits for slice type.
-- `serde-alloc` &mdash; Enable [`alloc`] and `serde/alloc` features.
-- `serde-std` &mdash; Enable [`std`] and `serde/std` features.
+  such as memory allocations, [`std::error::Error`] trait and
+  [`std::panic::UnwindSafe`] trait implementations.
+- `serde` &mdash; Implements [`Serialize`] and [`Deserialize`] traits
+  for slice primitive and [`Serialize`] trait for [`std::vec::Vec`] container.
+- `serde-alloc` &mdash; Enable [`alloc`] and `serde/alloc` features and
+  implement [`Deserialize`] trait for [`std::vec::Vec`] container.
+- `serde-std` &mdash; Enable [`std`] and `serde/std` features and
+  implement [`Deserialize`] trait for [`std::vec::Vec`] container.
 
 ## Similar crates
 
@@ -198,6 +202,7 @@ additional terms or conditions.
 [`Weak`]: https://doc.rust-lang.org/std/rc/struct.Weak.html
 [`std::vec::Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
 [`std::error::Error`]: https://doc.rust-lang.org/std/error/trait.Error.html
+[`std::panic::UnwindSafe`]: https://doc.rust-lang.org/std/panic/trait.UnwindSafe.html
 [`From`]: https://doc.rust-lang.org/std/convert/trait.From.html
 [`Into`]: https://doc.rust-lang.org/std/convert/trait.Into.html
 [`AsRef`]: https://doc.rust-lang.org/std/convert/trait.AsRef.html

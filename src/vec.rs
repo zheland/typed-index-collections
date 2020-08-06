@@ -15,10 +15,10 @@ use alloc::{
 };
 
 #[cfg(feature = "serde")]
-use serde::{
-    de::{Deserialize, Deserializer},
-    ser::{Serialize, Serializer},
-};
+use serde::ser::{Serialize, Serializer};
+
+#[cfg(any(feature = "serde-alloc", feature = "serde-std"))]
+use serde::de::{Deserialize, Deserializer};
 
 use crate::{Index, TiEnumerated, TiRangeBounds, TiSlice};
 
@@ -933,11 +933,11 @@ impl<'a, K, V> IntoIterator for &'a mut TiVec<K, V> {
 #[cfg(feature = "serde")]
 impl<K, V: Serialize> Serialize for TiVec<K, V> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        self.raw.serialize(serializer)
+        self.raw.as_slice().serialize(serializer)
     }
 }
 
-#[cfg(feature = "serde")]
+#[cfg(any(feature = "serde-alloc", feature = "serde-std"))]
 impl<'de, K, V: Deserialize<'de>> Deserialize<'de> for TiVec<K, V> {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         Vec::deserialize(deserializer).map(Into::into)

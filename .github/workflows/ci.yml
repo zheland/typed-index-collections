@@ -70,17 +70,22 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        toolchain:
-          - 1.41.0
-          - stable
-          - beta
-          - nightly
+        config:
+          - toolchain: 1.41.0
+            cargo_build_flags: ""
+          - toolchain: stable
+            cargo_build_flags: ""
+          - toolchain: beta
+            cargo_build_flags: ""
+          - toolchain: nightly
+            cargo_build_flags: "-Z features=dev_dep"
         cargo_flags:
           - ""
           - "--no-default-features"
           - "--no-default-features --features \"serde\""
           - "--no-default-features --features \"serde-alloc\""
           - "--no-default-features --features \"serde-std\""
+          - "--no-default-features --features \"std serde\""
           - "--no-default-features --features \"impl-index-from\""
           - "--all-features"
     steps:
@@ -91,19 +96,21 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: ${{ matrix.toolchain }}
+          toolchain: ${{ matrix.config.toolchain }}
           override: true
 
       - name: Build
         uses: actions-rs/cargo@v1
-        continue-on-error: ${{ matrix.toolchain == 'nightly' }}
+        continue-on-error: ${{ matrix.config.toolchain == 'nightly' }}
         with:
           command: build
-          args: --verbose --all ${{ matrix.cargo_flags }}
+          args: >-
+            --verbose --all ${{ matrix.cargo_flags }}
+            ${{ matrix.config.cargo_build_flags}}
 
       - name: Test
         uses: actions-rs/cargo@v1
-        continue-on-error: ${{ matrix.toolchain == 'nightly' }}
+        continue-on-error: ${{ matrix.config.toolchain == 'nightly' }}
         with:
           command: test
           args: --verbose --all ${{ matrix.cargo_flags }}

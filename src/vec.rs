@@ -768,6 +768,20 @@ impl<K, V> ops::DerefMut for TiVec<K, V> {
     }
 }
 
+impl<K, V> Extend<V> for TiVec<K, V> {
+    #[inline]
+    fn extend<I: IntoIterator<Item = V>>(&mut self, iter: I) {
+        self.raw.extend(iter)
+    }
+}
+
+impl<'a, K, V: 'a + Copy> Extend<&'a V> for TiVec<K, V> {
+    #[inline]
+    fn extend<I: IntoIterator<Item = &'a V>>(&mut self, iter: I) {
+        self.raw.extend(iter)
+    }
+}
+
 impl<K, V> FromIterator<V> for TiVec<K, V> {
     #[inline]
     fn from_iter<I: IntoIterator<Item = V>>(iter: I) -> Self {
@@ -1076,6 +1090,8 @@ mod test {
                 &[10, 6, 35, 4],
             ] {
                 assert_eq_vec_api!(vec => |&mut vec| vec.extend_from_slice(slice.into_t()));
+                assert_eq_vec_api!(vec => |&mut vec| vec.extend(slice.iter()));
+                assert_eq_vec_api!(vec => |&mut vec| vec.extend(slice.to_vec().into_iter()));
             }
             assert_eq_vec_api!(vec => |&mut vec| vec.dedup());
             for start in 0..vec.len() {

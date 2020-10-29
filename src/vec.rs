@@ -30,10 +30,9 @@ use crate::{Index, TiEnumerated, TiRangeBounds, TiSlice};
 /// and forwards to it as much as possible.
 ///
 /// `TiVec<K, V>` uses `K` instead of `usize` for element indices and
-/// require the index to implement [`Index`] trait.
-/// If default feature `impl-index-from` is not disabled, this trait is automatically implemented
-/// when [`From<usize>`][`From`] and [`Into<usize>`][`Into`] are implemented.
-/// And their implementation can be easily done
+/// require the index to implement
+/// [`From<usize>`][`From`] and [`Into<usize>`][`Into`] traits.
+/// Their implementation can be easily done
 /// with [`derive_more`] crate and `#[derive(From, Into)]`.
 ///
 /// `TiVec<K, V>` can be converted to [`std::vec::Vec<V>`][`std::vec::Vec`] and back
@@ -60,25 +59,20 @@ use crate::{Index, TiEnumerated, TiRangeBounds, TiSlice};
 ///   with `K` used for iteration indices.
 ///   It acts like `self.into_iter().enumerate()`,
 ///   but use `K` instead of `usize` for iteration indices.
-#[cfg_attr(
-    feature = "impl-index-from",
-    doc = r#"
-
-    # Example
-
-    ```
-    use typed_index_collections::TiVec;
-    use derive_more::{From, Into};
-
-    #[derive(From, Into)]
-    struct FooId(usize);
-
-    let mut foos: TiVec<FooId, usize> = std::vec![10, 11, 13].into();
-    foos.insert(FooId(2), 12);
-    assert_eq!(foos[FooId(2)], 12);
-    ```
-"#
-)]
+///
+/// # Example
+///
+/// ```
+/// use typed_index_collections::TiVec;
+/// use derive_more::{From, Into};
+///
+/// #[derive(From, Into)]
+/// struct FooId(usize);
+///
+/// let mut foos: TiVec<FooId, usize> = std::vec![10, 11, 13].into();
+/// foos.insert(FooId(2), 12);
+/// assert_eq!(foos[FooId(2)], 12);
+/// ```
 ///
 /// [`from_ref`]: #method.from_ref
 /// [`from_mut`]: #method.from_mut
@@ -406,24 +400,19 @@ impl<K, V> TiVec<K, V> {
     /// This function uses [`slice::next_key`] instead.
     ///
     /// See [`Vec::push`] for more details.
-    #[cfg_attr(
-        feature = "impl-index-from",
-        doc = r#"
-
-        # Example
-
-        ```
-        # use derive_more::{From, Into};
-        # use typed_index_collections::TiVec;
-        #[derive(Eq, Debug, From, Into, PartialEq)]
-        pub struct Id(usize);
-        let mut vec: TiVec<Id, usize> = vec![1, 2, 4].into();
-        assert_eq!(vec.push_and_get_key(8), Id(3));
-        assert_eq!(vec.push_and_get_key(16), Id(4));
-        assert_eq!(vec.push_and_get_key(32), Id(5));
-        ```
-    "#
-    )]
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use derive_more::{From, Into};
+    /// # use typed_index_collections::TiVec;
+    /// #[derive(Eq, Debug, From, Into, PartialEq)]
+    /// pub struct Id(usize);
+    /// let mut vec: TiVec<Id, usize> = vec![1, 2, 4].into();
+    /// assert_eq!(vec.push_and_get_key(8), Id(3));
+    /// assert_eq!(vec.push_and_get_key(16), Id(4));
+    /// assert_eq!(vec.push_and_get_key(32), Id(5));
+    /// ```
     ///
     /// [`Vec::push`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.push
     #[inline]
@@ -453,25 +442,20 @@ impl<K, V> TiVec<K, V> {
     /// See [`Vec::pop`] for more details.
     ///
     /// [`Vec::pop`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.pop
-    #[cfg_attr(
-        feature = "impl-index-from",
-        doc = r#"
-
-        # Example
-
-        ```
-        # use derive_more::{From, Into};
-        # use typed_index_collections::TiVec;
-        #[derive(Eq, Debug, From, Into, PartialEq)]
-        pub struct Id(usize);
-        let mut vec: TiVec<Id, usize> = vec![1, 2, 4].into();
-        assert_eq!(vec.pop_key_value(), Some((Id(2), 4)));
-        assert_eq!(vec.pop_key_value(), Some((Id(1), 2)));
-        assert_eq!(vec.pop_key_value(), Some((Id(0), 1)));
-        assert_eq!(vec.pop_key_value(), None);
-        ```
-    "#
-    )]
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use derive_more::{From, Into};
+    /// # use typed_index_collections::TiVec;
+    /// #[derive(Eq, Debug, From, Into, PartialEq)]
+    /// pub struct Id(usize);
+    /// let mut vec: TiVec<Id, usize> = vec![1, 2, 4].into();
+    /// assert_eq!(vec.pop_key_value(), Some((Id(2), 4)));
+    /// assert_eq!(vec.pop_key_value(), Some((Id(1), 2)));
+    /// assert_eq!(vec.pop_key_value(), Some((Id(0), 1)));
+    /// assert_eq!(vec.pop_key_value(), None);
+    /// ```
     ///
     /// [`Vec::push`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.push
     #[inline]
@@ -517,28 +501,23 @@ impl<K, V> TiVec<K, V> {
     /// regardless of the range starting point.
     ///
     /// See [`Vec::drain`] for more details.
-    #[cfg_attr(
-        feature = "impl-index-from",
-        doc = r#"
-
-        # Example
-
-        ```
-        # use derive_more::{From, Into};
-        # use typed_index_collections::{TiSlice, TiVec};
-        #[derive(Eq, Debug, From, Into, PartialEq)]
-        pub struct Id(usize);
-        let mut vec: TiVec<Id, usize> = vec![1, 2, 4].into();
-        {
-            let mut iterator = vec.drain_enumerated(Id(1)..);
-            assert_eq!(iterator.next(), Some((Id(0), 2)));
-            assert_eq!(iterator.next(), Some((Id(1), 4)));
-            assert_eq!(iterator.next(), None);
-        }
-        assert_eq!(vec.as_slice(), TiSlice::from_ref(&[1]));
-        ```
-    "#
-    )]
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use derive_more::{From, Into};
+    /// # use typed_index_collections::{TiSlice, TiVec};
+    /// #[derive(Eq, Debug, From, Into, PartialEq)]
+    /// pub struct Id(usize);
+    /// let mut vec: TiVec<Id, usize> = vec![1, 2, 4].into();
+    /// {
+    ///     let mut iterator = vec.drain_enumerated(Id(1)..);
+    ///     assert_eq!(iterator.next(), Some((Id(0), 2)));
+    ///     assert_eq!(iterator.next(), Some((Id(1), 4)));
+    ///     assert_eq!(iterator.next(), None);
+    /// }
+    /// assert_eq!(vec.as_slice(), TiSlice::from_ref(&[1]));
+    /// ```
     ///
     /// [`Vec::drain`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.drain
     #[inline]
@@ -669,26 +648,21 @@ impl<K, V> TiVec<K, V> {
     ///
     /// It acts like `self.into_iter().enumerate()`,
     /// but use `K` instead of `usize` for iteration indices.
-    #[cfg_attr(
-        feature = "impl-index-from",
-        doc = r#"
-
-        # Example
-
-        ```
-        # use derive_more::{From, Into};
-        # use typed_index_collections::TiVec;
-        #[derive(Eq, Debug, From, Into, PartialEq)]
-        pub struct Id(usize);
-        let vec: TiVec<Id, usize> = vec![1, 2, 4].into();
-        let mut iterator = vec.into_iter_enumerated();
-        assert_eq!(iterator.next(), Some((Id(0), 1)));
-        assert_eq!(iterator.next(), Some((Id(1), 2)));
-        assert_eq!(iterator.next(), Some((Id(2), 4)));
-        assert_eq!(iterator.next(), None);
-        ```
-    "#
-    )]
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use derive_more::{From, Into};
+    /// # use typed_index_collections::TiVec;
+    /// #[derive(Eq, Debug, From, Into, PartialEq)]
+    /// pub struct Id(usize);
+    /// let vec: TiVec<Id, usize> = vec![1, 2, 4].into();
+    /// let mut iterator = vec.into_iter_enumerated();
+    /// assert_eq!(iterator.next(), Some((Id(0), 1)));
+    /// assert_eq!(iterator.next(), Some((Id(1), 2)));
+    /// assert_eq!(iterator.next(), Some((Id(2), 4)));
+    /// assert_eq!(iterator.next(), None);
+    /// ```
     #[inline(always)]
     pub fn into_iter_enumerated(self) -> TiEnumerated<vec::IntoIter<V>, K, V>
     where

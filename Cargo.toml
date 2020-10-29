@@ -21,9 +21,8 @@ derive_more = "0.99"
 version-sync = "0.9"
 
 [features]
-default = ["alloc", "impl-index-from", "std"]
+default = ["alloc", "std"]
 alloc = []
-impl-index-from = []
 serde-alloc = ["alloc", "serde/alloc"]
 serde-std = ["std", "serde/std"]
 std = []

@@ -15,7 +15,7 @@ impl StrStripPrefix for str {
     }
 }
 
-#[cfg(all(feature = "impl-index-from", any(feature = "alloc", feature = "std")))]
+#[cfg(any(feature = "alloc", feature = "std"))]
 #[test]
 fn test_readme_docs_sync() {
     use std::fs::read_to_string;
@@ -70,11 +70,7 @@ fn test_readme_docs_sync() {
                     .or_else(|| StrStripPrefix::strip_prefix(line, "//!"))
                     .or_else(|| {
                         if line == "#![cfg_attr("
-                            || line
-                                == concat!(
-                                    r#"    all(feature = "impl-index-from", "#,
-                                    r#"any(feature = "alloc", feature = "std")),"#
-                                )
+                            || line == r#"    any(feature = "alloc", feature = "std"),"#
                             || line == r#"    doc = r#""#
                             || line == r##""#"##
                         {

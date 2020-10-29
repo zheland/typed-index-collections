@@ -39,7 +39,6 @@ jobs:
           - "--no-default-features --features \"serde\""
           - "--no-default-features --features \"serde-alloc\""
           - "--no-default-features --features \"serde-std\""
-          - "--no-default-features --features \"impl-index-from\""
           - "--all-features"
     steps:
       - name: Checkout sources
@@ -86,7 +85,6 @@ jobs:
           - "--no-default-features --features \"serde-alloc\""
           - "--no-default-features --features \"serde-std\""
           - "--no-default-features --features \"std serde\""
-          - "--no-default-features --features \"impl-index-from\""
           - "--all-features"
     steps:
       - name: Checkout source code

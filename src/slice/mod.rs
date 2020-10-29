@@ -53,10 +53,9 @@ pub use slice_index::TiSliceIndex;
 /// [`RangeToInclusive`] range types with `K` indices for `get`-methods and index expressions.
 /// The [`RangeFull`] trait is not currently supported.
 ///
-/// `TiSlice<K, V>` require the index to implement [`Index`] trait.
-/// If default feature `impl-index-from` is not disabled, this trait is automatically implemented
-/// when [`From<usize>`][`From`] and [`Into<usize>`][`Into`] are implemented.
-/// And their implementation can be easily done
+/// `TiSlice<K, V>` require the index to implement
+/// [`From<usize>`][`From`] and [`Into<usize>`][`Into`] traits.
+/// Their implementation can be easily done
 /// with [`derive_more`] crate and `#[derive(From, Into)]`.
 ///
 /// There are zero-cost conversions available between types and references:
@@ -96,26 +95,21 @@ pub use slice_index::TiSliceIndex;
 /// returning its index of type `K`.
 ///   It acts like `self.iter().rposition(...)`,
 ///   but instead of `usize` it returns index of type `K`.
-#[cfg_attr(
-    feature = "impl-index-from",
-    doc = r#"
-
-    # Example
-
-    ```
-    use typed_index_collections::TiSlice;
-    use derive_more::{From, Into};
-
-    #[derive(From, Into)]
-    struct FooId(usize);
-
-    let mut foos_raw = [1, 2, 5, 8];
-    let foos: &mut TiSlice<FooId, usize> = TiSlice::from_mut(&mut foos_raw);
-    foos[FooId(2)] = 4;
-    assert_eq!(foos[FooId(2)], 4);
-    ```
-"#
-)]
+///
+/// # Example
+///
+/// ```
+/// use typed_index_collections::TiSlice;
+/// use derive_more::{From, Into};
+///
+/// #[derive(From, Into)]
+/// struct FooId(usize);
+///
+/// let mut foos_raw = [1, 2, 5, 8];
+/// let foos: &mut TiSlice<FooId, usize> = TiSlice::from_mut(&mut foos_raw);
+/// foos[FooId(2)] = 4;
+/// assert_eq!(foos[FooId(2)], 4);
+/// ```
 ///
 /// [`from_ref`]: #method.from_ref
 /// [`from_mut`]: #method.from_mut
@@ -210,22 +204,17 @@ impl<K, V> TiSlice<K, V> {
 
     /// Returns the index of the next slice element to be appended
     /// and at the same time number of elements in the slice of type `K`.
-    #[cfg_attr(
-        feature = "impl-index-from",
-        doc = r#"
-
-        # Example
-
-        ```
-        # use derive_more::{From, Into};
-        # use typed_index_collections::TiSlice;
-        #[derive(Eq, Debug, From, Into, PartialEq)]
-        pub struct Id(usize);
-        let slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[1, 2, 4]);
-        assert_eq!(slice.next_key(), Id(3));
-        ```
-    "#
-    )]
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use derive_more::{From, Into};
+    /// # use typed_index_collections::TiSlice;
+    /// #[derive(Eq, Debug, From, Into, PartialEq)]
+    /// pub struct Id(usize);
+    /// let slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[1, 2, 4]);
+    /// assert_eq!(slice.next_key(), Id(3));
+    /// ```
     #[inline]
     pub fn next_key(&self) -> K
     where
@@ -245,26 +234,21 @@ impl<K, V> TiSlice<K, V> {
     }
 
     /// Returns an iterator over all keys.
-    #[cfg_attr(
-        feature = "impl-index-from",
-        doc = r#"
-
-        # Example
-
-        ```
-        # use derive_more::{From, Into};
-        # use typed_index_collections::TiSlice;
-        #[derive(Debug, Eq, From, Into, PartialEq)]
-        pub struct Id(usize);
-        let slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[1, 2, 4]);
-        let mut iterator = slice.keys();
-        assert_eq!(iterator.next(), Some(Id(0)));
-        assert_eq!(iterator.next(), Some(Id(1)));
-        assert_eq!(iterator.next(), Some(Id(2)));
-        assert_eq!(iterator.next(), None);
-        ```
-    "#
-    )]
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use derive_more::{From, Into};
+    /// # use typed_index_collections::TiSlice;
+    /// #[derive(Debug, Eq, From, Into, PartialEq)]
+    /// pub struct Id(usize);
+    /// let slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[1, 2, 4]);
+    /// let mut iterator = slice.keys();
+    /// assert_eq!(iterator.next(), Some(Id(0)));
+    /// assert_eq!(iterator.next(), Some(Id(1)));
+    /// assert_eq!(iterator.next(), Some(Id(2)));
+    /// assert_eq!(iterator.next(), None);
+    /// ```
     pub fn keys(&self) -> TiSliceKeys<K>
     where
         K: Index,
@@ -293,24 +277,19 @@ impl<K, V> TiSlice<K, V> {
     }
 
     /// Returns the first slice element index of type `K`, or `None` if the slice is empty.
-    #[cfg_attr(
-        feature = "impl-index-from",
-        doc = r#"
-
-        # Example
-
-        ```
-        # use derive_more::{From, Into};
-        # use typed_index_collections::TiSlice;
-        #[derive(Debug, Eq, From, Into, PartialEq)]
-        pub struct Id(usize);
-        let empty_slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[]);
-        let slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[1, 2, 4]);
-        assert_eq!(empty_slice.first_key(), None);
-        assert_eq!(slice.first_key(), Some(Id(0)));
-        ```
-    "#
-    )]
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use derive_more::{From, Into};
+    /// # use typed_index_collections::TiSlice;
+    /// #[derive(Debug, Eq, From, Into, PartialEq)]
+    /// pub struct Id(usize);
+    /// let empty_slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[]);
+    /// let slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[1, 2, 4]);
+    /// assert_eq!(empty_slice.first_key(), None);
+    /// assert_eq!(slice.first_key(), Some(Id(0)));
+    /// ```
     #[inline]
     pub fn first_key(&self) -> Option<K>
     where
@@ -327,24 +306,19 @@ impl<K, V> TiSlice<K, V> {
     /// or `None` if the slice is empty.
     ///
     /// See [`slice::first`] for more details.
-    #[cfg_attr(
-        feature = "impl-index-from",
-        doc = r#"
-
-        # Example
-
-        ```
-        # use derive_more::{From, Into};
-        # use typed_index_collections::TiSlice;
-        #[derive(Debug, Eq, From, Into, PartialEq)]
-        pub struct Id(usize);
-        let empty_slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[]);
-        let slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[1, 2, 4]);
-        assert_eq!(empty_slice.first_key_value(), None);
-        assert_eq!(slice.first_key_value(), Some((Id(0), &1)));
-        ```
-    "#
-    )]
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use derive_more::{From, Into};
+    /// # use typed_index_collections::TiSlice;
+    /// #[derive(Debug, Eq, From, Into, PartialEq)]
+    /// pub struct Id(usize);
+    /// let empty_slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[]);
+    /// let slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[1, 2, 4]);
+    /// assert_eq!(empty_slice.first_key_value(), None);
+    /// assert_eq!(slice.first_key_value(), Some((Id(0), &1)));
+    /// ```
     ///
     /// [`slice::first`]: https://doc.rust-lang.org/std/primitive.slice.html#method.first
     #[inline]
@@ -359,27 +333,22 @@ impl<K, V> TiSlice<K, V> {
     /// to the element itself, or `None` if the slice is empty.
     ///
     /// See [`slice::first_mut`] for more details.
-    #[cfg_attr(
-        feature = "impl-index-from",
-        doc = r#"
-
-        # Example
-
-        ```
-        # use derive_more::{From, Into};
-        # use typed_index_collections::TiSlice;
-        #[derive(Debug, Eq, From, Into, PartialEq)]
-        pub struct Id(usize);
-        let empty_slice: &mut TiSlice<Id, usize> = TiSlice::from_mut(&mut []);
-        let mut array = [1, 2, 4];
-        let slice: &mut TiSlice<Id, usize> = TiSlice::from_mut(&mut array);
-        assert_eq!(empty_slice.first_key_value_mut(), None);
-        assert_eq!(slice.first_key_value_mut(), Some((Id(0), &mut 1)));
-        *slice.first_key_value_mut().unwrap().1 = 123;
-        assert_eq!(slice.raw, [123, 2, 4]);
-        ```
-    "#
-    )]
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use derive_more::{From, Into};
+    /// # use typed_index_collections::TiSlice;
+    /// #[derive(Debug, Eq, From, Into, PartialEq)]
+    /// pub struct Id(usize);
+    /// let empty_slice: &mut TiSlice<Id, usize> = TiSlice::from_mut(&mut []);
+    /// let mut array = [1, 2, 4];
+    /// let slice: &mut TiSlice<Id, usize> = TiSlice::from_mut(&mut array);
+    /// assert_eq!(empty_slice.first_key_value_mut(), None);
+    /// assert_eq!(slice.first_key_value_mut(), Some((Id(0), &mut 1)));
+    /// *slice.first_key_value_mut().unwrap().1 = 123;
+    /// assert_eq!(slice.raw, [123, 2, 4]);
+    /// ```
     ///
     /// [`slice::first_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.first_mut
     #[inline]
@@ -461,24 +430,19 @@ impl<K, V> TiSlice<K, V> {
     }
 
     /// Returns the last slice element index of type `K`, or `None` if the slice is empty.
-    #[cfg_attr(
-        feature = "impl-index-from",
-        doc = r#"
-
-        # Example
-
-        ```
-        # use derive_more::{From, Into};
-        # use typed_index_collections::TiSlice;
-        #[derive(Debug, Eq, From, Into, PartialEq)]
-        pub struct Id(usize);
-        let empty_slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[]);
-        let slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[1, 2, 4]);
-        assert_eq!(empty_slice.last_key(), None);
-        assert_eq!(slice.last_key(), Some(Id(2)));
-        ```
-    "#
-    )]
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use derive_more::{From, Into};
+    /// # use typed_index_collections::TiSlice;
+    /// #[derive(Debug, Eq, From, Into, PartialEq)]
+    /// pub struct Id(usize);
+    /// let empty_slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[]);
+    /// let slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[1, 2, 4]);
+    /// assert_eq!(empty_slice.last_key(), None);
+    /// assert_eq!(slice.last_key(), Some(Id(2)));
+    /// ```
     #[inline]
     pub fn last_key(&self) -> Option<K>
     where
@@ -495,24 +459,19 @@ impl<K, V> TiSlice<K, V> {
     /// or `None` if the slice is empty.
     ///
     /// See [`slice::last`] for more details.
-    #[cfg_attr(
-        feature = "impl-index-from",
-        doc = r#"
-
-        # Example
-
-        ```
-        # use derive_more::{From, Into};
-        # use typed_index_collections::TiSlice;
-        #[derive(Debug, Eq, From, Into, PartialEq)]
-        pub struct Id(usize);
-        let empty_slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[]);
-        let slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[1, 2, 4]);
-        assert_eq!(empty_slice.last_key_value(), None);
-        assert_eq!(slice.last_key_value(), Some((Id(2), &4)));
-        ```
-    "#
-    )]
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use derive_more::{From, Into};
+    /// # use typed_index_collections::TiSlice;
+    /// #[derive(Debug, Eq, From, Into, PartialEq)]
+    /// pub struct Id(usize);
+    /// let empty_slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[]);
+    /// let slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[1, 2, 4]);
+    /// assert_eq!(empty_slice.last_key_value(), None);
+    /// assert_eq!(slice.last_key_value(), Some((Id(2), &4)));
+    /// ```
     ///
     /// [`slice::last`]: https://doc.rust-lang.org/std/primitive.slice.html#method.last
     #[inline]
@@ -530,27 +489,22 @@ impl<K, V> TiSlice<K, V> {
     /// to the element itself, or `None` if the slice is empty.
     ///
     /// See [`slice::last_mut`] for more details.
-    #[cfg_attr(
-        feature = "impl-index-from",
-        doc = r#"
-
-        # Example
-
-        ```
-        # use derive_more::{From, Into};
-        # use typed_index_collections::TiSlice;
-        #[derive(Debug, Eq, From, Into, PartialEq)]
-        pub struct Id(usize);
-        let empty_slice: &mut TiSlice<Id, usize> = TiSlice::from_mut(&mut []);
-        let mut array = [1, 2, 4];
-        let slice: &mut TiSlice<Id, usize> = TiSlice::from_mut(&mut array);
-        assert_eq!(empty_slice.last_key_value_mut(), None);
-        assert_eq!(slice.last_key_value_mut(), Some((Id(2), &mut 4)));
-        *slice.last_key_value_mut().unwrap().1 = 123;
-        assert_eq!(slice.raw, [1, 2, 123]);
-        ```
-    "#
-    )]
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use derive_more::{From, Into};
+    /// # use typed_index_collections::TiSlice;
+    /// #[derive(Debug, Eq, From, Into, PartialEq)]
+    /// pub struct Id(usize);
+    /// let empty_slice: &mut TiSlice<Id, usize> = TiSlice::from_mut(&mut []);
+    /// let mut array = [1, 2, 4];
+    /// let slice: &mut TiSlice<Id, usize> = TiSlice::from_mut(&mut array);
+    /// assert_eq!(empty_slice.last_key_value_mut(), None);
+    /// assert_eq!(slice.last_key_value_mut(), Some((Id(2), &mut 4)));
+    /// *slice.last_key_value_mut().unwrap().1 = 123;
+    /// assert_eq!(slice.raw, [1, 2, 123]);
+    /// ```
     ///
     /// [`slice::last_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.last_mut
     #[inline]
@@ -695,26 +649,21 @@ impl<K, V> TiSlice<K, V> {
     /// but use `K` instead of `usize` for iteration indices.
     ///
     /// See [`slice::iter`] for more details.
-    #[cfg_attr(
-        feature = "impl-index-from",
-        doc = r#"
-
-        # Example
-
-        ```
-        # use derive_more::{From, Into};
-        # use typed_index_collections::TiSlice;
-        #[derive(Debug, Eq, From, Into, PartialEq)]
-        pub struct Id(usize);
-        let slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[1, 2, 4]);
-        let mut iterator = slice.iter_enumerated();
-        assert_eq!(iterator.next(), Some((Id(0), &1)));
-        assert_eq!(iterator.next(), Some((Id(1), &2)));
-        assert_eq!(iterator.next(), Some((Id(2), &4)));
-        assert_eq!(iterator.next(), None);
-        ```
-    "#
-    )]
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use derive_more::{From, Into};
+    /// # use typed_index_collections::TiSlice;
+    /// #[derive(Debug, Eq, From, Into, PartialEq)]
+    /// pub struct Id(usize);
+    /// let slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[1, 2, 4]);
+    /// let mut iterator = slice.iter_enumerated();
+    /// assert_eq!(iterator.next(), Some((Id(0), &1)));
+    /// assert_eq!(iterator.next(), Some((Id(1), &2)));
+    /// assert_eq!(iterator.next(), Some((Id(2), &4)));
+    /// assert_eq!(iterator.next(), None);
+    /// ```
     ///
     /// [`slice::iter`]: https://doc.rust-lang.org/std/primitive.slice.html#method.iter
     #[inline]
@@ -742,26 +691,21 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// It acts like `self.iter_mut().enumerate()`,
     /// but use `K` instead of `usize` for iteration indices.
-    #[cfg_attr(
-        feature = "impl-index-from",
-        doc = r#"
-
-        # Example
-
-        ```
-        # use derive_more::{From, Into};
-        # use typed_index_collections::TiSlice;
-        #[derive(Debug, Eq, From, Into, PartialEq)]
-        pub struct Id(usize);
-        let mut array = [1, 2, 4];
-        let slice: &mut TiSlice<Id, usize> = TiSlice::from_mut(&mut array);
-        for (key, value) in slice.iter_mut_enumerated() {
-            *value += key.0;
-        }
-        assert_eq!(array, [1, 3, 6]);
-        ```
-    "#
-    )]
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use derive_more::{From, Into};
+    /// # use typed_index_collections::TiSlice;
+    /// #[derive(Debug, Eq, From, Into, PartialEq)]
+    /// pub struct Id(usize);
+    /// let mut array = [1, 2, 4];
+    /// let slice: &mut TiSlice<Id, usize> = TiSlice::from_mut(&mut array);
+    /// for (key, value) in slice.iter_mut_enumerated() {
+    ///     *value += key.0;
+    /// }
+    /// assert_eq!(array, [1, 3, 6]);
+    /// ```
     ///
     /// [`slice::iter_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.iter_mut
     #[inline]
@@ -781,25 +725,20 @@ impl<K, V> TiSlice<K, V> {
     /// but instead of `usize` it returns index of type `K`.
     ///
     /// See [`slice::iter`] and [`Iterator::position`] for more details.
-    #[cfg_attr(
-        feature = "impl-index-from",
-        doc = r#"
-
-        # Example
-
-        ```
-        # use derive_more::{From, Into};
-        # use typed_index_collections::TiSlice;
-        #[derive(Debug, Eq, From, Into, PartialEq)]
-        pub struct Id(usize);
-        let slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[1, 2, 4, 2, 1]);
-        assert_eq!(slice.position(|&value| value == 1), Some(Id(0)));
-        assert_eq!(slice.position(|&value| value == 2), Some(Id(1)));
-        assert_eq!(slice.position(|&value| value == 3), None);
-        assert_eq!(slice.position(|&value| value == 4), Some(Id(2)));
-        ```
-    "#
-    )]
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use derive_more::{From, Into};
+    /// # use typed_index_collections::TiSlice;
+    /// #[derive(Debug, Eq, From, Into, PartialEq)]
+    /// pub struct Id(usize);
+    /// let slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[1, 2, 4, 2, 1]);
+    /// assert_eq!(slice.position(|&value| value == 1), Some(Id(0)));
+    /// assert_eq!(slice.position(|&value| value == 2), Some(Id(1)));
+    /// assert_eq!(slice.position(|&value| value == 3), None);
+    /// assert_eq!(slice.position(|&value| value == 4), Some(Id(2)));
+    /// ```
     ///
     /// [`slice::iter`]: https://doc.rust-lang.org/std/primitive.slice.html#method.iter
     /// [`Iterator::position`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.position
@@ -818,25 +757,20 @@ impl<K, V> TiSlice<K, V> {
     /// but instead of `usize` it returns index of type `K`.
     ///
     /// See [`slice::iter`] and [`Iterator::position`] for more details.
-    #[cfg_attr(
-        feature = "impl-index-from",
-        doc = r#"
-
-        # Example
-
-        ```
-        # use derive_more::{From, Into};
-        # use typed_index_collections::TiSlice;
-        #[derive(Debug, Eq, From, Into, PartialEq)]
-        pub struct Id(usize);
-        let slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[1, 2, 4, 2, 1]);
-        assert_eq!(slice.rposition(|&value| value == 1), Some(Id(4)));
-        assert_eq!(slice.rposition(|&value| value == 2), Some(Id(3)));
-        assert_eq!(slice.rposition(|&value| value == 3), None);
-        assert_eq!(slice.rposition(|&value| value == 4), Some(Id(2)));
-        ```
-    "#
-    )]
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use derive_more::{From, Into};
+    /// # use typed_index_collections::TiSlice;
+    /// #[derive(Debug, Eq, From, Into, PartialEq)]
+    /// pub struct Id(usize);
+    /// let slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[1, 2, 4, 2, 1]);
+    /// assert_eq!(slice.rposition(|&value| value == 1), Some(Id(4)));
+    /// assert_eq!(slice.rposition(|&value| value == 2), Some(Id(3)));
+    /// assert_eq!(slice.rposition(|&value| value == 3), None);
+    /// assert_eq!(slice.rposition(|&value| value == 4), Some(Id(2)));
+    /// ```
     ///
     /// [`slice::iter`]: https://doc.rust-lang.org/std/primitive.slice.html#method.iter
     /// [`Iterator::position`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.position

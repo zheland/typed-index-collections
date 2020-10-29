@@ -3,31 +3,16 @@
 #[cfg(any(feature = "alloc", feature = "std"))]
 use alloc::{boxed::Box, vec::Vec};
 
-#[cfg(feature = "impl-index-from")]
 use derive_more::{From, Into};
 
 use crate::TiSlice;
 
-#[cfg(not(feature = "impl-index-from"))]
-use crate::Index;
-
 #[cfg(any(feature = "alloc", feature = "std"))]
 use crate::TiVec;
 
-#[cfg_attr(feature = "impl-index-from", derive(From, Into))]
+#[derive(From, Into)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Id(usize);
-
-#[cfg(not(feature = "impl-index-from"))]
-impl Index for Id {
-    fn from_usize(index: usize) -> Self {
-        Self(index)
-    }
-
-    fn into_usize(self) -> usize {
-        self.0
-    }
-}
 
 pub trait DummyConvert {
     type Target;
@@ -72,14 +57,8 @@ macro_rules! impl_convert {
     };
 }
 
-#[cfg(not(feature = "impl-index-from"))]
-impl_convert!(|self: usize| -> Id { Id::from_usize(self) });
-#[cfg(feature = "impl-index-from")]
 impl_convert!(|self: usize| -> Id { self.into() });
 
-#[cfg(not(feature = "impl-index-from"))]
-impl_convert!(|self: Id| -> usize { self.into_usize() });
-#[cfg(feature = "impl-index-from")]
 impl_convert!(|self: Id| -> usize { self.into() });
 
 impl_convert!(for ('a, V)

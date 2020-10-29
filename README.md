@@ -20,10 +20,9 @@ when using Struct of Arrays, or when [`Rc`] and [`Weak`] usage is undesirable.
 
 This crate provides typed index version of [`slice`] and [`std::vec::Vec`]
 types with custom index type.
-Containers only require the index to implement [`Index`] trait.
-If default feature `impl-index-from` is enabled, this trait is automatically implemented
-when [`From<usize>`][`From`] and [`Into<usize>`][`Into`] are implemented.
-And their implementation can be easily done
+Containers only require the index to implement
+[`From<usize>`][`From`] and [`Into<usize>`][`Into`] traits.
+Their implementation can be easily done
 with [`derive_more`] crate and `#[derive(From, Into)]`.
 
 The [`TiSlice`] and [`TiVec`] structs are only wrappers
@@ -52,7 +51,7 @@ in your `Cargo.toml` as shown below:
 [dependencies.typed-index-collections]
 version = "2.0"
 default-features = false
-features = ["alloc", "impl-index-from"]
+features = ["alloc"]
 ```
 
 If you want to use [`derive_more`] for
@@ -140,9 +139,6 @@ let _boxed_slice: std::boxed::Box<[Foo]> = ti_boxed_slice.into();
 
 ## Feature Flags
 
-- `impl-index-from` (enabled by default) &mdash; Enables automatic [`Index`]
-  trait implementation for types that implement
-  [`From<usize>`][`From`] and [`Into<usize>`][`Into`].
 - `alloc` (enabled by default) &mdash; Enables types and functions
   which require memory allocation.
 - `std` (enabled by default) &mdash; Enables all [`std`] features

@@ -794,7 +794,7 @@ where
 {
     #[inline]
     fn eq(&self, other: &&'a TiSlice<K, B>) -> bool {
-        self.raw == &other.raw
+        *self.raw == other.raw
     }
 }
 
@@ -804,7 +804,7 @@ where
 {
     #[inline]
     fn eq(&self, other: &&'a mut TiSlice<K, B>) -> bool {
-        self.raw == &other.raw
+        *self.raw == other.raw
     }
 }
 

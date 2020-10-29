@@ -189,7 +189,6 @@ additional terms or conditions.
 
 [`TiSlice`]: https://docs.rs/typed-index-collections/*/typed_index_collections/struct.TiSlice.html
 [`TiVec`]: https://docs.rs/typed-index-collections/*/typed_index_collections/struct.TiVec.html
-[`Index`]: https://docs.rs/typed-index-collections/*/typed_index_collections/trait.Index.html
 [API Documentation]: https://docs.rs/typed-index-collections
 [`std`]: https://doc.rust-lang.org/std/index.html
 [`alloc`]: https://doc.rust-lang.org/alloc/index.html

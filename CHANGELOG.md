@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Set `impl-index-from` feature always enabled because of
   compatibility issues between crates that use it and crates that don't.
+- Remove `TypedIndex` trait.
 
 ## [2.0.1] - 2020-08-06
 ### Fixed

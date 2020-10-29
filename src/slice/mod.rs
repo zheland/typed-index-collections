@@ -28,7 +28,7 @@ use alloc::{borrow::ToOwned, boxed::Box};
 #[cfg(feature = "serde")]
 use serde::ser::{Serialize, Serializer};
 
-use crate::{Index, TiEnumerated, TiRangeBounds, TiSliceKeys, TiSliceMutMap, TiSliceRefMap};
+use crate::{TiEnumerated, TiRangeBounds, TiSliceKeys, TiSliceMutMap, TiSliceRefMap};
 
 #[cfg(any(feature = "alloc", feature = "std"))]
 use crate::TiVec;
@@ -125,7 +125,6 @@ pub use slice_index::TiSliceIndex;
 /// [`iter_mut_enumerated`]: #method.iter_mut_enumerated
 /// [`position`]: #method.position
 /// [`rposition`]: #method.rposition
-/// [`Index`]: trait.Index.html
 /// [`slice`]: https://doc.rust-lang.org/std/primitive.slice.html
 /// [`From`]: https://doc.rust-lang.org/std/convert/trait.From.html
 /// [`Into`]: https://doc.rust-lang.org/std/convert/trait.Into.html
@@ -218,9 +217,9 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn next_key(&self) -> K
     where
-        K: Index,
+        K: From<usize>,
     {
-        Index::from_usize(self.raw.len())
+        self.raw.len().into()
     }
 
     /// Returns `true` if the slice has a length of 0.
@@ -251,9 +250,9 @@ impl<K, V> TiSlice<K, V> {
     /// ```
     pub fn keys(&self) -> TiSliceKeys<K>
     where
-        K: Index,
+        K: From<usize>,
     {
-        (0..self.len()).map(Index::from_usize)
+        (0..self.len()).map(Into::into)
     }
 
     /// Returns the first element of the slice, or `None` if it is empty.
@@ -293,12 +292,12 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn first_key(&self) -> Option<K>
     where
-        K: Index,
+        K: From<usize>,
     {
         if self.is_empty() {
             None
         } else {
-            Some(Index::from_usize(0))
+            Some(0.into())
         }
     }
 
@@ -324,9 +323,9 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn first_key_value(&self) -> Option<(K, &V)>
     where
-        K: Index,
+        K: From<usize>,
     {
-        self.raw.first().map(|first| (Index::from_usize(0), first))
+        self.raw.first().map(|first| (0.into(), first))
     }
 
     /// Returns the first slice element index of type `K` and a mutable reference
@@ -354,11 +353,9 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn first_key_value_mut(&mut self) -> Option<(K, &mut V)>
     where
-        K: Index,
+        K: From<usize>,
     {
-        self.raw
-            .first_mut()
-            .map(|first| (Index::from_usize(0), first))
+        self.raw.first_mut().map(|first| (0.into(), first))
     }
 
     /// Returns the first and all the rest of the elements of the slice, or `None` if it is empty.
@@ -446,12 +443,12 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn last_key(&self) -> Option<K>
     where
-        K: Index,
+        K: From<usize>,
     {
         if self.is_empty() {
             None
         } else {
-            Some(Index::from_usize(self.len() - 1))
+            Some((self.len() - 1).into())
         }
     }
 
@@ -477,12 +474,10 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn last_key_value(&self) -> Option<(K, &V)>
     where
-        K: Index,
+        K: From<usize>,
     {
         let len = self.len();
-        self.raw
-            .last()
-            .map(|last| (Index::from_usize(len - 1), last))
+        self.raw.last().map(|last| ((len - 1).into(), last))
     }
 
     /// Returns the last slice element index of type `K` and a mutable reference
@@ -510,12 +505,10 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn last_key_value_mut(&mut self) -> Option<(K, &mut V)>
     where
-        K: Index,
+        K: From<usize>,
     {
         let len = self.len();
-        self.raw
-            .last_mut()
-            .map(|last| (Index::from_usize(len - 1), last))
+        self.raw.last_mut().map(|last| ((len - 1).into(), last))
     }
 
     /// Returns a reference to an element or subslice
@@ -618,9 +611,9 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn swap(&mut self, a: K, b: K)
     where
-        K: Index,
+        usize: From<K>,
     {
-        self.raw.swap(a.into_usize(), b.into_usize())
+        self.raw.swap(a.into(), b.into())
     }
 
     /// Reverses the order of elements in the slice, in place.
@@ -669,12 +662,12 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn iter_enumerated(&self) -> TiEnumerated<Iter<'_, V>, K, &V>
     where
-        K: Index,
+        K: From<usize>,
     {
         self.raw
             .iter()
             .enumerate()
-            .map(|(key, value)| (Index::from_usize(key), value))
+            .map(|(key, value)| (key.into(), value))
     }
 
     /// Returns an iterator that allows modifying each value.
@@ -711,12 +704,12 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn iter_mut_enumerated(&mut self) -> TiEnumerated<IterMut<'_, V>, K, &mut V>
     where
-        K: Index,
+        K: From<usize>,
     {
         self.raw
             .iter_mut()
             .enumerate()
-            .map(|(key, value)| (Index::from_usize(key), value))
+            .map(|(key, value)| (key.into(), value))
     }
 
     /// Searches for an element in an iterator, returning its index of type `K`.
@@ -745,10 +738,10 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn position<P>(&self, predicate: P) -> Option<K>
     where
-        K: Index,
+        K: From<usize>,
         P: FnMut(&V) -> bool,
     {
-        self.raw.iter().position(predicate).map(Index::from_usize)
+        self.raw.iter().position(predicate).map(Into::into)
     }
 
     /// Searches for an element in an iterator from the right, returning its index of type `K`.
@@ -777,10 +770,10 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn rposition<P>(&self, predicate: P) -> Option<K>
     where
-        K: Index,
+        K: From<usize>,
         P: FnMut(&V) -> bool,
     {
-        self.raw.iter().rposition(predicate).map(Index::from_usize)
+        self.raw.iter().rposition(predicate).map(Into::into)
     }
 
     /// Returns an iterator over all contiguous windows of length
@@ -899,9 +892,9 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn split_at(&self, mid: K) -> (&Self, &Self)
     where
-        K: Index,
+        usize: From<K>,
     {
-        let (left, right) = self.raw.split_at(mid.into_usize());
+        let (left, right) = self.raw.split_at(mid.into());
         (left.as_ref(), right.as_ref())
     }
 
@@ -913,9 +906,9 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn split_at_mut(&mut self, mid: K) -> (&mut Self, &mut Self)
     where
-        K: Index,
+        usize: From<K>,
     {
-        let (left, right) = self.raw.split_at_mut(mid.into_usize());
+        let (left, right) = self.raw.split_at_mut(mid.into());
         (left.as_mut(), right.as_mut())
     }
 
@@ -1083,12 +1076,12 @@ impl<K, V> TiSlice<K, V> {
     pub fn binary_search(&self, x: &V) -> Result<K, K>
     where
         V: Ord,
-        K: Index,
+        K: From<usize>,
     {
         self.raw
             .binary_search(x)
-            .map(Index::from_usize)
-            .map_err(Index::from_usize)
+            .map(Into::into)
+            .map_err(Into::into)
     }
 
     /// Binary searches this sorted slice with a comparator function.
@@ -1100,12 +1093,12 @@ impl<K, V> TiSlice<K, V> {
     pub fn binary_search_by<'a, F>(&'a self, f: F) -> Result<K, K>
     where
         F: FnMut(&'a V) -> Ordering,
-        K: Index,
+        K: From<usize>,
     {
         self.raw
             .binary_search_by(f)
-            .map(Index::from_usize)
-            .map_err(Index::from_usize)
+            .map(Into::into)
+            .map_err(Into::into)
     }
 
     /// Binary searches this sorted slice with a key extraction function.
@@ -1118,12 +1111,12 @@ impl<K, V> TiSlice<K, V> {
     where
         F: FnMut(&'a V) -> B,
         B: Ord,
-        K: Index,
+        K: From<usize>,
     {
         self.raw
             .binary_search_by_key(b, f)
-            .map(Index::from_usize)
-            .map_err(Index::from_usize)
+            .map(Into::into)
+            .map_err(Into::into)
     }
 
     /// Sorts the slice, but may not preserve the order of equal elements.
@@ -1178,9 +1171,9 @@ impl<K, V> TiSlice<K, V> {
     /// [`slice::rotate_left`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rotate_left
     pub fn rotate_left(&mut self, mid: K)
     where
-        K: Index,
+        usize: From<K>,
     {
-        self.raw.rotate_left(mid.into_usize())
+        self.raw.rotate_left(mid.into())
     }
 
     /// Rotates the slice in-place such that the first `self.next_key() - k`
@@ -1193,9 +1186,9 @@ impl<K, V> TiSlice<K, V> {
     /// [`slice::rotate_right`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rotate_right
     pub fn rotate_right(&mut self, k: K)
     where
-        K: Index,
+        usize: From<K>,
     {
-        self.raw.rotate_right(k.into_usize())
+        self.raw.rotate_right(k.into())
     }
 
     /// Copies the elements from `src` into `self`.
@@ -1232,9 +1225,9 @@ impl<K, V> TiSlice<K, V> {
     where
         R: TiRangeBounds<K>,
         V: Copy,
-        K: Index,
+        usize: From<K>,
     {
-        self.raw.copy_within(src.into_range(), dest.into_usize())
+        self.raw.copy_within(src.into_range(), dest.into())
     }
 
     /// Swaps all elements in `self` with those in `other`.
@@ -1458,7 +1451,7 @@ impl<K> TiSlice<K, u8> {
 
 impl<K, V> fmt::Debug for TiSlice<K, V>
 where
-    K: fmt::Debug + Index,
+    K: fmt::Debug + From<usize>,
     V: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -2105,19 +2098,20 @@ mod test {
 
     #[test]
     fn use_non_zero_indecies() {
-        use crate::Index;
         use core::num::NonZeroUsize;
 
         #[derive(Clone, Copy, Debug, Eq, PartialEq)]
         struct Id(NonZeroUsize);
 
-        impl Index for Id {
-            fn from_usize(value: usize) -> Self {
+        impl From<usize> for Id {
+            fn from(value: usize) -> Self {
                 Self(NonZeroUsize::new(value + 1).unwrap())
             }
+        }
 
-            fn into_usize(self) -> usize {
-                self.0.get() - 1
+        impl From<Id> for usize {
+            fn from(value: Id) -> Self {
+                value.0.get() - 1
             }
         }
 

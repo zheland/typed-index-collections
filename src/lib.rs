@@ -182,7 +182,6 @@
 //!
 //! [`TiSlice`]: struct.TiSlice.html
 //! [`TiVec`]: struct.TiVec.html
-//! [`Index`]: trait.Index.html
 //! [`std`]: https://doc.rust-lang.org/std/index.html
 //! [`alloc`]: https://doc.rust-lang.org/alloc/index.html
 //! [`slice`]: https://doc.rust-lang.org/std/primitive.slice.html
@@ -226,7 +225,6 @@ extern crate std as alloc;
 #[macro_use]
 mod test;
 
-mod index;
 mod iter;
 mod range;
 mod slice;
@@ -234,7 +232,6 @@ mod slice;
 #[cfg(any(feature = "alloc", feature = "std"))]
 mod vec;
 
-pub use index::Index;
 pub use iter::{TiEnumerated, TiSliceKeys, TiSliceMutMap, TiSliceRefMap};
 pub use range::TiRangeBounds;
 pub use slice::{TiSlice, TiSliceIndex};

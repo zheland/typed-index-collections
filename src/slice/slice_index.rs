@@ -1,4 +1,4 @@
-use crate::{Index, TiRangeBounds, TiSlice};
+use crate::{TiRangeBounds, TiSlice};
 use core::ops;
 
 mod private {
@@ -68,42 +68,42 @@ pub trait TiSliceIndex<K, V>: private::Sealed<K> {
     fn index_mut(self, slice: &mut TiSlice<K, V>) -> &mut Self::Output;
 }
 
-impl<K: Index, V> TiSliceIndex<K, V> for K {
+impl<K, V> TiSliceIndex<K, V> for K where usize: From<K> {
     type Output = V;
 
     #[inline]
     fn get(self, slice: &TiSlice<K, V>) -> Option<&Self::Output> {
-        slice.raw.get(self.into_usize())
+        slice.raw.get(usize::from(self))
     }
 
     #[inline]
     fn get_mut(self, slice: &mut TiSlice<K, V>) -> Option<&mut Self::Output> {
-        slice.raw.get_mut(self.into_usize())
+        slice.raw.get_mut(usize::from(self))
     }
 
     #[inline]
     unsafe fn get_unchecked(self, slice: &TiSlice<K, V>) -> &Self::Output {
-        slice.raw.get_unchecked(self.into_usize())
+        slice.raw.get_unchecked(usize::from(self))
     }
 
     #[inline]
     unsafe fn get_unchecked_mut(self, slice: &mut TiSlice<K, V>) -> &mut Self::Output {
-        slice.raw.get_unchecked_mut(self.into_usize())
+        slice.raw.get_unchecked_mut(usize::from(self))
     }
 
     #[inline]
     fn index(self, slice: &TiSlice<K, V>) -> &Self::Output {
-        &slice.raw[self.into_usize()]
+        &slice.raw[usize::from(self)]
     }
 
     fn index_mut(self, slice: &mut TiSlice<K, V>) -> &mut Self::Output {
-        &mut slice.raw[self.into_usize()]
+        &mut slice.raw[usize::from(self)]
     }
 }
 
 macro_rules! impl_ti_slice_range {
     ($ty:ty) => {
-        impl<K: Index, V> TiSliceIndex<K, V> for $ty {
+        impl<K, V> TiSliceIndex<K, V> for $ty where usize: From<K> {
             type Output = TiSlice<K, V>;
 
             #[inline]

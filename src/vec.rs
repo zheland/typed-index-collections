@@ -20,7 +20,7 @@ use serde::ser::{Serialize, Serializer};
 #[cfg(any(feature = "serde-alloc", feature = "serde-std"))]
 use serde::de::{Deserialize, Deserializer};
 
-use crate::{Index, TiEnumerated, TiRangeBounds, TiSlice};
+use crate::{TiEnumerated, TiRangeBounds, TiSlice};
 
 /// A contiguous growable array type
 /// that only accepts keys of the type `K`.
@@ -80,7 +80,6 @@ use crate::{Index, TiEnumerated, TiRangeBounds, TiSlice};
 /// [`pop_key_value`]: #method.pop_key_value
 /// [`drain_enumerated`]: #method.drain_enumerated
 /// [`into_iter_enumerated`]: #method.into_iter_enumerated
-/// [`Index`]: trait.Index.html
 /// [`std::vec::Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
 /// [`From`]: https://doc.rust-lang.org/std/convert/trait.From.html
 /// [`Into`]: https://doc.rust-lang.org/std/convert/trait.Into.html
@@ -312,9 +311,9 @@ impl<K, V> TiVec<K, V> {
     #[inline]
     pub fn swap_remove(&mut self, index: K) -> V
     where
-        K: Index,
+        usize: From<K>,
     {
-        self.raw.swap_remove(index.into_usize())
+        self.raw.swap_remove(index.into())
     }
 
     /// Inserts an element at position `index` within the vector, shifting all
@@ -325,9 +324,9 @@ impl<K, V> TiVec<K, V> {
     /// [`Vec::insert`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.insert
     pub fn insert(&mut self, index: K, element: V)
     where
-        K: Index,
+        usize: From<K>,
     {
-        self.raw.insert(index.into_usize(), element)
+        self.raw.insert(index.into(), element)
     }
 
     /// Removes and returns the element at position `index` within the vector,
@@ -338,9 +337,9 @@ impl<K, V> TiVec<K, V> {
     /// [`Vec::remove`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.remove
     pub fn remove(&mut self, index: K) -> V
     where
-        K: Index,
+        usize: From<K>,
     {
-        self.raw.remove(index.into_usize())
+        self.raw.remove(index.into())
     }
 
     /// Retains only the elements specified by the predicate.
@@ -418,7 +417,7 @@ impl<K, V> TiVec<K, V> {
     #[inline]
     pub fn push_and_get_key(&mut self, value: V) -> K
     where
-        K: Index,
+        K: From<usize>,
     {
         let key = self.next_key();
         self.raw.push(value);
@@ -461,11 +460,9 @@ impl<K, V> TiVec<K, V> {
     #[inline]
     pub fn pop_key_value(&mut self) -> Option<(K, V)>
     where
-        K: Index,
+        K: From<usize>,
     {
-        self.raw
-            .pop()
-            .map(|value| (K::from_usize(self.raw.len()), value))
+        self.raw.pop().map(|value| (self.raw.len().into(), value))
     }
 
     /// Moves all the elements of `other` into `Self`, leaving `other` empty.
@@ -523,13 +520,13 @@ impl<K, V> TiVec<K, V> {
     #[inline]
     pub fn drain_enumerated<R>(&mut self, range: R) -> TiEnumerated<Drain<'_, V>, K, V>
     where
-        K: Index,
+        K: From<usize>,
         R: TiRangeBounds<K>,
     {
         self.raw
             .drain(range.into_range())
             .enumerate()
-            .map(|(key, value)| (Index::from_usize(key), value))
+            .map(|(key, value)| (key.into(), value))
     }
 
     /// Clears the vector, removing all values.
@@ -571,9 +568,9 @@ impl<K, V> TiVec<K, V> {
     #[must_use = "use `.truncate()` if you don't need the other half"]
     pub fn split_off(&mut self, at: K) -> Self
     where
-        K: Index,
+        usize: From<K>,
     {
-        self.raw.split_off(at.into_usize()).into()
+        self.raw.split_off(at.into()).into()
     }
 
     /// Resizes the `TiVec` in-place so that `len` is equal to `new_len`.
@@ -666,18 +663,18 @@ impl<K, V> TiVec<K, V> {
     #[inline(always)]
     pub fn into_iter_enumerated(self) -> TiEnumerated<vec::IntoIter<V>, K, V>
     where
-        K: Index,
+        K: From<usize>,
     {
         self.raw
             .into_iter()
             .enumerate()
-            .map(|(key, value)| (K::from_usize(key), value))
+            .map(|(key, value)| (key.into(), value))
     }
 }
 
 impl<K, V> fmt::Debug for TiVec<K, V>
 where
-    K: fmt::Debug + Index,
+    K: fmt::Debug + From<usize>,
     V: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

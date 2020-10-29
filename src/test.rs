@@ -10,8 +10,7 @@ use crate::TiSlice;
 #[cfg(any(feature = "alloc", feature = "std"))]
 use crate::TiVec;
 
-#[derive(From, Into)]
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(From, Into, Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Id(usize);
 
 pub trait DummyConvert {

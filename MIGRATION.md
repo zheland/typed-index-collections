@@ -4,6 +4,8 @@
 - Default `impl-index-from` feature is now always enabled.
   Use wrappers for `TypedIndex` values
   if you use different `From/Into` `usize` and `TypedIndex::{from_usize, into_usize}` implementations.
+- Trait `TypedIndex` was removed.
+  Use `From<usize>` and `Into<usize>` instead.
 
 ## [2.0.0]
 - Use `AsRef::as_ref()` and `AsMut::as_mut()` instead `Into::into()`

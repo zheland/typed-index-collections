@@ -1,12 +1,11 @@
-use crate::Index;
 use core::ops;
 
 /// A helper trait used to convert typed index ranges to `usize` ranges.
-/// The trait is implemented for Rust's built-in range types with [`Index`] used as bound endpoints.
+/// The trait is implemented for Rust's built-in range types with `K where usize: `[`From<K>`] used as bound endpoints.
 ///
 /// See [`core::ops::RangeBounds`] for more details.
 ///
-/// [`Index`]: trait.Index.html
+/// [`From<K>`]: https://doc.rust-lang.org/std/convert/trait.From.html
 /// [`core::ops::RangeBounds`]: https://doc.rust-lang.org/core/ops/trait.RangeBounds.html
 pub trait TiRangeBounds<K> {
     /// Appropriate usize range
@@ -15,23 +14,32 @@ pub trait TiRangeBounds<K> {
     fn into_range(self) -> Self::Range;
 }
 
-impl<K: Index> TiRangeBounds<K> for ops::Range<K> {
+impl<K> TiRangeBounds<K> for ops::Range<K>
+where
+    usize: From<K>,
+{
     type Range = ops::Range<usize>;
     #[inline]
     fn into_range(self) -> Self::Range {
-        self.start.into_usize()..self.end.into_usize()
+        self.start.into()..self.end.into()
     }
 }
 
-impl<K: Index> TiRangeBounds<K> for ops::RangeFrom<K> {
+impl<K> TiRangeBounds<K> for ops::RangeFrom<K>
+where
+    usize: From<K>,
+{
     type Range = ops::RangeFrom<usize>;
     #[inline]
     fn into_range(self) -> Self::Range {
-        self.start.into_usize()..
+        self.start.into()..
     }
 }
 
-impl<K: Index> TiRangeBounds<K> for ops::RangeFull {
+impl<K> TiRangeBounds<K> for ops::RangeFull
+where
+    usize: From<K>,
+{
     type Range = ops::RangeFull;
     #[inline]
     fn into_range(self) -> Self::Range {
@@ -39,27 +47,36 @@ impl<K: Index> TiRangeBounds<K> for ops::RangeFull {
     }
 }
 
-impl<K: Index> TiRangeBounds<K> for ops::RangeInclusive<K> {
+impl<K> TiRangeBounds<K> for ops::RangeInclusive<K>
+where
+    usize: From<K>,
+{
     type Range = ops::RangeInclusive<usize>;
     #[inline]
     fn into_range(self) -> Self::Range {
         let (start, end) = self.into_inner();
-        start.into_usize()..=end.into_usize()
+        start.into()..=end.into()
     }
 }
 
-impl<K: Index> TiRangeBounds<K> for ops::RangeTo<K> {
+impl<K> TiRangeBounds<K> for ops::RangeTo<K>
+where
+    usize: From<K>,
+{
     type Range = ops::RangeTo<usize>;
     #[inline]
     fn into_range(self) -> Self::Range {
-        ..self.end.into_usize()
+        ..self.end.into()
     }
 }
 
-impl<K: Index> TiRangeBounds<K> for ops::RangeToInclusive<K> {
+impl<K> TiRangeBounds<K> for ops::RangeToInclusive<K>
+where
+    usize: From<K>,
+{
     type Range = ops::RangeToInclusive<usize>;
     #[inline]
     fn into_range(self) -> Self::Range {
-        ..=self.end.into_usize()
+        ..=self.end.into()
     }
 }

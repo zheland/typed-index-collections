@@ -1964,6 +1964,7 @@ mod test {
         for_in!(
             for arr in [[0; 0], [1], [1, 3], [7, 3, 5], [10, 6, 35, 4]] {
                 assert_eq_api!(arr => |&mut arr| {
+                    #[allow(clippy::stable_sort_primitive)]
                     arr.as_mut().into_t().sort();
                     arr
                 });

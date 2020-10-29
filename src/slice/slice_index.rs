@@ -68,7 +68,10 @@ pub trait TiSliceIndex<K, V>: private::Sealed<K> {
     fn index_mut(self, slice: &mut TiSlice<K, V>) -> &mut Self::Output;
 }
 
-impl<K, V> TiSliceIndex<K, V> for K where usize: From<K> {
+impl<K, V> TiSliceIndex<K, V> for K
+where
+    usize: From<K>,
+{
     type Output = V;
 
     #[inline]
@@ -103,7 +106,10 @@ impl<K, V> TiSliceIndex<K, V> for K where usize: From<K> {
 
 macro_rules! impl_ti_slice_range {
     ($ty:ty) => {
-        impl<K, V> TiSliceIndex<K, V> for $ty where usize: From<K> {
+        impl<K, V> TiSliceIndex<K, V> for $ty
+        where
+            usize: From<K>,
+        {
             type Output = TiSlice<K, V>;
 
             #[inline]

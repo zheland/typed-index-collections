@@ -5,8 +5,7 @@ use core::{
     hash::{Hash, Hasher},
     iter::FromIterator,
     marker::PhantomData,
-    ops,
-    slice::{self /*SliceIndex*/},
+    ops, slice,
 };
 
 use alloc::{

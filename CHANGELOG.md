@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.1] - 2020-10-30
+### Changed
+- Rephrase Introduction and About sections in readme and docs.
+
 ## [3.0.0] - 2020-10-29
 ### Added
 - Implement `Extend` for `TiVec`.
@@ -97,7 +101,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `TiSlice` API compatibility tests.
 - Crate API documentation with examples.
 
-[Unreleased]: https://github.com/zheland/typed-index-collections/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/zheland/typed-index-collections/compare/v3.0.1...HEAD
+[3.0.1]: https://github.com/zheland/typed-index-collections/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/zheland/typed-index-collections/compare/v2.0.1...v3.0.0
 [2.0.1]: https://github.com/zheland/typed-index-collections/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/zheland/typed-index-collections/compare/v1.1.0...v2.0.0

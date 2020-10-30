@@ -3,27 +3,28 @@
 //!
 //! # Introduction
 //!
-//! When dealing with slices and vectors it is not safe to index all arrays
-//! with type-unsafe usizes as indices.
-//! Using slice and vector indexing might be useful in Data Oriented Design,
-//! when using Struct of Arrays, or when [`Rc`] and [`Weak`] usage is undesirable.
+//! The extensive use of slices and vectors instead of references
+//! and smart pointers might be useful for optimization,
+//! Data-Oriented Design and when using Struct of Arrays.
+//! But when dealing with a bunch of slices and vectors
+//! it is easy to accidentally use the wrong index,
+//! which is a common source of bugs.
 //!
 //! # About
 //!
-//! This crate provides typed index version of [`slice`] and [`std::vec::Vec`]
-//! types with custom index type.
-//! Containers only require the index to implement
-//! [`From<usize>`][`From`] and [`Into<usize>`][`Into`] traits.
-//! Their implementation can be easily done
-//! with [`derive_more`] crate and `#[derive(From, Into)]`.
+//! This crate provides [`TiSlice<K, V>`][`TiSlice`] and [`TiVec<K, V>`][`TiVec`] containers
+//! that can be indexed only by the specified index type `K`.
+//! These containers are only wrappers around
+//! the slice primitive [`[V]`][`slice`] and the container [`std::vec::Vec<V>`][`std::vec::Vec`].
+//! Crate containers mirror the stable API of the matched Rust containers
+//! and forward to them as much as possible.
 //!
-//! The [`TiSlice`] and [`TiVec`] structs are only wrappers
-//! around Rust [`slice`] and [`std::vec::Vec`] structs with custom index type
-//! and exposed `raw` property with original struct.
-//! They can be easily converted to matched Rust containers using
+//! [`TiSlice`] and [`TiVec`] can be easily converted to matched Rust containers and back using
 //! [`From`], [`Into`], [`AsRef`] and [`AsMut`] traits.
-//! The structs mirrors the stable API of Rust [`slice`] and [`std::vec::Vec`]
-//! and forwards to it as much as possible.
+//! Also, they expose `raw` property with the original data type.
+//! Containers only require the index to implement
+//! [`From<usize>`][`From`] and [`Into<usize>`][`Into`] traits
+//! that can be easily done with [`derive_more`] crate and `#[derive(From, Into)]`.
 //!
 //! # Usage
 //!

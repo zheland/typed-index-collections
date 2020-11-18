@@ -140,16 +140,16 @@ let _boxed_slice: std::boxed::Box<[Foo]> = ti_boxed_slice.into();
 
 ## Feature Flags
 
-- `alloc` (enabled by default) &mdash; Enables types and functions
+- `alloc` (enabled by default): Enables types and functions
   which require memory allocation.
-- `std` (enabled by default) &mdash; Enables all [`std`] features
+- `std` (enabled by default): Enables all [`std`] features
   such as memory allocations, [`std::error::Error`] trait and
   [`std::panic::UnwindSafe`] trait implementations.
-- `serde` &mdash; Implements [`Serialize`] and [`Deserialize`] traits
+- `serde`: Implements [`Serialize`] and [`Deserialize`] traits
   for slice primitive and [`Serialize`] trait for [`std::vec::Vec`] container.
-- `serde-alloc` &mdash; Enable [`alloc`] and `serde/alloc` features and
+- `serde-alloc`: Enable [`alloc`] and `serde/alloc` features and
   implement [`Deserialize`] trait for [`std::vec::Vec`] container.
-- `serde-std` &mdash; Enable [`std`] and `serde/std` features and
+- `serde-std`: Enable [`std`] and `serde/std` features and
   implement [`Deserialize`] trait for [`std::vec::Vec`] container.
 
 ## Similar crates

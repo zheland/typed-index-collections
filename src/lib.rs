@@ -167,10 +167,10 @@ let _boxed_slice: std::boxed::Box<[Foo]> = ti_boxed_slice.into();
 //!
 //! - Apache License, Version 2.0
 //!   ([LICENSE-APACHE](https://github.com/zheland/typed-index-collections/blob/master/LICENSE-APACHE) or
-//!   [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0))
+//!   <https://www.apache.org/licenses/LICENSE-2.0>)
 //! - MIT license
 //!   ([LICENSE-MIT](https://github.com/zheland/typed-index-collections/blob/master/LICENSE-MIT) or
-//!   [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT))
+//!   <https://opensource.org/licenses/MIT>)
 //!
 //! at your option.
 //!

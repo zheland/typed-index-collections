@@ -112,3 +112,47 @@ jobs:
         with:
           command: test
           args: --verbose --all ${{ matrix.cargo_flags }}
+
+  test_no_alloc:
+    name: Test no-alloc
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        continue-on-error: true
+        working-directory: tests/no-alloc
+        with:
+          command: build
+          args: --verbose --all
+
+  test_no_std:
+    name: Test no-std
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        continue-on-error: true
+        working-directory: tests/no-std
+        with:
+          command: build
+          args: --verbose --all

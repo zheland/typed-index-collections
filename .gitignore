@@ -1,2 +1,4 @@
 /target
+/tests/no-alloc/target
+/tests/no-std/target
 Cargo.lock

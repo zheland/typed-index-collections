@@ -1,0 +1,17 @@
+[package]
+name = "no-std"
+version = "0.1.0"
+authors = ["Andrey Zheleznov <zheland.net@gmail.com>"]
+edition = "2018"
+publish = false
+
+[dependencies.typed-index-collections]
+version = "3.0"
+default-features = false
+features = ["alloc"]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"

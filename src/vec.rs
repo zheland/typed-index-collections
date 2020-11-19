@@ -393,9 +393,8 @@ impl<K, V> TiVec<K, V> {
 
     /// Appends an element to the back of a collection and returns its index of type `K`.
     ///
-    /// Using of `{ vec.push(...); vec.last_key().unwrap() }` is not recommended,
-    /// because it is not well optimized and generates an unreachable panic call.
-    /// This function uses [`slice::next_key`] instead.
+    /// It acts like `{ vec.push(...); vec.last_key().unwrap() }`,
+    /// but is optimized better.
     ///
     /// See [`Vec::push`] for more details.
     ///

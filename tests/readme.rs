@@ -80,7 +80,7 @@ fn test_readme_docs_sync() {
                             is_cfg_block = false;
                             None
                         } else if is_cfg_block {
-                            StrStripPrefix::strip_prefix(line, "    ").or(Some(line))
+                            Some(line)
                         } else {
                             None
                         }

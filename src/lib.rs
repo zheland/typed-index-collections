@@ -60,74 +60,74 @@
     any(feature = "alloc", feature = "std"),
     doc = r#"
 
-    # Examples
+# Examples
 
-    Simple example with [`derive_more`]:
-    ```rust
-    use typed_index_collections::TiVec;
-    use derive_more::{From, Into};
+Simple example with [`derive_more`]:
+```rust
+use typed_index_collections::TiVec;
+use derive_more::{From, Into};
 
-    #[derive(From, Into)]
-    struct FooId(usize);
+#[derive(From, Into)]
+struct FooId(usize);
 
-    let mut ti_vec: TiVec<FooId, usize> = std::vec![10, 11, 13].into();
-    ti_vec.insert(FooId(2), 12);
-    assert_eq!(ti_vec[FooId(2)], 12);
-    ```
+let mut ti_vec: TiVec<FooId, usize> = std::vec![10, 11, 13].into();
+ti_vec.insert(FooId(2), 12);
+assert_eq!(ti_vec[FooId(2)], 12);
+```
 
-    If a wrong index type is used, compilation will fail:
-    ```compile_fail
-    use typed_index_collections::TiVec;
-    use derive_more::{From, Into};
+If a wrong index type is used, compilation will fail:
+```compile_fail
+use typed_index_collections::TiVec;
+use derive_more::{From, Into};
 
-    #[derive(From, Into)]
-    struct FooId(usize);
+#[derive(From, Into)]
+struct FooId(usize);
 
-    #[derive(From, Into)]
-    struct BarId(usize);
+#[derive(From, Into)]
+struct BarId(usize);
 
-    let mut ti_vec: TiVec<FooId, usize> = std::vec![10, 11, 13].into();
+let mut ti_vec: TiVec<FooId, usize> = std::vec![10, 11, 13].into();
 
-    ti_vec.insert(BarId(2), 12);
-    //            ^^^^^^^^ expected struct `FooId`, found struct `BarId`
-    assert_eq!(ti_vec[BarId(2)], 12);
-    //         ^^^^^^^^^^^^^^^^ the trait ... is not implemented for `BarId`
-    ```
+ti_vec.insert(BarId(2), 12);
+//            ^^^^^^^^ expected struct `FooId`, found struct `BarId`
+assert_eq!(ti_vec[BarId(2)], 12);
+//         ^^^^^^^^^^^^^^^^ the trait ... is not implemented for `BarId`
+```
 
-    Another more detailed example with [`derive_more`]:
-    ```rust
-    use typed_index_collections::{TiSlice, TiVec};
-    use derive_more::{From, Into};
+Another more detailed example with [`derive_more`]:
+```rust
+use typed_index_collections::{TiSlice, TiVec};
+use derive_more::{From, Into};
 
-    #[derive(Clone, Copy, Debug, From, Into, Eq, PartialEq)]
-    struct FooId(usize);
+#[derive(Clone, Copy, Debug, From, Into, Eq, PartialEq)]
+struct FooId(usize);
 
-    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-    struct Foo {
-        value: usize,
-    }
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct Foo {
+    value: usize,
+}
 
-    let first = Foo { value: 1 };
-    let second = Foo { value: 2 };
+let first = Foo { value: 1 };
+let second = Foo { value: 2 };
 
-    let slice_ref = &[first, second][..];
-    let vec = std::vec![first, second];
-    let boxed_slice = std::vec![first, second].into_boxed_slice();
+let slice_ref = &[first, second][..];
+let vec = std::vec![first, second];
+let boxed_slice = std::vec![first, second].into_boxed_slice();
 
-    let ti_slice_ref: &TiSlice<FooId, Foo> = slice_ref.as_ref();
-    let ti_vec: TiVec<FooId, Foo> = vec.into();
-    let ti_boxed_slice: std::boxed::Box<TiSlice<FooId, Foo>> = boxed_slice.into();
+let ti_slice_ref: &TiSlice<FooId, Foo> = slice_ref.as_ref();
+let ti_vec: TiVec<FooId, Foo> = vec.into();
+let ti_boxed_slice: std::boxed::Box<TiSlice<FooId, Foo>> = boxed_slice.into();
 
-    assert_eq!(ti_vec[FooId(1)], second);
-    assert_eq!(ti_vec.raw[1], second);
-    assert_eq!(ti_vec.last(), Some(&second));
-    assert_eq!(ti_vec.last_key_value(), Some((FooId(1), &second)));
-    assert_eq!(ti_vec.iter_enumerated().next(), Some((FooId(0), &first)));
+assert_eq!(ti_vec[FooId(1)], second);
+assert_eq!(ti_vec.raw[1], second);
+assert_eq!(ti_vec.last(), Some(&second));
+assert_eq!(ti_vec.last_key_value(), Some((FooId(1), &second)));
+assert_eq!(ti_vec.iter_enumerated().next(), Some((FooId(0), &first)));
 
-    let _slice_ref: &[Foo] = ti_slice_ref.as_ref();
-    let _vec: std::vec::Vec<Foo> = ti_vec.into();
-    let _boxed_slice: std::boxed::Box<[Foo]> = ti_boxed_slice.into();
-    ```
+let _slice_ref: &[Foo] = ti_slice_ref.as_ref();
+let _vec: std::vec::Vec<Foo> = ti_vec.into();
+let _boxed_slice: std::boxed::Box<[Foo]> = ti_boxed_slice.into();
+```
 "#
 )]
 //!

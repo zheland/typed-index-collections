@@ -116,6 +116,9 @@ jobs:
   test_no_alloc:
     name: Test no-alloc
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./tests/no-alloc
     steps:
       - name: Checkout source code
         uses: actions/checkout@v2
@@ -130,7 +133,6 @@ jobs:
       - name: Build
         uses: actions-rs/cargo@v1
         continue-on-error: true
-        working-directory: tests/no-alloc
         with:
           command: build
           args: --verbose --all
@@ -138,6 +140,9 @@ jobs:
   test_no_std:
     name: Test no-std
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./tests/no-std
     steps:
       - name: Checkout source code
         uses: actions/checkout@v2
@@ -152,7 +157,6 @@ jobs:
       - name: Build
         uses: actions-rs/cargo@v1
         continue-on-error: true
-        working-directory: tests/no-std
         with:
           command: build
           args: --verbose --all

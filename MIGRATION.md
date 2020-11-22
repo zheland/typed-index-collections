@@ -8,7 +8,8 @@
   Use `From<usize>` and `Into<usize>` instead.
 
 ## [2.0.0]
-- Use `AsRef::as_ref()` and `AsMut::as_mut()` instead `Into::into()`
+- Use `TiSlice::from_ref()`, `TiSlice::from_mut()`,
+  `AsRef::as_ref()` and `AsMut::as_mut()` instead `Into::into()`
   for zero-cost conversions between `&slice` and `&TiSlice`, `&mut slice` and `&mut TiSlice`,
   `&std::Vec` and `&TiVec`, `&mut std::Vec` and `&TiVec`.
 

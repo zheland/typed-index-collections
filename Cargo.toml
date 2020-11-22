@@ -17,9 +17,9 @@ default-features = false
 optional = true
 
 [dev-dependencies]
-derive_more = "0.99"
-version-sync = "0.9"
-readme-sync = "0.1.0"
+derive_more = "0.99.11"
+version-sync = "0.9.1"
+readme-sync = "0.1.1"
 
 [features]
 default = ["alloc", "std"]

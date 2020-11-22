@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.2] - 2020-11-22
+### Added
+- `no-std` and `no-alloc` crate tests.
+
+### Changed
+- `readme-sync` dev-dependency used for docs sync check.
+
 ## [3.0.1] - 2020-10-30
 ### Changed
 - Rephrase Introduction and About sections in readme and docs.
@@ -23,14 +30,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fix compilation when `serde` feature is used with `alloc` or `std` features
   without `serde/alloc` or `serde/std`.
-
-### Added
 - Use `-Z features=dev_dep` to check CI build on nightly Rust
   without features from dev-dependencies.
   See [rust-lang/cargo#1796](https://github.com/rust-lang/cargo/issues/1796)
   and [rust-lang/cargo#7916](https://github.com/rust-lang/cargo/issues/7916)
   for more details.
-- Add CI build check with `std` and `serde` fearues.
+
+### Added
+- Add CI build check with `std` and `serde` features.
 
 ## [2.0.0] - 2020-08-03
 ### Changed
@@ -101,7 +108,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `TiSlice` API compatibility tests.
 - Crate API documentation with examples.
 
-[Unreleased]: https://github.com/zheland/typed-index-collections/compare/v3.0.1...HEAD
+[Unreleased]: https://github.com/zheland/typed-index-collections/compare/v3.0.2...HEAD
+[3.0.2]: https://github.com/zheland/typed-index-collections/compare/v3.0.1...v3.0.2
 [3.0.1]: https://github.com/zheland/typed-index-collections/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/zheland/typed-index-collections/compare/v2.0.1...v3.0.0
 [2.0.1]: https://github.com/zheland/typed-index-collections/compare/v2.0.0...v2.0.1

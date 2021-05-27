@@ -145,12 +145,11 @@ let _boxed_slice: std::boxed::Box<[Foo]> = ti_boxed_slice.into();
 - `std` (enabled by default): Enables all [`std`] features
   such as memory allocations, [`std::error::Error`] trait and
   [`std::panic::UnwindSafe`] trait implementations.
-- `serde`: Implements [`Serialize`] and [`Deserialize`] traits
-  for slice primitive and [`Serialize`] trait for [`std::vec::Vec`] container.
-- `serde-alloc`: Enable [`alloc`] and `serde/alloc` features and
-  implement [`Deserialize`] trait for [`std::vec::Vec`] container.
-- `serde-std`: Enable [`std`] and `serde/std` features and
-  implement [`Deserialize`] trait for [`std::vec::Vec`] container.
+- `serde`: Implements [`Serialize`] trait for [`TiSlice`] and [`TiVec`] containers.
+- `serde-alloc`: Enables [`alloc`] and `serde/alloc` features and
+  implements [`Deserialize`] trait for [`Box`]`<`[`TiSlice`]`>` and [`TiVec`].
+- `serde-std`: Enables [`std`] and `serde/std` features and
+  implements [`Deserialize`] trait for [`Box`]`<`[`TiSlice`]`>` and [`TiVec`].
 
 ## Similar crates
 
@@ -194,6 +193,7 @@ additional terms or conditions.
 [`std`]: https://doc.rust-lang.org/std/index.html
 [`alloc`]: https://doc.rust-lang.org/alloc/index.html
 [`slice`]: https://doc.rust-lang.org/std/primitive.slice.html
+[`Box`]: https://doc.rust-lang.org/std/boxed/struct.Box.html
 [`Rc`]: https://doc.rust-lang.org/std/rc/struct.Rc.html
 [`Weak`]: https://doc.rust-lang.org/std/rc/struct.Weak.html
 [`std::vec::Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html

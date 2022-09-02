@@ -85,6 +85,7 @@ use crate::{TiEnumerated, TiRangeBounds, TiSlice};
 /// [`AsRef`]: https://doc.rust-lang.org/std/convert/trait.AsRef.html
 /// [`AsMut`]: https://doc.rust-lang.org/std/convert/trait.AsMut.html
 /// [`derive_more`]: https://crates.io/crates/derive_more
+#[repr(transparent)]
 pub struct TiVec<K, V> {
     /// Raw slice property
     pub raw: Vec<V>,

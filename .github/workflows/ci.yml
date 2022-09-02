@@ -70,7 +70,7 @@ jobs:
     strategy:
       matrix:
         config:
-          - toolchain: 1.41.0
+          - toolchain: 1.46.0
             cargo_build_flags: ""
           - toolchain: stable
             cargo_build_flags: ""

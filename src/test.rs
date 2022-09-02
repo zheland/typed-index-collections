@@ -23,7 +23,7 @@ pub trait TypedConvert {
     fn into_t(self) -> Self::Target;
 }
 
-impl<'a, T> DummyConvert for T {
+impl<T> DummyConvert for T {
     type Target = T;
     fn into_t(self) -> Self::Target {
         self

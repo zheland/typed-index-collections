@@ -1078,6 +1078,7 @@ mod test {
                 });
                 assert_eq_vec_api!(vec => |&mut vec| vec.resize(j, 123));
             }
+            #[allow(clippy::unnecessary_to_owned)]
             for slice in &[
                 &[0; 0][..],
                 &[1],

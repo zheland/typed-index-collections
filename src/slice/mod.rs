@@ -138,6 +138,7 @@ pub use slice_index::TiSliceIndex;
 /// [`RangeToInclusive`]: https://doc.rust-lang.org/std/ops/struct.RangeToInclusive.html
 /// [`RangeFull`]: https://doc.rust-lang.org/std/ops/struct.RangeFull.html
 /// [`derive_more`]: https://crates.io/crates/derive_more
+#[repr(transparent)]
 pub struct TiSlice<K, V> {
     /// Tied slice index type
     ///

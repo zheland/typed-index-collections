@@ -928,6 +928,26 @@ impl<'de, K, V: Deserialize<'de>> Deserialize<'de> for TiVec<K, V> {
     }
 }
 
+/// Macro for creating [`TiVec`] similar to `vec![]`.
+#[macro_export]
+macro_rules! tivec {
+    (@single $($x:tt)*) => (());
+    (@count $($rest:expr),*) => (<[()]>::len(&[$($crate::tivec!(@single $rest)),*]));
+
+    ($($v:expr,)+) => { $crate::tivec!($($v),+) };
+    ($($v:expr),*) => {
+        {
+            let _cap = $crate::tivec!(@count $($v),*);
+            let mut _vec = $crate::vec::TiVec::with_capacity(_cap);
+            $(
+                #[allow(let_underscore_drop)]
+                _vec.push($v);
+            )*
+            _vec
+        }
+    };
+}
+
 #[cfg(test)]
 mod test {
     use crate::test::Id;
@@ -1104,5 +1124,16 @@ mod test {
                 }
             }
         }
+    }
+
+    #[test]
+    fn test_macro() {
+        use crate::TiVec;
+        use alloc::vec;
+        use alloc::vec::Vec;
+
+        let ti_vec: TiVec<usize, usize> = tivec![1, 2, 3];
+        let vector: Vec<_> = ti_vec.into();
+        assert_eq!(vec![1, 2, 3], vector);
     }
 }

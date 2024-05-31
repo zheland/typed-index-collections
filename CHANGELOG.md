@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.1.0] - 2022-09-02
 ### Changed
-- `The minimum supported Rust version has been increased to 1.46.0.
+- The minimum supported Rust version has been increased to 1.46.0.
 - `#[repr(transparent)]` added to `TiSlice` and `TiVec` collections.
 
 ## [3.0.3] - 2020-05-27

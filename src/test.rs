@@ -129,12 +129,12 @@ impl_convert!(for ('a, V, U, W) |
 );
 
 impl_convert!(for (T) |self: Option<T>| -> Option<T::Target> where (T: TypedConvert) {
-    self.map(|value| value.into_t())
+    self.map(TypedConvert::into_t)
 });
 
 impl_convert!(for (T, U) |self: Result<T, U>| -> Result<T::Target, U::Target>
     where (T: TypedConvert, U: TypedConvert) {
-        self.map(|value| value.into_t()).map_err(|value| value.into_t())
+        self.map(TypedConvert::into_t).map_err(TypedConvert::into_t)
     }
 );
 
@@ -153,21 +153,47 @@ macro_rules! assert_api_impl(
         $fn!({
             #[deny(unused_imports)]
             use crate::test::TypedConvert;
-            #[allow(dead_code, unused_qualifications)]
+
+            #[allow(
+                dead_code,
+                unused_qualifications,
+                clippy::allow_attributes,
+                reason = "okay in tests"
+            )]
             type UsizeSlice = crate::TiSlice<Id, usize>;
+
             #[cfg(any(feature = "alloc", feature = "std"))]
-            #[allow(dead_code, unused_qualifications)]
+            #[allow(
+                dead_code,
+                unused_qualifications,
+                clippy::allow_attributes,
+                reason = "okay in tests"
+            )]
             type UsizeVec = crate::TiVec<Id, usize>;
+
             $($lhs_init)*
             $expr
         }, {
             #[deny(unused_imports)]
             use crate::test::DummyConvert;
-            #[allow(dead_code, unused_qualifications)]
+
+            #[allow(
+                dead_code,
+                unused_qualifications,
+                clippy::allow_attributes,
+                reason = "okay in tests"
+            )]
             type UsizeSlice = [usize];
+
             #[cfg(any(feature = "alloc", feature = "std"))]
-            #[allow(dead_code, unused_qualifications)]
+            #[allow(
+                dead_code,
+                unused_qualifications,
+                clippy::allow_attributes,
+                reason = "okay in tests"
+            )]
             type UsizeVec = alloc::vec::Vec<usize>;
+
             $($rhs_init)*
             $expr
         },

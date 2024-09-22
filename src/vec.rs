@@ -115,7 +115,8 @@ impl<K, V> TiVec<K, V> {
     ///
     /// [`Vec::new`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.new
     #[inline]
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {
             raw: Vec::new(),
             _marker: PhantomData,
@@ -128,6 +129,7 @@ impl<K, V> TiVec<K, V> {
     ///
     /// [`Vec::with_capacity`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.with_capacity
     #[inline]
+    #[must_use]
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             raw: Vec::with_capacity(capacity),
@@ -139,8 +141,14 @@ impl<K, V> TiVec<K, V> {
     ///
     /// See [`Vec::from_raw_parts`] for more details.
     ///
+    /// # Safety
+    ///
+    /// This is highly unsafe, due to the number of invariants that aren't
+    /// checked.
+    /// See [`Vec::from_raw_parts`] for more details.
+    ///
     /// [`Vec::from_raw_parts`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.from_raw_parts
-    #[allow(clippy::missing_safety_doc)]
+    #[inline]
     pub unsafe fn from_raw_parts(ptr: *mut V, length: usize, capacity: usize) -> Self {
         Self {
             raw: Vec::from_raw_parts(ptr, length, capacity),
@@ -162,10 +170,11 @@ impl<K, V> TiVec<K, V> {
     /// ```
     ///
     /// [`&std::vec::Vec<V>`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
-    #[allow(trivial_casts, clippy::ptr_arg)]
     #[inline]
-    pub fn from_ref(raw: &Vec<V>) -> &Self {
-        unsafe { &*(raw as *const Vec<V> as *const Self) }
+    #[must_use]
+    pub const fn from_ref(raw: &Vec<V>) -> &Self {
+        // SAFETY: `TiVec<K, V>` is `repr(transparent)` over a `Vec<V>` type.
+        unsafe { &*core::ptr::from_ref::<Vec<V>>(raw).cast::<Self>() }
     }
 
     /// Converts a [`&mut std::vec::Vec<V>`] into a `&mut TiVec<K, V>`.
@@ -179,10 +188,10 @@ impl<K, V> TiVec<K, V> {
     /// ```
     ///
     /// [`&std::vec::mut Vec<V>`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
-    #[allow(trivial_casts)]
     #[inline]
     pub fn from_mut(raw: &mut Vec<V>) -> &mut Self {
-        unsafe { &mut *(raw as *mut Vec<V> as *mut Self) }
+        // SAFETY: `TiVec<K, V>` is `repr(transparent)` over a `Vec<V>` type.
+        unsafe { &mut *core::ptr::from_mut::<Vec<V>>(raw).cast::<Self>() }
     }
 
     /// Returns the number of elements the vector can hold without
@@ -192,6 +201,7 @@ impl<K, V> TiVec<K, V> {
     ///
     /// [`Vec::capacity`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.capacity
     #[inline]
+    #[must_use]
     pub fn capacity(&self) -> usize {
         self.raw.capacity()
     }
@@ -205,8 +215,9 @@ impl<K, V> TiVec<K, V> {
     /// See [`Vec::reserve`] for more details.
     ///
     /// [`Vec::reserve`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.reserve
+    #[inline]
     pub fn reserve(&mut self, additional: usize) {
-        self.raw.reserve(additional)
+        self.raw.reserve(additional);
     }
 
     /// Reserves the minimum capacity for exactly `additional` more elements to
@@ -217,8 +228,9 @@ impl<K, V> TiVec<K, V> {
     /// See [`Vec::reserve_exact`] for more details.
     ///
     /// [`Vec::reserve_exact`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.reserve_exact
+    #[inline]
     pub fn reserve_exact(&mut self, additional: usize) {
-        self.raw.reserve_exact(additional)
+        self.raw.reserve_exact(additional);
     }
 
     /// Shrinks the capacity of the vector as much as possible.
@@ -226,8 +238,9 @@ impl<K, V> TiVec<K, V> {
     /// See [`Vec::shrink_to_fit`] for more details.
     ///
     /// [`Vec::shrink_to_fit`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.shrink_to_fit
+    #[inline]
     pub fn shrink_to_fit(&mut self) {
-        self.raw.shrink_to_fit()
+        self.raw.shrink_to_fit();
     }
 
     /// Converts the vector into [`Box<TiSlice<K, V>>`][`Box`].
@@ -236,6 +249,8 @@ impl<K, V> TiVec<K, V> {
     ///
     /// [`Vec::into_boxed_slice`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.into_boxed_slice
     /// [`Box`]: https://doc.rust-lang.org/std/boxed/struct.Box.html
+    #[inline]
+    #[must_use]
     pub fn into_boxed_slice(self) -> Box<TiSlice<K, V>> {
         self.raw.into_boxed_slice().into()
     }
@@ -246,8 +261,9 @@ impl<K, V> TiVec<K, V> {
     /// See [`Vec::truncate`] for more details.
     ///
     /// [`Vec::truncate`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.truncate
+    #[inline]
     pub fn truncate(&mut self, len: usize) {
-        self.raw.truncate(len)
+        self.raw.truncate(len);
     }
 
     /// Extracts a slice containing the entire vector.
@@ -256,6 +272,7 @@ impl<K, V> TiVec<K, V> {
     ///
     /// [`Vec::as_slice`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.as_slice
     #[inline]
+    #[must_use]
     pub fn as_slice(&self) -> &TiSlice<K, V> {
         self.raw.as_slice().as_ref()
     }
@@ -276,6 +293,7 @@ impl<K, V> TiVec<K, V> {
     ///
     /// [`Vec::as_ptr`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.as_ptr
     #[inline]
+    #[must_use]
     pub fn as_ptr(&self) -> *const V {
         self.raw.as_ptr()
     }
@@ -294,11 +312,16 @@ impl<K, V> TiVec<K, V> {
     ///
     /// See [`Vec::set_len`] for more details.
     ///
+    /// # Safety
+    ///
+    /// - `new_len` must be less than or equal to [`capacity()`].
+    /// - The elements at `old_len..new_len` must be initialized.
+    ///
     /// [`Vec::set_len`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.set_len
-    #[allow(clippy::missing_safety_doc)]
+    /// [`capacity()`]: #method.capacity
     #[inline]
     pub unsafe fn set_len(&mut self, new_len: usize) {
-        self.raw.set_len(new_len)
+        self.raw.set_len(new_len);
     }
 
     /// Removes an element from the vector and returns it.
@@ -322,11 +345,12 @@ impl<K, V> TiVec<K, V> {
     /// See [`Vec::insert`] for more details.
     ///
     /// [`Vec::insert`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.insert
+    #[inline]
     pub fn insert(&mut self, index: K, element: V)
     where
         usize: From<K>,
     {
-        self.raw.insert(index.into(), element)
+        self.raw.insert(index.into(), element);
     }
 
     /// Removes and returns the element at position `index` within the vector,
@@ -335,6 +359,7 @@ impl<K, V> TiVec<K, V> {
     /// See [`Vec::remove`] for more details.
     ///
     /// [`Vec::remove`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.remove
+    #[inline]
     pub fn remove(&mut self, index: K) -> V
     where
         usize: From<K>,
@@ -347,11 +372,12 @@ impl<K, V> TiVec<K, V> {
     /// See [`Vec::retain`] for more details.
     ///
     /// [`Vec::retain`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.retain
+    #[inline]
     pub fn retain<F>(&mut self, f: F)
     where
         F: FnMut(&V) -> bool,
     {
-        self.raw.retain(f)
+        self.raw.retain(f);
     }
 
     /// Removes all but the first of consecutive elements in the vector that resolve to the same
@@ -366,7 +392,7 @@ impl<K, V> TiVec<K, V> {
         F: FnMut(&mut V) -> K2,
         K2: PartialEq,
     {
-        self.raw.dedup_by_key(key)
+        self.raw.dedup_by_key(key);
     }
 
     /// Removes all but the first of consecutive elements in the vector satisfying a given equality
@@ -375,11 +401,12 @@ impl<K, V> TiVec<K, V> {
     /// See [`Vec::dedup_by`] for more details.
     ///
     /// [`Vec::dedup_by`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.dedup_by
+    #[inline]
     pub fn dedup_by<F>(&mut self, same_bucket: F)
     where
         F: FnMut(&mut V, &mut V) -> bool,
     {
-        self.raw.dedup_by(same_bucket)
+        self.raw.dedup_by(same_bucket);
     }
 
     /// Appends an element to the back of a collection.
@@ -389,7 +416,7 @@ impl<K, V> TiVec<K, V> {
     /// [`Vec::push`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.push
     #[inline]
     pub fn push(&mut self, value: V) {
-        self.raw.push(value)
+        self.raw.push(value);
     }
 
     /// Appends an element to the back of a collection and returns its index of type `K`.
@@ -471,7 +498,7 @@ impl<K, V> TiVec<K, V> {
     /// [`Vec::append`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.append
     #[inline]
     pub fn append(&mut self, other: &mut Self) {
-        self.raw.append(&mut other.raw)
+        self.raw.append(&mut other.raw);
     }
 
     /// Creates a draining iterator that removes the specified range in the vector
@@ -480,6 +507,7 @@ impl<K, V> TiVec<K, V> {
     /// See [`Vec::drain`] for more details.
     ///
     /// [`Vec::drain`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.drain
+    #[inline]
     pub fn drain<R>(&mut self, range: R) -> Drain<'_, V>
     where
         R: TiRangeBounds<K>,
@@ -535,7 +563,7 @@ impl<K, V> TiVec<K, V> {
     /// [`Vec::clear`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.clear
     #[inline]
     pub fn clear(&mut self) {
-        self.raw.clear()
+        self.raw.clear();
     }
 
     /// Returns the number of elements in the vector, also referred to
@@ -545,6 +573,7 @@ impl<K, V> TiVec<K, V> {
     ///
     /// [`Vec::len`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.len
     #[inline]
+    #[must_use]
     pub fn len(&self) -> usize {
         self.raw.len()
     }
@@ -554,6 +583,8 @@ impl<K, V> TiVec<K, V> {
     /// See [`Vec::is_empty`] for more details.
     ///
     /// [`Vec::is_empty`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.is_empty
+    #[inline]
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.raw.is_empty()
     }
@@ -577,11 +608,12 @@ impl<K, V> TiVec<K, V> {
     /// See [`Vec::resize_with`] for more details.
     ///
     /// [`Vec::resize_with`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.resize_with
+    #[inline]
     pub fn resize_with<F>(&mut self, new_len: usize, f: F)
     where
         F: FnMut() -> V,
     {
-        self.raw.resize_with(new_len, f)
+        self.raw.resize_with(new_len, f);
     }
 
     /// Resizes the `TiVec` in-place so that `len` is equal to `new_len`.
@@ -589,11 +621,12 @@ impl<K, V> TiVec<K, V> {
     /// See [`Vec::resize`] for more details.
     ///
     /// [`Vec::resize`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.resize
+    #[inline]
     pub fn resize(&mut self, new_len: usize, value: V)
     where
         V: Clone,
     {
-        self.raw.resize(new_len, value)
+        self.raw.resize(new_len, value);
     }
 
     /// Clones and appends all elements in a slice to the `TiVec`.
@@ -601,11 +634,12 @@ impl<K, V> TiVec<K, V> {
     /// See [`Vec::extend_from_slice`] for more details.
     ///
     /// [`Vec::extend_from_slice`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.extend_from_slice
+    #[inline]
     pub fn extend_from_slice(&mut self, other: &TiSlice<K, V>)
     where
         V: Clone,
     {
-        self.raw.extend_from_slice(&other.raw)
+        self.raw.extend_from_slice(&other.raw);
     }
 
     /// Removes consecutive repeated elements in the vector according to the
@@ -620,7 +654,7 @@ impl<K, V> TiVec<K, V> {
     where
         V: PartialEq,
     {
-        self.raw.dedup()
+        self.raw.dedup();
     }
 
     /// Creates a splicing iterator that replaces the specified range in the vector
@@ -659,7 +693,7 @@ impl<K, V> TiVec<K, V> {
     /// assert_eq!(iterator.next(), Some((Id(2), 4)));
     /// assert_eq!(iterator.next(), None);
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn into_iter_enumerated(self) -> TiEnumerated<vec::IntoIter<V>, K, V>
     where
         K: From<usize>,
@@ -676,78 +710,95 @@ where
     K: fmt::Debug + From<usize>,
     V: fmt::Debug,
 {
+    #[allow(clippy::allow_attributes, reason = "rust-lang/rust#130021")]
+    #[allow(
+        clippy::missing_inline_in_public_items,
+        reason = "use default inlining behavior"
+    )]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_map().entries(self.iter_enumerated()).finish()
     }
 }
 
-impl<K, V> AsRef<TiVec<K, V>> for TiVec<K, V> {
-    fn as_ref(&self) -> &TiVec<K, V> {
+impl<K, V> AsRef<Self> for TiVec<K, V> {
+    #[inline]
+    fn as_ref(&self) -> &Self {
         self
     }
 }
 
-impl<K, V> AsMut<TiVec<K, V>> for TiVec<K, V> {
-    fn as_mut(&mut self) -> &mut TiVec<K, V> {
+impl<K, V> AsMut<Self> for TiVec<K, V> {
+    #[inline]
+    fn as_mut(&mut self) -> &mut Self {
         self
     }
 }
 
 impl<K, V> AsRef<TiSlice<K, V>> for TiVec<K, V> {
+    #[inline]
     fn as_ref(&self) -> &TiSlice<K, V> {
         self
     }
 }
 
 impl<K, V> AsMut<TiSlice<K, V>> for TiVec<K, V> {
+    #[inline]
     fn as_mut(&mut self) -> &mut TiSlice<K, V> {
         self
     }
 }
 
 impl<K, V> AsRef<Vec<V>> for TiVec<K, V> {
+    #[inline]
     fn as_ref(&self) -> &Vec<V> {
         &self.raw
     }
 }
 
 impl<K, V> AsMut<Vec<V>> for TiVec<K, V> {
+    #[inline]
     fn as_mut(&mut self) -> &mut Vec<V> {
         &mut self.raw
     }
 }
 
 impl<K, V> AsRef<[V]> for TiVec<K, V> {
+    #[inline]
     fn as_ref(&self) -> &[V] {
         &self.raw
     }
 }
 
 impl<K, V> AsMut<[V]> for TiVec<K, V> {
+    #[inline]
     fn as_mut(&mut self) -> &mut [V] {
         &mut self.raw
     }
 }
 
 impl<K, V> AsRef<TiVec<K, V>> for Vec<V> {
+    #[inline]
     fn as_ref(&self) -> &TiVec<K, V> {
         TiVec::from_ref(self)
     }
 }
 
 impl<K, V> AsMut<TiVec<K, V>> for Vec<V> {
+    #[inline]
     fn as_mut(&mut self) -> &mut TiVec<K, V> {
         TiVec::from_mut(self)
     }
 }
 
 impl<K, V> Borrow<TiSlice<K, V>> for TiVec<K, V> {
+    #[inline]
     fn borrow(&self) -> &TiSlice<K, V> {
         self.as_slice()
     }
 }
 
 impl<K, V> BorrowMut<TiSlice<K, V>> for TiVec<K, V> {
+    #[inline]
     fn borrow_mut(&mut self) -> &mut TiSlice<K, V> {
         self.as_mut_slice()
     }
@@ -756,12 +807,14 @@ impl<K, V> BorrowMut<TiSlice<K, V>> for TiVec<K, V> {
 impl<K, V> ops::Deref for TiVec<K, V> {
     type Target = TiSlice<K, V>;
 
+    #[inline]
     fn deref(&self) -> &TiSlice<K, V> {
         Self::Target::from_ref(&self.raw)
     }
 }
 
 impl<K, V> ops::DerefMut for TiVec<K, V> {
+    #[inline]
     fn deref_mut(&mut self) -> &mut TiSlice<K, V> {
         Self::Target::from_mut(&mut self.raw)
     }
@@ -770,14 +823,14 @@ impl<K, V> ops::DerefMut for TiVec<K, V> {
 impl<K, V> Extend<V> for TiVec<K, V> {
     #[inline]
     fn extend<I: IntoIterator<Item = V>>(&mut self, iter: I) {
-        self.raw.extend(iter)
+        self.raw.extend(iter);
     }
 }
 
 impl<'a, K, V: 'a + Copy> Extend<&'a V> for TiVec<K, V> {
     #[inline]
     fn extend<I: IntoIterator<Item = &'a V>>(&mut self, iter: I) {
-        self.raw.extend(iter)
+        self.raw.extend(iter);
     }
 }
 
@@ -821,12 +874,12 @@ where
     }
 }
 
-impl<K, V> PartialOrd<TiVec<K, V>> for TiVec<K, V>
+impl<K, V> PartialOrd<Self> for TiVec<K, V>
 where
     V: PartialOrd<V>,
 {
     #[inline]
-    fn partial_cmp(&self, other: &TiVec<K, V>) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.raw.partial_cmp(&other.raw)
     }
 }
@@ -836,7 +889,7 @@ where
     V: Clone,
 {
     #[inline]
-    fn clone(&self) -> TiVec<K, V> {
+    fn clone(&self) -> Self {
         self.raw.clone().into()
     }
 }
@@ -854,8 +907,9 @@ impl<K, V> Hash for TiVec<K, V>
 where
     V: Hash,
 {
+    #[inline]
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.raw.hash(state)
+        self.raw.hash(state);
     }
 }
 
@@ -864,12 +918,13 @@ where
     V: Ord,
 {
     #[inline]
-    fn cmp(&self, other: &TiVec<K, V>) -> Ordering {
+    fn cmp(&self, other: &Self) -> Ordering {
         self.raw.cmp(&other.raw)
     }
 }
 
 impl<K, V> From<Vec<V>> for TiVec<K, V> {
+    #[inline]
     fn from(vec: Vec<V>) -> Self {
         Self {
             raw: vec,
@@ -879,6 +934,7 @@ impl<K, V> From<Vec<V>> for TiVec<K, V> {
 }
 
 impl<K, V> From<TiVec<K, V>> for Vec<V> {
+    #[inline]
     fn from(vec: TiVec<K, V>) -> Self {
         vec.raw
     }
@@ -916,6 +972,7 @@ impl<'a, K, V> IntoIterator for &'a mut TiVec<K, V> {
 
 #[cfg(feature = "serde")]
 impl<K, V: Serialize> Serialize for TiVec<K, V> {
+    #[inline]
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         self.raw.as_slice().serialize(serializer)
     }
@@ -923,6 +980,7 @@ impl<K, V: Serialize> Serialize for TiVec<K, V> {
 
 #[cfg(any(feature = "serde-alloc", feature = "serde-std"))]
 impl<'de, K, V: Deserialize<'de>> Deserialize<'de> for TiVec<K, V> {
+    #[inline]
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         Vec::deserialize(deserializer).map(Into::into)
     }
@@ -962,6 +1020,13 @@ mod test {
         };
     }
 
+    #[expect(
+        clippy::allow_attributes,
+        clippy::too_many_lines,
+        clippy::undocumented_unsafe_blocks,
+        clippy::unwrap_used,
+        reason = "okay in tests"
+    )]
     #[test]
     fn api_compatibility() {
         use crate::TiVec;
@@ -1071,11 +1136,11 @@ mod test {
             for j in 0..8 {
                 assert_eq_vec_api!(vec => |&mut vec| {
                     let mut items = 0..;
-                    vec.resize_with(j, || items.next().unwrap())
+                    vec.resize_with(j, || items.next().unwrap());
                 });
                 assert_eq_vec_api!(vec => |&mut vec| vec.resize(j, 123));
             }
-            #[allow(clippy::unnecessary_to_owned)]
+            #[allow(clippy::unnecessary_to_owned, reason = "okay in tests")]
             for slice in &[
                 &[0; 0][..],
                 &[1],

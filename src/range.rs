@@ -40,10 +40,10 @@ impl<K> TiRangeBounds<K> for ops::RangeFull
 where
     usize: From<K>,
 {
-    type Range = ops::RangeFull;
+    type Range = Self;
     #[inline]
     fn into_range(self) -> Self::Range {
-        ops::RangeFull
+        Self
     }
 }
 

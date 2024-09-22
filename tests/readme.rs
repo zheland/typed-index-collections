@@ -1,3 +1,10 @@
+#![allow(missing_docs, reason = "okay in tests")]
+#![expect(
+    unused_crate_dependencies,
+    clippy::unwrap_used,
+    reason = "okay in tests"
+)]
+
 #[cfg(all(test, not(miri)))]
 #[test]
 fn test_readme_sync() {

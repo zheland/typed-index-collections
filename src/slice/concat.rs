@@ -17,6 +17,7 @@ pub trait Concat<Item: ?Sized> {
 impl<K, V: Borrow<str>> Concat<str> for TiSlice<K, V> {
     type Output = String;
 
+    #[inline]
     fn concat(slice: &Self) -> Self::Output {
         slice.raw.concat()
     }
@@ -25,6 +26,7 @@ impl<K, V: Borrow<str>> Concat<str> for TiSlice<K, V> {
 impl<K, T: Clone, V: Borrow<[T]>> Concat<T> for TiSlice<K, V> {
     type Output = TiVec<K, T>;
 
+    #[inline]
     fn concat(slice: &Self) -> Self::Output {
         slice.raw.concat().into()
     }

@@ -171,10 +171,11 @@ impl<K, V> TiSlice<K, V> {
     /// pub struct Id(usize);
     /// let slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[1, 2, 4]);
     /// ```
-    #[allow(trivial_casts)]
+    #[expect(clippy::as_conversions, reason = "transparent over a `[V]` type")]
     #[inline]
-    pub fn from_ref(raw: &[V]) -> &Self {
-        unsafe { &*(raw as *const [V] as *const Self) }
+    pub const fn from_ref(raw: &[V]) -> &Self {
+        // SAFETY: `TiSlice<K, V>` is `repr(transparent)` over a `[V]` type.
+        unsafe { &*(core::ptr::from_ref::<[V]>(raw) as *const Self) }
     }
 
     /// Converts a `&mut [V]` into a `&mut TiSlice<K, V>`.
@@ -186,10 +187,11 @@ impl<K, V> TiSlice<K, V> {
     /// pub struct Id(usize);
     /// let slice: &mut TiSlice<Id, usize> = TiSlice::from_mut(&mut [1, 2, 4]);
     /// ```
-    #[allow(trivial_casts)]
+    #[expect(clippy::as_conversions, reason = "transparent over a `[V]` type")]
     #[inline]
     pub fn from_mut(raw: &mut [V]) -> &mut Self {
-        unsafe { &mut *(raw as *mut [V] as *mut Self) }
+        // SAFETY: `TiSlice<K, V>` is `repr(transparent)` over a `[V]` type.
+        unsafe { &mut *(core::ptr::from_mut::<[V]>(raw) as *mut Self) }
     }
 
     /// Returns the number of elements in the slice.
@@ -198,7 +200,7 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// [`slice::len`]: https://doc.rust-lang.org/std/primitive.slice.html#method.len
     #[inline]
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.raw.len()
     }
 
@@ -249,6 +251,7 @@ impl<K, V> TiSlice<K, V> {
     /// assert_eq!(iterator.next(), Some(Id(2)));
     /// assert_eq!(iterator.next(), None);
     /// ```
+    #[inline]
     pub fn keys(&self) -> TiSliceKeys<K>
     where
         K: From<usize>,
@@ -262,7 +265,7 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// [`slice::first`]: https://doc.rust-lang.org/std/primitive.slice.html#method.first
     #[inline]
-    pub fn first(&self) -> Option<&V> {
+    pub const fn first(&self) -> Option<&V> {
         self.raw.first()
     }
 
@@ -365,7 +368,7 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// [`slice::split_first`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_first
     #[inline]
-    pub fn split_first(&self) -> Option<(&V, &TiSlice<K, V>)> {
+    pub fn split_first(&self) -> Option<(&V, &Self)> {
         self.raw
             .split_first()
             .map(|(first, rest)| (first, rest.as_ref()))
@@ -377,7 +380,7 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// [`slice::split_first_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_first_mut
     #[inline]
-    pub fn split_first_mut(&mut self) -> Option<(&mut V, &mut TiSlice<K, V>)> {
+    pub fn split_first_mut(&mut self) -> Option<(&mut V, &mut Self)> {
         self.raw
             .split_first_mut()
             .map(|(first, rest)| (first, rest.as_mut()))
@@ -389,7 +392,7 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// [`slice::split_last`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_last
     #[inline]
-    pub fn split_last(&self) -> Option<(&V, &TiSlice<K, V>)> {
+    pub fn split_last(&self) -> Option<(&V, &Self)> {
         self.raw
             .split_last()
             .map(|(last, rest)| (last, rest.as_ref()))
@@ -401,7 +404,7 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// [`slice::split_last_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_last_mut
     #[inline]
-    pub fn split_last_mut(&mut self) -> Option<(&mut V, &mut TiSlice<K, V>)> {
+    pub fn split_last_mut(&mut self) -> Option<(&mut V, &mut Self)> {
         self.raw
             .split_last_mut()
             .map(|(last, rest)| (last, rest.as_mut()))
@@ -413,7 +416,7 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// [`slice::last`]: https://doc.rust-lang.org/std/primitive.slice.html#method.last
     #[inline]
-    pub fn last(&self) -> Option<&V> {
+    pub const fn last(&self) -> Option<&V> {
         self.raw.last()
     }
 
@@ -446,11 +449,7 @@ impl<K, V> TiSlice<K, V> {
     where
         K: From<usize>,
     {
-        if self.is_empty() {
-            None
-        } else {
-            Some((self.len() - 1).into())
-        }
+        Some(self.len().checked_sub(1)?.into())
     }
 
     /// Returns the last slice element index of type `K` and the element itself,
@@ -472,13 +471,19 @@ impl<K, V> TiSlice<K, V> {
     /// ```
     ///
     /// [`slice::last`]: https://doc.rust-lang.org/std/primitive.slice.html#method.last
+    #[expect(clippy::missing_panics_doc, reason = "should not panic")]
     #[inline]
     pub fn last_key_value(&self) -> Option<(K, &V)>
     where
         K: From<usize>,
     {
         let len = self.len();
-        self.raw.last().map(|last| ((len - 1).into(), last))
+        self.raw.last().map(|last| {
+            (
+                len.checked_sub(1).expect("unexpected overflow").into(),
+                last,
+            )
+        })
     }
 
     /// Returns the last slice element index of type `K` and a mutable reference
@@ -503,13 +508,19 @@ impl<K, V> TiSlice<K, V> {
     /// ```
     ///
     /// [`slice::last_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.last_mut
+    #[expect(clippy::missing_panics_doc, reason = "should not panic")]
     #[inline]
     pub fn last_key_value_mut(&mut self) -> Option<(K, &mut V)>
     where
         K: From<usize>,
     {
         let len = self.len();
-        self.raw.last_mut().map(|last| ((len - 1).into(), last))
+        self.raw.last_mut().map(|last| {
+            (
+                len.checked_sub(1).expect("unexpected overflow").into(),
+                last,
+            )
+        })
     }
 
     /// Returns a reference to an element or subslice
@@ -543,17 +554,17 @@ impl<K, V> TiSlice<K, V> {
     /// Returns a reference to an element or subslice
     /// depending on the type of index, without doing bounds checking.
     ///
-    /// This is generally not recommended, use with caution!
+    /// See [`slice::get_unchecked`] for more details.
+    ///
+    /// # Safety
+    ///
     /// Calling this method with an out-of-bounds index is *[undefined behavior]*
     /// even if the resulting reference is not used.
     /// For a safe alternative see [`get`].
     ///
-    /// See [`slice::get_unchecked`] for more details.
-    ///
     /// [`get`]: #method.get
     /// [`slice::get_unchecked`]: https://doc.rust-lang.org/std/primitive.slice.html#method.get_unchecked
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
-    #[allow(clippy::missing_safety_doc)]
     #[inline]
     pub unsafe fn get_unchecked<I>(&self, index: I) -> &I::Output
     where
@@ -565,17 +576,17 @@ impl<K, V> TiSlice<K, V> {
     /// Returns a mutable reference to an element or subslice
     /// depending on the type of index, without doing bounds checking.
     ///
-    /// This is generally not recommended, use with caution!
+    /// See [`slice::get_unchecked_mut`] for more details.
+    ///
+    /// # Safety
+    ///
     /// Calling this method with an out-of-bounds index is *[undefined behavior]*
     /// even if the resulting reference is not used.
     /// For a safe alternative see [`get_mut`].
     ///
-    /// See [`slice::get_unchecked_mut`] for more details.
-    ///
     /// [`get_mut`]: #method.get_mut
     /// [`slice::get_unchecked_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.get_unchecked_mut
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
-    #[allow(clippy::missing_safety_doc)]
     #[inline]
     pub unsafe fn get_unchecked_mut<I>(&mut self, index: I) -> &mut I::Output
     where
@@ -614,7 +625,7 @@ impl<K, V> TiSlice<K, V> {
     where
         usize: From<K>,
     {
-        self.raw.swap(a.into(), b.into())
+        self.raw.swap(a.into(), b.into());
     }
 
     /// Reverses the order of elements in the slice, in place.
@@ -624,7 +635,7 @@ impl<K, V> TiSlice<K, V> {
     /// [`slice::reverse`]: https://doc.rust-lang.org/std/primitive.slice.html#method.reverse
     #[inline]
     pub fn reverse(&mut self) {
-        self.raw.reverse()
+        self.raw.reverse();
     }
 
     /// Returns an iterator over the slice.
@@ -786,7 +797,7 @@ impl<K, V> TiSlice<K, V> {
     /// [`slice::windows`]: https://doc.rust-lang.org/std/primitive.slice.html#method.windows
     #[inline]
     pub fn windows(&self, size: usize) -> TiSliceRefMap<Windows<'_, V>, K, V> {
-        self.raw.windows(size).map(TiSlice::from_ref)
+        self.raw.windows(size).map(Self::from_ref)
     }
 
     /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the
@@ -797,7 +808,7 @@ impl<K, V> TiSlice<K, V> {
     /// [`slice::chunks`]: https://doc.rust-lang.org/std/primitive.slice.html#method.chunks
     #[inline]
     pub fn chunks(&self, chunk_size: usize) -> TiSliceRefMap<Chunks<'_, V>, K, V> {
-        self.raw.chunks(chunk_size).map(TiSlice::from_ref)
+        self.raw.chunks(chunk_size).map(Self::from_ref)
     }
 
     /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the
@@ -808,7 +819,7 @@ impl<K, V> TiSlice<K, V> {
     /// [`slice::chunks_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.chunks_mut
     #[inline]
     pub fn chunks_mut(&mut self, chunk_size: usize) -> TiSliceMutMap<ChunksMut<'_, V>, K, V> {
-        self.raw.chunks_mut(chunk_size).map(TiSlice::from_mut)
+        self.raw.chunks_mut(chunk_size).map(Self::from_mut)
     }
 
     /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the
@@ -819,7 +830,7 @@ impl<K, V> TiSlice<K, V> {
     /// [`slice::chunks_exact`]: https://doc.rust-lang.org/std/primitive.slice.html#method.chunks_exact
     #[inline]
     pub fn chunks_exact(&self, chunk_size: usize) -> TiSliceRefMap<ChunksExact<'_, V>, K, V> {
-        self.raw.chunks_exact(chunk_size).map(TiSlice::from_ref)
+        self.raw.chunks_exact(chunk_size).map(Self::from_ref)
     }
 
     /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the
@@ -833,7 +844,7 @@ impl<K, V> TiSlice<K, V> {
         &mut self,
         chunk_size: usize,
     ) -> TiSliceMutMap<ChunksExactMut<'_, V>, K, V> {
-        self.raw.chunks_exact_mut(chunk_size).map(TiSlice::from_mut)
+        self.raw.chunks_exact_mut(chunk_size).map(Self::from_mut)
     }
 
     /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the end
@@ -844,7 +855,7 @@ impl<K, V> TiSlice<K, V> {
     /// [`slice::rchunks`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rchunks
     #[inline]
     pub fn rchunks(&self, chunk_size: usize) -> TiSliceRefMap<RChunks<'_, V>, K, V> {
-        self.raw.rchunks(chunk_size).map(TiSlice::from_ref)
+        self.raw.rchunks(chunk_size).map(Self::from_ref)
     }
 
     /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the end
@@ -855,7 +866,7 @@ impl<K, V> TiSlice<K, V> {
     /// [`slice::rchunks_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rchunks_mut
     #[inline]
     pub fn rchunks_mut(&mut self, chunk_size: usize) -> TiSliceMutMap<RChunksMut<'_, V>, K, V> {
-        self.raw.rchunks_mut(chunk_size).map(TiSlice::from_mut)
+        self.raw.rchunks_mut(chunk_size).map(Self::from_mut)
     }
 
     /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the
@@ -866,7 +877,7 @@ impl<K, V> TiSlice<K, V> {
     /// [`slice::rchunks_exact`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rchunks_exact
     #[inline]
     pub fn rchunks_exact(&self, chunk_size: usize) -> TiSliceRefMap<RChunksExact<'_, V>, K, V> {
-        self.raw.rchunks_exact(chunk_size).map(TiSlice::from_ref)
+        self.raw.rchunks_exact(chunk_size).map(Self::from_ref)
     }
 
     /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the end
@@ -880,9 +891,7 @@ impl<K, V> TiSlice<K, V> {
         &mut self,
         chunk_size: usize,
     ) -> TiSliceMutMap<RChunksExactMut<'_, V>, K, V> {
-        self.raw
-            .rchunks_exact_mut(chunk_size)
-            .map(TiSlice::from_mut)
+        self.raw.rchunks_exact_mut(chunk_size).map(Self::from_mut)
     }
 
     /// Divides one slice into two at an index.
@@ -924,7 +933,7 @@ impl<K, V> TiSlice<K, V> {
     where
         F: FnMut(&V) -> bool,
     {
-        self.raw.split(pred).map(TiSlice::from_ref)
+        self.raw.split(pred).map(Self::from_ref)
     }
 
     /// Returns an iterator over mutable subslices separated by elements that
@@ -938,7 +947,7 @@ impl<K, V> TiSlice<K, V> {
     where
         F: FnMut(&V) -> bool,
     {
-        self.raw.split_mut(pred).map(TiSlice::from_mut)
+        self.raw.split_mut(pred).map(Self::from_mut)
     }
 
     /// Returns an iterator over subslices separated by elements that match
@@ -953,7 +962,7 @@ impl<K, V> TiSlice<K, V> {
     where
         F: FnMut(&V) -> bool,
     {
-        self.raw.rsplit(pred).map(TiSlice::from_ref)
+        self.raw.rsplit(pred).map(Self::from_ref)
     }
 
     /// Returns an iterator over mutable subslices separated by elements that
@@ -968,7 +977,7 @@ impl<K, V> TiSlice<K, V> {
     where
         F: FnMut(&V) -> bool,
     {
-        self.raw.rsplit_mut(pred).map(TiSlice::from_mut)
+        self.raw.rsplit_mut(pred).map(Self::from_mut)
     }
 
     /// Returns an iterator over subslices separated by elements that match
@@ -983,7 +992,7 @@ impl<K, V> TiSlice<K, V> {
     where
         F: FnMut(&V) -> bool,
     {
-        self.raw.splitn(n, pred).map(TiSlice::from_ref)
+        self.raw.splitn(n, pred).map(Self::from_ref)
     }
 
     /// Returns an iterator over subslices separated by elements that match
@@ -998,7 +1007,7 @@ impl<K, V> TiSlice<K, V> {
     where
         F: FnMut(&V) -> bool,
     {
-        self.raw.splitn_mut(n, pred).map(TiSlice::from_mut)
+        self.raw.splitn_mut(n, pred).map(Self::from_mut)
     }
 
     /// Returns an iterator over subslices separated by elements that match
@@ -1014,7 +1023,7 @@ impl<K, V> TiSlice<K, V> {
     where
         F: FnMut(&V) -> bool,
     {
-        self.raw.rsplitn(n, pred).map(TiSlice::from_ref)
+        self.raw.rsplitn(n, pred).map(Self::from_ref)
     }
 
     /// Returns an iterator over subslices separated by elements that match
@@ -1030,7 +1039,7 @@ impl<K, V> TiSlice<K, V> {
     where
         F: FnMut(&V) -> bool,
     {
-        self.raw.rsplitn_mut(n, pred).map(TiSlice::from_mut)
+        self.raw.rsplitn_mut(n, pred).map(Self::from_mut)
     }
 
     /// Returns `true` if the slice contains an element with the given value.
@@ -1038,6 +1047,7 @@ impl<K, V> TiSlice<K, V> {
     /// See [`slice::contains`] for more details.
     ///
     /// [`slice::contains`]: https://doc.rust-lang.org/std/primitive.slice.html#method.contains
+    #[inline]
     pub fn contains(&self, x: &V) -> bool
     where
         V: PartialEq,
@@ -1050,6 +1060,7 @@ impl<K, V> TiSlice<K, V> {
     /// See [`slice::starts_with`] for more details.
     ///
     /// [`slice::starts_with`]: https://doc.rust-lang.org/std/primitive.slice.html#method.starts_with
+    #[inline]
     pub fn starts_with(&self, needle: &Self) -> bool
     where
         V: PartialEq,
@@ -1062,6 +1073,7 @@ impl<K, V> TiSlice<K, V> {
     /// See [`slice::ends_with`] for more details.
     ///
     /// [`slice::ends_with`]: https://doc.rust-lang.org/std/primitive.slice.html#method.ends_with
+    #[inline]
     pub fn ends_with(&self, needle: &Self) -> bool
     where
         V: PartialEq,
@@ -1074,6 +1086,8 @@ impl<K, V> TiSlice<K, V> {
     /// See [`slice::binary_search`] for more details.
     ///
     /// [`slice::binary_search`]: https://doc.rust-lang.org/std/primitive.slice.html#method.binary_search
+    #[expect(clippy::missing_errors_doc, reason = "missed in std docs")]
+    #[inline]
     pub fn binary_search(&self, x: &V) -> Result<K, K>
     where
         V: Ord,
@@ -1090,6 +1104,7 @@ impl<K, V> TiSlice<K, V> {
     /// See [`slice::binary_search_by`] for more details.
     ///
     /// [`slice::binary_search_by`]: https://doc.rust-lang.org/std/primitive.slice.html#method.binary_search_by
+    #[expect(clippy::missing_errors_doc, reason = "missed in std docs")]
     #[inline]
     pub fn binary_search_by<'a, F>(&'a self, f: F) -> Result<K, K>
     where
@@ -1107,6 +1122,7 @@ impl<K, V> TiSlice<K, V> {
     /// See [`slice::binary_search_by_key`] for more details.
     ///
     /// [`slice::binary_search_by_key`]: https://doc.rust-lang.org/std/primitive.slice.html#method.binary_search_by_key
+    #[expect(clippy::missing_errors_doc, reason = "missed in std docs")]
     #[inline]
     pub fn binary_search_by_key<'a, B, F>(&'a self, b: &B, f: F) -> Result<K, K>
     where
@@ -1130,7 +1146,7 @@ impl<K, V> TiSlice<K, V> {
     where
         V: Ord,
     {
-        self.raw.sort_unstable()
+        self.raw.sort_unstable();
     }
 
     /// Sorts the slice with a comparator function, but may not preserve the order of equal
@@ -1144,7 +1160,7 @@ impl<K, V> TiSlice<K, V> {
     where
         F: FnMut(&V, &V) -> Ordering,
     {
-        self.raw.sort_unstable_by(compare)
+        self.raw.sort_unstable_by(compare);
     }
 
     /// Sorts the slice with a key extraction function, but may not preserve the order of equal
@@ -1159,7 +1175,7 @@ impl<K, V> TiSlice<K, V> {
         F: FnMut(&V) -> K2,
         K2: Ord,
     {
-        self.raw.sort_unstable_by_key(f)
+        self.raw.sort_unstable_by_key(f);
     }
 
     /// Rotates the slice in-place such that the first `mid` elements of the
@@ -1170,11 +1186,12 @@ impl<K, V> TiSlice<K, V> {
     /// See [`slice::rotate_left`] for more details.
     ///
     /// [`slice::rotate_left`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rotate_left
+    #[inline]
     pub fn rotate_left(&mut self, mid: K)
     where
         usize: From<K>,
     {
-        self.raw.rotate_left(mid.into())
+        self.raw.rotate_left(mid.into());
     }
 
     /// Rotates the slice in-place such that the first `self.next_key() - k`
@@ -1185,11 +1202,12 @@ impl<K, V> TiSlice<K, V> {
     /// See [`slice::rotate_right`] for more details.
     ///
     /// [`slice::rotate_right`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rotate_right
+    #[inline]
     pub fn rotate_right(&mut self, k: K)
     where
         usize: From<K>,
     {
-        self.raw.rotate_right(k.into())
+        self.raw.rotate_right(k.into());
     }
 
     /// Copies the elements from `src` into `self`.
@@ -1197,11 +1215,12 @@ impl<K, V> TiSlice<K, V> {
     /// See [`slice::clone_from_slice`] for more details.
     ///
     /// [`slice::clone_from_slice`]: https://doc.rust-lang.org/std/primitive.slice.html#method.clone_from_slice
+    #[inline]
     pub fn clone_from_slice(&mut self, src: &Self)
     where
         V: Clone,
     {
-        self.raw.clone_from_slice(&src.raw)
+        self.raw.clone_from_slice(&src.raw);
     }
 
     /// Copies all elements from `src` into `self`, using a memcpy.
@@ -1209,11 +1228,12 @@ impl<K, V> TiSlice<K, V> {
     /// See [`slice::copy_from_slice`] for more details.
     ///
     /// [`slice::copy_from_slice`]: https://doc.rust-lang.org/std/primitive.slice.html#method.copy_from_slice
+    #[inline]
     pub fn copy_from_slice(&mut self, src: &Self)
     where
         V: Copy,
     {
-        self.raw.copy_from_slice(&src.raw)
+        self.raw.copy_from_slice(&src.raw);
     }
 
     /// Copies elements from one part of the slice to another part of itself,
@@ -1222,13 +1242,14 @@ impl<K, V> TiSlice<K, V> {
     /// See [`slice::copy_within`] for more details.
     ///
     /// [`slice::copy_within`]: https://doc.rust-lang.org/std/primitive.slice.html#method.copy_within
+    #[inline]
     pub fn copy_within<R>(&mut self, src: R, dest: K)
     where
         R: TiRangeBounds<K>,
         V: Copy,
         usize: From<K>,
     {
-        self.raw.copy_within(src.into_range(), dest.into())
+        self.raw.copy_within(src.into_range(), dest.into());
     }
 
     /// Swaps all elements in `self` with those in `other`.
@@ -1237,8 +1258,9 @@ impl<K, V> TiSlice<K, V> {
     /// See [`slice::swap_with_slice`] for more details.
     ///
     /// [`slice::swap_with_slice`]: https://doc.rust-lang.org/std/primitive.slice.html#method.swap_with_slice
+    #[inline]
     pub fn swap_with_slice(&mut self, other: &mut Self) {
-        self.raw.swap_with_slice(other.as_mut())
+        self.raw.swap_with_slice(other.as_mut());
     }
 
     /// Transmute the slice to a slice of another type, ensuring alignment of the types is
@@ -1246,8 +1268,13 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::align_to`] for more details.
     ///
+    /// # Safety
+    ///
+    /// This method is essentially a `transmute` with respect to the elements in the returned
+    /// middle slice, so all the usual caveats pertaining to `transmute::<T, U>` also apply here.
+    ///
     /// [`slice::align_to`]: https://doc.rust-lang.org/std/primitive.slice.html#method.align_to
-    #[allow(clippy::missing_safety_doc)]
+    #[inline]
     pub unsafe fn align_to<U>(&self) -> (&Self, &TiSlice<K, U>, &Self) {
         let (first, mid, last) = self.raw.align_to();
         (first.as_ref(), mid.as_ref(), last.as_ref())
@@ -1258,8 +1285,13 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::align_to_mut`] for more details.
     ///
+    /// # Safety
+    ///
+    /// This method is essentially a `transmute` with respect to the elements in the returned
+    /// middle slice, so all the usual caveats pertaining to `transmute::<T, U>` also apply here.
+    ///
     /// [`slice::align_to_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.align_to_mut
-    #[allow(clippy::missing_safety_doc)]
+    #[inline]
     pub unsafe fn align_to_mut<U>(&mut self) -> (&mut Self, &mut TiSlice<K, U>, &mut Self) {
         let (first, mid, last) = self.raw.align_to_mut();
         (first.as_mut(), mid.as_mut(), last.as_mut())
@@ -1273,7 +1305,8 @@ impl<K> TiSlice<K, u8> {
     ///
     /// [`slice::is_ascii`]: https://doc.rust-lang.org/std/primitive.slice.html#method.is_ascii
     #[inline]
-    pub fn is_ascii(&self) -> bool {
+    #[must_use]
+    pub const fn is_ascii(&self) -> bool {
         self.raw.is_ascii()
     }
 
@@ -1283,6 +1316,7 @@ impl<K> TiSlice<K, u8> {
     ///
     /// [`slice::eq_ignore_ascii_case`]: https://doc.rust-lang.org/std/primitive.slice.html#method.eq_ignore_ascii_case
     #[inline]
+    #[must_use]
     pub fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
         self.raw.eq_ignore_ascii_case(other.as_ref())
     }
@@ -1294,7 +1328,7 @@ impl<K> TiSlice<K, u8> {
     /// [`slice::make_ascii_uppercase`]: https://doc.rust-lang.org/std/primitive.slice.html#method.make_ascii_uppercase
     #[inline]
     pub fn make_ascii_uppercase(&mut self) {
-        self.raw.make_ascii_uppercase()
+        self.raw.make_ascii_uppercase();
     }
 
     /// Converts this slice to its ASCII lower case equivalent in-place.
@@ -1304,7 +1338,7 @@ impl<K> TiSlice<K, u8> {
     /// [`slice::make_ascii_lowercase`]: https://doc.rust-lang.org/std/primitive.slice.html#method.make_ascii_lowercase
     #[inline]
     pub fn make_ascii_lowercase(&mut self) {
-        self.raw.make_ascii_lowercase()
+        self.raw.make_ascii_lowercase();
     }
 }
 
@@ -1320,7 +1354,7 @@ impl<K, V> TiSlice<K, V> {
     where
         V: Ord,
     {
-        self.raw.sort()
+        self.raw.sort();
     }
 
     /// Sorts the slice with a comparator function.
@@ -1333,7 +1367,7 @@ impl<K, V> TiSlice<K, V> {
     where
         F: FnMut(&V, &V) -> Ordering,
     {
-        self.raw.sort_by(compare)
+        self.raw.sort_by(compare);
     }
 
     /// Sorts the slice with a key extraction function.
@@ -1347,7 +1381,7 @@ impl<K, V> TiSlice<K, V> {
         F: FnMut(&V) -> K2,
         K2: Ord,
     {
-        self.raw.sort_by_key(f)
+        self.raw.sort_by_key(f);
     }
 
     /// Sorts the slice with a key extraction function.
@@ -1361,7 +1395,7 @@ impl<K, V> TiSlice<K, V> {
         F: FnMut(&V) -> K2,
         K2: Ord,
     {
-        self.raw.sort_by_cached_key(f)
+        self.raw.sort_by_cached_key(f);
     }
 
     /// Copies `self` into a new `TiVec`.
@@ -1383,6 +1417,7 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// [`slice::into_vec`]: https://doc.rust-lang.org/std/primitive.slice.html#method.into_vec
     #[inline]
+    #[must_use]
     pub fn into_vec(self: Box<Self>) -> TiVec<K, V> {
         Box::<[V]>::from(self).into_vec().into()
     }
@@ -1392,6 +1427,7 @@ impl<K, V> TiSlice<K, V> {
     /// See [`slice::repeat`] for more details.
     ///
     /// [`slice::repeat`]: https://doc.rust-lang.org/std/primitive.slice.html#method.repeat
+    #[inline]
     pub fn repeat(&self, n: usize) -> TiVec<K, V>
     where
         V: Copy,
@@ -1404,6 +1440,7 @@ impl<K, V> TiSlice<K, V> {
     /// See [`slice::concat`] for more details.
     ///
     /// [`slice::concat`]: https://doc.rust-lang.org/std/primitive.slice.html#method.concat
+    #[inline]
     pub fn concat<Item: ?Sized>(&self) -> <Self as Concat<Item>>::Output
     where
         Self: Concat<Item>,
@@ -1417,6 +1454,7 @@ impl<K, V> TiSlice<K, V> {
     /// See [`slice::join`] for more details.
     ///
     /// [`slice::join`]: https://doc.rust-lang.org/std/primitive.slice.html#method.join
+    #[inline]
     pub fn join<Separator>(&self, sep: Separator) -> <Self as Join<Separator>>::Output
     where
         Self: Join<Separator>,
@@ -1434,6 +1472,7 @@ impl<K> TiSlice<K, u8> {
     ///
     /// [`slice::to_ascii_uppercase`]: https://doc.rust-lang.org/std/primitive.slice.html#method.to_ascii_uppercase
     #[inline]
+    #[must_use]
     pub fn to_ascii_uppercase(&self) -> TiVec<K, u8> {
         self.raw.to_ascii_uppercase().into()
     }
@@ -1445,6 +1484,7 @@ impl<K> TiSlice<K, u8> {
     ///
     /// [`slice::to_ascii_lowercase`]: https://doc.rust-lang.org/std/primitive.slice.html#method.to_ascii_lowercase
     #[inline]
+    #[must_use]
     pub fn to_ascii_lowercase(&self) -> TiVec<K, u8> {
         self.raw.to_ascii_lowercase().into()
     }
@@ -1455,42 +1495,53 @@ where
     K: fmt::Debug + From<usize>,
     V: fmt::Debug,
 {
+    #[allow(clippy::allow_attributes, reason = "rust-lang/rust#130021")]
+    #[allow(
+        clippy::missing_inline_in_public_items,
+        reason = "use default inlining behavior"
+    )]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_map().entries(self.iter_enumerated()).finish()
     }
 }
 
-impl<K, V> AsRef<TiSlice<K, V>> for TiSlice<K, V> {
-    fn as_ref(&self) -> &TiSlice<K, V> {
+impl<K, V> AsRef<Self> for TiSlice<K, V> {
+    #[inline]
+    fn as_ref(&self) -> &Self {
         self
     }
 }
 
-impl<K, V> AsMut<TiSlice<K, V>> for TiSlice<K, V> {
-    fn as_mut(&mut self) -> &mut TiSlice<K, V> {
+impl<K, V> AsMut<Self> for TiSlice<K, V> {
+    #[inline]
+    fn as_mut(&mut self) -> &mut Self {
         self
     }
 }
 
 impl<K, V> AsRef<[V]> for TiSlice<K, V> {
+    #[inline]
     fn as_ref(&self) -> &[V] {
         &self.raw
     }
 }
 
 impl<K, V> AsMut<[V]> for TiSlice<K, V> {
+    #[inline]
     fn as_mut(&mut self) -> &mut [V] {
         &mut self.raw
     }
 }
 
 impl<K, V> AsRef<TiSlice<K, V>> for [V] {
+    #[inline]
     fn as_ref(&self) -> &TiSlice<K, V> {
         TiSlice::from_ref(self)
     }
 }
 
 impl<K, V> AsMut<TiSlice<K, V>> for [V] {
+    #[inline]
     fn as_mut(&mut self) -> &mut TiSlice<K, V> {
         TiSlice::from_mut(self)
     }
@@ -1522,9 +1573,9 @@ impl<'a, K, V> IntoIterator for &'a TiSlice<K, V> {
     type Item = &'a V;
     type IntoIter = Iter<'a, V>;
 
-    #[allow(clippy::into_iter_on_ref)]
+    #[inline]
     fn into_iter(self) -> Iter<'a, V> {
-        self.raw.into_iter()
+        self.raw.iter()
     }
 }
 
@@ -1532,15 +1583,17 @@ impl<'a, K, V> IntoIterator for &'a mut TiSlice<K, V> {
     type Item = &'a mut V;
     type IntoIter = IterMut<'a, V>;
 
-    #[allow(clippy::into_iter_on_ref)]
+    #[inline]
     fn into_iter(self) -> IterMut<'a, V> {
-        (&mut self.raw).into_iter()
+        self.raw.iter_mut()
     }
 }
 
 #[cfg(any(feature = "alloc", feature = "std"))]
 impl<K, V: Clone> ToOwned for TiSlice<K, V> {
     type Owned = TiVec<K, V>;
+
+    #[inline]
     fn to_owned(&self) -> TiVec<K, V> {
         self.raw.to_owned().into()
     }
@@ -1550,17 +1603,18 @@ impl<K, A, B> PartialEq<TiSlice<K, B>> for TiSlice<K, A>
 where
     A: PartialEq<B>,
 {
+    #[inline]
     fn eq(&self, other: &TiSlice<K, B>) -> bool {
         self.raw == other.raw
     }
 }
 
-impl<K, V> PartialOrd<TiSlice<K, V>> for TiSlice<K, V>
+impl<K, V> PartialOrd<Self> for TiSlice<K, V>
 where
     V: PartialOrd<V>,
 {
     #[inline]
-    fn partial_cmp(&self, other: &TiSlice<K, V>) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.raw.partial_cmp(&other.raw)
     }
 }
@@ -1585,8 +1639,9 @@ impl<K, V> Hash for TiSlice<K, V>
 where
     V: Hash,
 {
+    #[inline]
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.raw.hash(state)
+        self.raw.hash(state);
     }
 }
 
@@ -1595,13 +1650,14 @@ where
     V: Ord,
 {
     #[inline]
-    fn cmp(&self, other: &TiSlice<K, V>) -> Ordering {
+    fn cmp(&self, other: &Self) -> Ordering {
         self.raw.cmp(&other.raw)
     }
 }
 
 #[cfg(feature = "serde")]
 impl<K, V: Serialize> Serialize for TiSlice<K, V> {
+    #[inline]
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         self.raw.serialize(serializer)
     }
@@ -1628,7 +1684,14 @@ mod test {
         ]
     }
 
-    #[allow(clippy::zero_repeat_side_effects)]
+    #[expect(
+        clippy::modulo_arithmetic,
+        clippy::too_many_lines,
+        clippy::undocumented_unsafe_blocks,
+        clippy::unwrap_used,
+        clippy::zero_repeat_side_effects,
+        reason = "okay in tests"
+    )]
     #[test]
     fn no_std_api_compatibility() {
         for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {
@@ -1958,6 +2021,12 @@ mod test {
         }
     }
 
+    #[expect(
+        clippy::allow_attributes,
+        clippy::modulo_arithmetic,
+        clippy::unwrap_used,
+        reason = "okay in tests"
+    )]
     #[cfg(any(feature = "alloc", feature = "std"))]
     #[test]
     fn std_api_compatibility() {
@@ -1966,7 +2035,7 @@ mod test {
         for_in!(
             for arr in [[0; 0], [1], [1, 3], [7, 3, 5], [10, 6, 35, 4]] {
                 assert_eq_api!(arr => |&mut arr| {
-                    #[allow(clippy::stable_sort_primitive)]
+                    #[allow(clippy::stable_sort_primitive, reason = "okay in tests")]
                     arr.as_mut().into_t().sort();
                     arr
                 });
@@ -2017,6 +2086,7 @@ mod test {
         );
     }
 
+    #[expect(clippy::allow_attributes, reason = "okay in tests")]
     #[test]
     fn no_std_trait_api_compatibility() {
         use core::slice::IterMut;
@@ -2066,12 +2136,12 @@ mod test {
                 }
             }
             assert_eq_api!(arr => |&arr| {
-                #[allow(clippy::into_iter_on_ref)]
+                #[allow(clippy::into_iter_on_ref, reason = "okay in tests")]
                 let mut iter = arr.as_ref().into_t().into_iter();
                 array_32_from(|| iter.next())
             });
             assert_eq_api!(arr => |&mut arr| {
-                #[allow(clippy::into_iter_on_ref)]
+                #[allow(clippy::into_iter_on_ref, reason = "okay in tests")]
                 let mut iter: IterMut<'_, _> = arr.as_mut().into_t().into_iter();
                 array_32_from(|| iter.next())
             });
@@ -2099,6 +2169,7 @@ mod test {
         });
     }
 
+    #[expect(clippy::unwrap_used, reason = "okay in tests")]
     #[test]
     fn use_non_zero_indecies() {
         use core::mem::size_of;
@@ -2107,6 +2178,11 @@ mod test {
         #[derive(Clone, Copy, Debug, Eq, PartialEq)]
         struct Id(NonZeroUsize);
 
+        #[expect(
+            clippy::unwrap_used,
+            clippy::fallible_impl_from,
+            reason = "okay in tests"
+        )]
         impl From<usize> for Id {
             fn from(value: usize) -> Self {
                 Self(NonZeroUsize::new(value + 1).unwrap())

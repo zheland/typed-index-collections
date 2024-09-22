@@ -205,18 +205,6 @@
 //! [`Serialize`]: https://docs.serde.rs/serde/trait.Serialize.html
 //! [`Deserialize`]: https://docs.serde.rs/serde/trait.Deserialize.html
 
-#![warn(
-    clippy::all,
-    rust_2018_idioms,
-    missing_copy_implementations,
-    missing_debug_implementations,
-    single_use_lifetimes,
-    missing_docs,
-    trivial_casts,
-    unused_import_braces,
-    unused_qualifications,
-    unused_results
-)]
 #![no_std]
 
 #[cfg(all(feature = "alloc", not(feature = "std")))]
@@ -242,3 +230,8 @@ pub use slice::{TiSlice, TiSliceIndex};
 
 #[cfg(any(feature = "alloc", feature = "std"))]
 pub use vec::TiVec;
+
+#[cfg(test)]
+mod integration_tests_deps {
+    use {readme_sync as _, version_sync as _};
+}

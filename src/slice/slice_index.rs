@@ -43,20 +43,24 @@ pub trait TiSliceIndex<K, V>: private::Sealed<K> {
 
     /// Returns a shared reference to the output at this location, without
     /// performing any bounds checking.
+    ///
+    /// # Safety
+    ///
     /// Calling this method with an out-of-bounds index is *[undefined behavior]*
     /// even if the resulting reference is not used.
     ///
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
-    #[allow(clippy::missing_safety_doc)]
     unsafe fn get_unchecked(self, slice: &TiSlice<K, V>) -> &Self::Output;
 
     /// Returns a mutable reference to the output at this location, without
     /// performing any bounds checking.
+    ///
+    /// # Safety
+    ///
     /// Calling this method with an out-of-bounds index is *[undefined behavior]*
     /// even if the resulting reference is not used.
     ///
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
-    #[allow(clippy::missing_safety_doc)]
     unsafe fn get_unchecked_mut(self, slice: &mut TiSlice<K, V>) -> &mut Self::Output;
 
     /// Returns a shared reference to the output at this location, panicking
@@ -99,6 +103,7 @@ where
         &slice.raw[usize::from(self)]
     }
 
+    #[inline]
     fn index_mut(self, slice: &mut TiSlice<K, V>) -> &mut Self::Output {
         &mut slice.raw[usize::from(self)]
     }

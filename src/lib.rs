@@ -216,6 +216,8 @@ mod range;
 mod slice;
 
 #[cfg(feature = "alloc")]
+mod macros;
+#[cfg(feature = "alloc")]
 mod vec;
 
 pub use iter::{TiEnumerated, TiSliceKeys, TiSliceMutMap, TiSliceRefMap};
@@ -228,4 +230,10 @@ pub use vec::TiVec;
 #[cfg(test)]
 mod integration_tests_deps {
     use {readme_sync as _, version_sync as _};
+}
+
+#[doc(hidden)]
+pub mod macro_deps {
+    #[cfg(feature = "alloc")]
+    pub use alloc::vec;
 }

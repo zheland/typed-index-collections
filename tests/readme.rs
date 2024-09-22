@@ -1,4 +1,4 @@
-#[cfg(test)]
+#[cfg(all(test, not(miri)))]
 #[test]
 fn test_readme_sync() {
     use readme_sync::{assert_sync, CMarkDocs, CMarkReadme, Config, Package};

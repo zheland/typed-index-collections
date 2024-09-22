@@ -60,11 +60,8 @@
 //! # Examples
 //!
 //! Simple example with [`derive_more`]:
-#![cfg_attr(any(feature = "alloc", feature = "std"), doc = "```rust")]
-#![cfg_attr(
-    not(any(feature = "alloc", feature = "std")),
-    doc = "```rust,compile_fail"
-)]
+#![cfg_attr(feature = "alloc", doc = "```rust")]
+#![cfg_attr(not(feature = "alloc"), doc = "```rust,compile_fail")]
 //!use typed_index_collections::TiVec;
 //!use derive_more::{From, Into};
 //!
@@ -96,11 +93,8 @@
 //! ```
 //!
 //! Another more detailed example with [`derive_more`]:
-#![cfg_attr(any(feature = "alloc", feature = "std"), doc = "```rust")]
-#![cfg_attr(
-    not(any(feature = "alloc", feature = "std")),
-    doc = "```rust,compile_fail"
-)]
+#![cfg_attr(feature = "alloc", doc = "```rust")]
+#![cfg_attr(not(feature = "alloc"), doc = "```rust,compile_fail")]
 //!use typed_index_collections::{TiSlice, TiVec};
 //!use derive_more::{From, Into};
 //!
@@ -136,8 +130,8 @@
 //!
 //! # Feature Flags
 //!
-//! - `alloc` (enabled by default): Enables types and functions
-//!   which require memory allocation.
+//! - `alloc` (implied by `std`, enabled by default): Enables types and
+//!   functions which require memory allocation.
 //! - `std` (enabled by default): Enables all [`std`] features
 //!   such as memory allocations, [`std::error::Error`] trait and
 //!   [`std::panic::UnwindSafe`] trait implementations.
@@ -207,11 +201,11 @@
 
 #![no_std]
 
-#[cfg(all(feature = "alloc", not(feature = "std")))]
+#[cfg(feature = "alloc")]
 extern crate alloc;
 
 #[cfg(feature = "std")]
-extern crate std as alloc;
+extern crate std;
 
 #[cfg(test)]
 #[macro_use]
@@ -221,14 +215,14 @@ mod iter;
 mod range;
 mod slice;
 
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 mod vec;
 
 pub use iter::{TiEnumerated, TiSliceKeys, TiSliceMutMap, TiSliceRefMap};
 pub use range::TiRangeBounds;
 pub use slice::{TiSlice, TiSliceIndex};
 
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 pub use vec::TiVec;
 
 #[cfg(test)]

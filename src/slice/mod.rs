@@ -1,10 +1,10 @@
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 mod boxed;
 
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 mod concat;
 
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 mod join;
 
 mod slice_index;
@@ -22,7 +22,7 @@ use core::{
     },
 };
 
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 use alloc::{borrow::ToOwned, boxed::Box};
 
 #[cfg(feature = "serde")]
@@ -30,13 +30,13 @@ use serde::ser::{Serialize, Serializer};
 
 use crate::{TiEnumerated, TiRangeBounds, TiSliceKeys, TiSliceMutMap, TiSliceRefMap};
 
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 use crate::TiVec;
 
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 use concat::Concat;
 
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 use join::Join;
 
 pub use slice_index::TiSliceIndex;
@@ -1342,7 +1342,7 @@ impl<K> TiSlice<K, u8> {
     }
 }
 
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 impl<K, V> TiSlice<K, V> {
     /// Sorts the slice.
     ///
@@ -1463,7 +1463,7 @@ impl<K, V> TiSlice<K, V> {
     }
 }
 
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 impl<K> TiSlice<K, u8> {
     /// Returns a vector containing a copy of this slice where each byte
     /// is mapped to its ASCII upper case equivalent.
@@ -1589,7 +1589,7 @@ impl<'a, K, V> IntoIterator for &'a mut TiSlice<K, V> {
     }
 }
 
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 impl<K, V: Clone> ToOwned for TiSlice<K, V> {
     type Owned = TiVec<K, V>;
 
@@ -2027,7 +2027,7 @@ mod test {
         clippy::unwrap_used,
         reason = "okay in tests"
     )]
-    #[cfg(any(feature = "alloc", feature = "std"))]
+    #[cfg(feature = "alloc")]
     #[test]
     fn std_api_compatibility() {
         use alloc::boxed::Box;
@@ -2075,7 +2075,7 @@ mod test {
         );
     }
 
-    #[cfg(any(feature = "alloc", feature = "std"))]
+    #[cfg(feature = "alloc")]
     #[test]
     fn std_u8_api_compatibility() {
         for_in!(
@@ -2160,7 +2160,7 @@ mod test {
         assert_eq!(default_slice_mut, &mut default_ti_slice_mut.raw);
     }
 
-    #[cfg(any(feature = "alloc", feature = "std"))]
+    #[cfg(feature = "alloc")]
     #[test]
     fn alloc_trait_api_compatibility() {
         use alloc::borrow::ToOwned;

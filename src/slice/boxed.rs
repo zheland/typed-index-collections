@@ -1,7 +1,7 @@
 use core::iter::FromIterator;
 use core::mem::transmute;
 
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 use alloc::{boxed::Box, vec};
 
 #[cfg(any(feature = "serde-alloc", feature = "serde-std"))]

@@ -140,8 +140,8 @@ let _boxed_slice: std::boxed::Box<[Foo]> = ti_boxed_slice.into();
 
 ## Feature Flags
 
-- `alloc` (enabled by default): Enables types and functions
-  which require memory allocation.
+- `alloc` (implied by `std`, enabled by default): Enables types and
+  functions which require memory allocation.
 - `std` (enabled by default): Enables all [`std`] features
   such as memory allocations, [`std::error::Error`] trait and
   [`std::panic::UnwindSafe`] trait implementations.

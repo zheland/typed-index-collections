@@ -1,6 +1,6 @@
 use core::borrow::Borrow;
 
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 use alloc::string::String;
 
 use crate::{TiSlice, TiVec};

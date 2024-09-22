@@ -1,13 +1,13 @@
 // This module is used only for tests.
 
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 use alloc::{boxed::Box, vec::Vec};
 
 use derive_more::{From, Into};
 
 use crate::TiSlice;
 
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 use crate::TiVec;
 
 #[derive(From, Into, Clone, Copy, Debug, Eq, PartialEq)]
@@ -70,26 +70,26 @@ impl_convert!(for ('a, V)
 impl_convert!(for ('a, V)
     |self: &'a mut TiSlice<Id, V>| -> &'a mut [V] { self.as_mut() });
 
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 impl_convert!(for (V)
     |self: Box<[V]>| -> Box<TiSlice<Id, V>> { self.into() });
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 impl_convert!(for (V)
     |self: Box<TiSlice<Id, V>>| -> Box<[V]> { self.into() });
 
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 impl_convert!(for (T) |self: Vec<T>| -> TiVec<Id, T> { self.into() } );
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 impl_convert!(for (T) |self: TiVec<Id, T>| -> Vec<T> { self.into() } );
 
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 impl_convert!(for ('a, T) |self: &'a Vec<T>| -> &'a TiVec<Id, T> { self.as_ref() } );
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 impl_convert!(for ('a, T) |self: &'a TiVec<Id, T>| -> &'a Vec<T> { self.as_ref() } );
 
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 impl_convert!(for ('a, T) |self: &'a mut Vec<T>| -> &'a mut TiVec<Id, T> { self.as_mut() } );
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 impl_convert!(for ('a, T) |self: &'a mut TiVec<Id, T>| -> &'a mut Vec<T> { self.as_mut() } );
 
 impl_convert!(for ('a, V)
@@ -162,7 +162,7 @@ macro_rules! assert_api_impl(
             )]
             type UsizeSlice = crate::TiSlice<Id, usize>;
 
-            #[cfg(any(feature = "alloc", feature = "std"))]
+            #[cfg(feature = "alloc")]
             #[allow(
                 dead_code,
                 unused_qualifications,
@@ -185,7 +185,7 @@ macro_rules! assert_api_impl(
             )]
             type UsizeSlice = [usize];
 
-            #[cfg(any(feature = "alloc", feature = "std"))]
+            #[cfg(feature = "alloc")]
             #[allow(
                 dead_code,
                 unused_qualifications,

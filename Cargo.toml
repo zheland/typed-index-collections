@@ -27,7 +27,7 @@ default = ["alloc", "std"]
 alloc = []
 serde-alloc = ["alloc", "serde/alloc"]
 serde-std = ["std", "serde/std"]
-std = []
+std = ["alloc"]
 
 [package.metadata.docs.rs]
 all-features = true

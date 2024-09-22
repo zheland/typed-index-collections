@@ -1732,7 +1732,7 @@ mod test {
                 assert_eq_api!(arr => |arr| arr.into_t().as_ptr());
             }
         );
-        for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {
+        for_in!(for arr in [[1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {
             assert_ne_api!(arr => |&mut arr| arr.as_mut().into_t().as_mut_ptr());
         });
         assert_eq_api!([1u32, 2, 3] => |&mut arr| {

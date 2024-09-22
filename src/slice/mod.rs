@@ -92,7 +92,7 @@ pub use slice_index::TiSliceIndex;
 ///   It acts like `self.iter().position(...)`,
 ///   but instead of `usize` it returns index of type `K`.
 /// - [`rposition`] - Searches for an element in an iterator from the right,
-/// returning its index of type `K`.
+///   returning its index of type `K`.
 ///   It acts like `self.iter().rposition(...)`,
 ///   but instead of `usize` it returns index of type `K`.
 ///
@@ -1628,6 +1628,7 @@ mod test {
         ]
     }
 
+    #[allow(clippy::zero_repeat_side_effects)]
     #[test]
     fn no_std_api_compatibility() {
         for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {
@@ -2100,6 +2101,7 @@ mod test {
 
     #[test]
     fn use_non_zero_indecies() {
+        use core::mem::size_of;
         use core::num::NonZeroUsize;
 
         #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -2117,10 +2119,7 @@ mod test {
             }
         }
 
-        assert_eq!(
-            core::mem::size_of::<Option<Id>>(),
-            core::mem::size_of::<Id>()
-        );
+        assert_eq!(size_of::<Option<Id>>(), size_of::<Id>());
 
         let slice: &TiSlice<Id, usize> = TiSlice::from_ref(&[1, 2, 4, 8, 16]);
         assert_eq!(

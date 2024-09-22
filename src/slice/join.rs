@@ -1,16 +1,15 @@
 use core::borrow::Borrow;
 
-#[cfg(feature = "alloc")]
 use alloc::string::String;
 
 use crate::{TiSlice, TiVec};
 
-/// Helper trait for [`[T]::join`](../../std/primitive.slice.html#method.join)
+/// A helper trait for [`TiSlice::join`](crate::TiSlice#method.join)
 pub trait Join<Separator> {
     /// The resulting type after concatenation
     type Output;
 
-    /// Implementation of [`[T]::join`](../../std/primitive.slice.html#method.join)
+    /// Implementation of [`TiSlice::join`](crate::TiSlice#method.join)
     fn join(slice: &Self, sep: Separator) -> Self::Output;
 }
 

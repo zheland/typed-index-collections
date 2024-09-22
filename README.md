@@ -140,15 +140,15 @@ let _boxed_slice: std::boxed::Box<[Foo]> = ti_boxed_slice.into();
 
 ## Feature Flags
 
-- `alloc` (implied by `std`, enabled by default): Enables types and
-  functions which require memory allocation.
-- `std` (enabled by default): Enables all [`std`] features
-  such as memory allocations, [`std::error::Error`] trait and
-  [`std::panic::UnwindSafe`] trait implementations.
+- `alloc` (implied by `std`, enabled by default): Enables [`TiVec`] type, [`ti_vec!`] macro,
+  trait implementations for [`Box`]`<`[`TiSlice`]`>`,
+  and some [`TiSlice`] methods that require memory allocation.
+- `std` (enabled by default): Enables `alloc` feature
+  and implements [`std::io::Write`] for [`TiVec`].
 - `serde`: Implements [`Serialize`] trait for [`TiSlice`] and [`TiVec`] containers.
-- `serde-alloc`: Enables [`alloc`] and `serde/alloc` features and
+- `serde-alloc`: Enables `alloc` and `serde/alloc` features and
   implements [`Deserialize`] trait for [`Box`]`<`[`TiSlice`]`>` and [`TiVec`].
-- `serde-std`: Enables [`std`] and `serde/std` features and
+- `serde-std`: Enables `std` and `serde/std` features and
   implements [`Deserialize`] trait for [`Box`]`<`[`TiSlice`]`>` and [`TiVec`].
 
 ## Similar crates
@@ -189,16 +189,14 @@ additional terms or conditions.
 
 [`TiSlice`]: https://docs.rs/typed-index-collections/*/typed_index_collections/struct.TiSlice.html
 [`TiVec`]: https://docs.rs/typed-index-collections/*/typed_index_collections/struct.TiVec.html
+[`ti_vec!`]: https://docs.rs/typed-index-collections/*/typed_index_collections/macro.ti_vec.html
 [API Documentation]: https://docs.rs/typed-index-collections
-[`std`]: https://doc.rust-lang.org/std/index.html
-[`alloc`]: https://doc.rust-lang.org/alloc/index.html
 [`slice`]: https://doc.rust-lang.org/std/primitive.slice.html
 [`Box`]: https://doc.rust-lang.org/std/boxed/struct.Box.html
 [`Rc`]: https://doc.rust-lang.org/std/rc/struct.Rc.html
 [`Weak`]: https://doc.rust-lang.org/std/rc/struct.Weak.html
 [`std::vec::Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
-[`std::error::Error`]: https://doc.rust-lang.org/std/error/trait.Error.html
-[`std::panic::UnwindSafe`]: https://doc.rust-lang.org/std/panic/trait.UnwindSafe.html
+[`std::io::Write`]: https://doc.rust-lang.org/std/io/trait.Write.html
 [`From`]: https://doc.rust-lang.org/std/convert/trait.From.html
 [`Into`]: https://doc.rust-lang.org/std/convert/trait.Into.html
 [`AsRef`]: https://doc.rust-lang.org/std/convert/trait.AsRef.html

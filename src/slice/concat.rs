@@ -1,16 +1,15 @@
 use core::borrow::Borrow;
 
-#[cfg(feature = "alloc")]
 use alloc::string::String;
 
 use crate::{TiSlice, TiVec};
 
-/// Helper trait for [`[T]::concat`](../../std/primitive.slice.html#method.concat).
+/// A helper trait for [`TiSlice::concat`](crate::TiSlice#method.concat).
 pub trait Concat<Item: ?Sized> {
     /// The resulting type after concatenation
     type Output;
 
-    /// Implementation of [`[T]::concat`](../../std/primitive.slice.html#method.concat)
+    /// Implementation of [`TiSlice::concat`](crate::TiSlice#method.concat)
     fn concat(slice: &Self) -> Self::Output;
 }
 

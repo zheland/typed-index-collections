@@ -1,5 +1,6 @@
-use crate::{TiRangeBounds, TiSlice};
 use core::ops;
+
+use crate::{TiRangeBounds, TiSlice};
 
 mod private {
     use core::ops;

@@ -9,18 +9,17 @@ mod join;
 
 mod slice_index;
 
-use core::{
-    cmp::Ordering,
-    fmt,
-    hash::{Hash, Hasher},
-    marker::PhantomData,
-    ops,
-    slice::{
-        Chunks, ChunksExact, ChunksExactMut, ChunksMut, Iter, IterMut, RChunks, RChunksExact,
-        RChunksExactMut, RChunksMut, RSplit, RSplitMut, RSplitN, RSplitNMut, Split, SplitMut,
-        SplitN, SplitNMut, Windows,
-    },
+use core::cmp::Ordering;
+use core::fmt;
+use core::hash::{Hash, Hasher};
+use core::marker::PhantomData;
+use core::ops::{Index, IndexMut, Range};
+use core::slice::{
+    ChunkBy, ChunkByMut, Chunks, ChunksExact, ChunksExactMut, ChunksMut, EscapeAscii, Iter,
+    IterMut, RChunks, RChunksExact, RChunksExactMut, RChunksMut, RSplit, RSplitMut, RSplitN,
+    RSplitNMut, Split, SplitInclusive, SplitInclusiveMut, SplitMut, SplitN, SplitNMut, Windows,
 };
+use core::str::Utf8Chunks;
 
 #[cfg(feature = "alloc")]
 use alloc::{borrow::ToOwned, boxed::Box};
@@ -34,10 +33,10 @@ use crate::{TiEnumerated, TiRangeBounds, TiSliceKeys, TiSliceMutMap, TiSliceRefM
 use crate::TiVec;
 
 #[cfg(feature = "alloc")]
-use concat::Concat;
+pub use concat::Concat;
 
 #[cfg(feature = "alloc")]
-use join::Join;
+pub use join::Join;
 
 pub use slice_index::TiSliceIndex;
 
@@ -615,6 +614,28 @@ impl<K, V> TiSlice<K, V> {
         self.raw.as_mut_ptr()
     }
 
+    /// Returns the two raw pointers spanning the slice.
+    ///
+    /// See [`slice::as_ptr_range`] for more details.
+    ///
+    /// [`slice::as_ptr_range`]: https://doc.rust-lang.org/std/primitive.slice.html#method.as_ptr_range
+    #[inline]
+    #[must_use]
+    pub const fn as_ptr_range(&self) -> Range<*const V> {
+        self.raw.as_ptr_range()
+    }
+
+    /// Returns the two unsafe mutable pointers spanning the slice.
+    ///
+    /// See [`slice::as_mut_ptr_range`] for more details.
+    ///
+    /// [`slice::as_mut_ptr_range`]: https://doc.rust-lang.org/std/primitive.slice.html#method.as_mut_ptr_range
+    #[inline]
+    #[must_use]
+    pub fn as_mut_ptr_range(&mut self) -> Range<*mut V> {
+        self.raw.as_mut_ptr_range()
+    }
+
     /// Swaps two elements in the slice.
     ///
     /// See [`slice::swap`] for more details.
@@ -761,7 +782,7 @@ impl<K, V> TiSlice<K, V> {
     /// It acts like `self.iter().rposition(...)`,
     /// but instead of `usize` it returns index of type `K`.
     ///
-    /// See [`slice::iter`] and [`Iterator::position`] for more details.
+    /// See [`slice::iter`] and [`Iterator::rposition`] for more details.
     ///
     /// # Example
     ///
@@ -778,7 +799,7 @@ impl<K, V> TiSlice<K, V> {
     /// ```
     ///
     /// [`slice::iter`]: https://doc.rust-lang.org/std/primitive.slice.html#method.iter
-    /// [`Iterator::position`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.position
+    /// [`Iterator::rposition`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.rposition
     #[inline]
     pub fn rposition<P>(&self, predicate: P) -> Option<K>
     where
@@ -894,6 +915,34 @@ impl<K, V> TiSlice<K, V> {
         self.raw.rchunks_exact_mut(chunk_size).map(Self::from_mut)
     }
 
+    /// Returns an iterator over the slice producing non-overlapping runs
+    /// of elements using the predicate to separate them.
+    ///
+    /// See [`slice::chunk_by`] for more details.
+    ///
+    /// [`slice::chunk_by`]: https://doc.rust-lang.org/std/primitive.slice.html#method.chunk_by
+    #[inline]
+    pub fn chunk_by<F>(&self, pred: F) -> TiSliceRefMap<ChunkBy<'_, V, F>, K, V>
+    where
+        F: FnMut(&V, &V) -> bool,
+    {
+        self.raw.chunk_by(pred).map(Self::from_ref)
+    }
+
+    /// Returns an iterator over the slice producing non-overlapping mutable
+    /// runs of elements using the predicate to separate them.
+    ///
+    /// See [`slice::chunk_by_mut`] for more details.
+    ///
+    /// [`slice::chunk_by_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.chunk_by_mut
+    #[inline]
+    pub fn chunk_by_mut<F>(&mut self, pred: F) -> TiSliceMutMap<ChunkByMut<'_, V, F>, K, V>
+    where
+        F: FnMut(&V, &V) -> bool,
+    {
+        self.raw.chunk_by_mut(pred).map(Self::from_mut)
+    }
+
     /// Divides one slice into two at an index.
     ///
     /// See [`slice::split_at`] for more details.
@@ -922,6 +971,83 @@ impl<K, V> TiSlice<K, V> {
         (left.as_mut(), right.as_mut())
     }
 
+    /// Divides one slice into two at an index, without doing bounds checking.
+    ///
+    /// See [`slice::split_at_unchecked`] for more details.
+    ///
+    /// # Safety
+    ///
+    /// Calling this method with an out-of-bounds index is *[undefined behavior]*
+    /// even if the resulting reference is not used. The caller has to ensure that
+    /// `0 <= mid <= self.len()`.
+    ///
+    /// [`slice::split_at_unchecked`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_at_unchecked
+    /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
+    ///
+    #[inline]
+    #[must_use]
+    pub unsafe fn split_at_unchecked(&self, mid: K) -> (&Self, &Self)
+    where
+        usize: From<K>,
+    {
+        let (left, right) = self.raw.split_at_unchecked(mid.into());
+        (left.as_ref(), right.as_ref())
+    }
+
+    /// Divides one mutable slice into two at an index, without doing bounds checking.
+    ///
+    /// See [`slice::split_at_mut_unchecked`] for more details.
+    ///
+    /// # Safety
+    ///
+    /// Calling this method with an out-of-bounds index is *[undefined behavior]*
+    /// even if the resulting reference is not used. The caller has to ensure that
+    /// `0 <= mid <= self.len()`.
+    ///
+    /// [`slice::split_at_mut_unchecked`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_at_mut_unchecked
+    /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
+    #[inline]
+    #[must_use]
+    pub unsafe fn split_at_mut_unchecked(&mut self, mid: K) -> (&mut Self, &mut Self)
+    where
+        usize: From<K>,
+    {
+        let (left, right) = self.raw.split_at_mut_unchecked(mid.into());
+        (left.as_mut(), right.as_mut())
+    }
+
+    /// Divides one slice into two at an index, returning `None` if the slice is
+    /// too short.
+    ///
+    /// See [`slice::split_at_checked`] for more details.
+    ///
+    /// [`slice::split_at_checked`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_at_checked
+    #[inline]
+    #[must_use]
+    pub fn split_at_checked(&self, mid: K) -> Option<(&Self, &Self)>
+    where
+        usize: From<K>,
+    {
+        let (left, right) = self.raw.split_at_checked(mid.into())?;
+        Some((left.as_ref(), right.as_ref()))
+    }
+
+    /// Divides one mutable slice into two at an index, returning `None` if the
+    /// slice is too short.
+    ///
+    /// See [`slice::split_at_mut_checked`] for more details.
+    ///
+    /// [`slice::split_at_mut_checked`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_at_mut_checked
+    #[inline]
+    #[must_use]
+    pub fn split_at_mut_checked(&mut self, mid: K) -> Option<(&mut Self, &mut Self)>
+    where
+        usize: From<K>,
+    {
+        let (left, right) = self.raw.split_at_mut_checked(mid.into())?;
+        Some((left.as_mut(), right.as_mut()))
+    }
+
     /// Returns an iterator over subslices separated by elements that match
     /// `pred`. The matched element is not contained in the subslices.
     ///
@@ -948,6 +1074,39 @@ impl<K, V> TiSlice<K, V> {
         F: FnMut(&V) -> bool,
     {
         self.raw.split_mut(pred).map(Self::from_mut)
+    }
+
+    /// Returns an iterator over subslices separated by elements that match
+    /// `pred`. The matched element is contained in the end of the previous
+    /// subslice as a terminator.
+    ///
+    /// See [`slice::split_inclusive`] for more details.
+    ///
+    /// [`slice::split_inclusive`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_inclusive
+    #[inline]
+    pub fn split_inclusive<F>(&self, pred: F) -> TiSliceRefMap<SplitInclusive<'_, V, F>, K, V>
+    where
+        F: FnMut(&V) -> bool,
+    {
+        self.raw.split_inclusive(pred).map(Self::from_ref)
+    }
+
+    /// Returns an iterator over mutable subslices separated by elements that
+    /// match `pred`. The matched element is contained in the previous
+    /// subslice as a terminator.
+    ///
+    /// See [`slice::split_inclusive_mut`] for more details.
+    ///
+    /// [`slice::split_inclusive_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_inclusive_mut
+    #[inline]
+    pub fn split_inclusive_mut<F>(
+        &mut self,
+        pred: F,
+    ) -> TiSliceMutMap<SplitInclusiveMut<'_, V, F>, K, V>
+    where
+        F: FnMut(&V) -> bool,
+    {
+        self.raw.split_inclusive_mut(pred).map(Self::from_mut)
     }
 
     /// Returns an iterator over subslices separated by elements that match
@@ -1178,6 +1337,81 @@ impl<K, V> TiSlice<K, V> {
         self.raw.sort_unstable_by_key(f);
     }
 
+    /// Reorder the slice such that the element at `index` after the reordering is at its final
+    /// sorted position.
+    ///
+    /// See [`slice::select_nth_unstable`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics when `index >= len()`, meaning it always panics on empty slices.
+    ///
+    /// May panic if the implementation of [`Ord`] for `T` does not implement a [total order].
+    ///
+    /// [`slice::select_nth_unstable`]: https://doc.rust-lang.org/std/primitive.slice.html#method.select_nth_unstable
+    #[inline]
+    pub fn select_nth_unstable(&mut self, index: K) -> (&mut Self, &mut V, &mut Self)
+    where
+        usize: From<K>,
+        V: Ord,
+    {
+        let (left, nth, right) = self.raw.select_nth_unstable(index.into());
+        (Self::from_mut(left), nth, Self::from_mut(right))
+    }
+
+    /// Reorder the slice with a comparator function such that the element at `index` after the
+    /// reordering is at its final sorted position.
+    ///
+    /// See [`slice::select_nth_unstable_by`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics when `index >= len()`, meaning it always panics on empty slices.
+    ///
+    /// May panic if `compare` does not implement a [total order].
+    ///
+    /// [`slice::select_nth_unstable_by`]: https://doc.rust-lang.org/std/primitive.slice.html#method.select_nth_unstable_by
+    #[inline]
+    pub fn select_nth_unstable_by<F>(
+        &mut self,
+        index: K,
+        compare: F,
+    ) -> (&mut Self, &mut V, &mut Self)
+    where
+        usize: From<K>,
+        F: FnMut(&V, &V) -> Ordering,
+    {
+        let (left, nth, right) = self.raw.select_nth_unstable_by(index.into(), compare);
+        (Self::from_mut(left), nth, Self::from_mut(right))
+    }
+
+    /// Reorder the slice with a key extraction function such that the element at `index` after the
+    /// reordering is at its final sorted position.
+    ///
+    /// See [`slice::select_nth_unstable_by_key`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics when `index >= len()`, meaning it always panics on empty slices.
+    ///
+    /// May panic if `K: Ord` does not implement a total order.
+    ///
+    /// [`slice::select_nth_unstable_by_key`]: https://doc.rust-lang.org/std/primitive.slice.html#method.select_nth_unstable_by_key
+    #[inline]
+    pub fn select_nth_unstable_by_key<Key, F>(
+        &mut self,
+        index: K,
+        f: F,
+    ) -> (&mut Self, &mut V, &mut Self)
+    where
+        usize: From<K>,
+        F: FnMut(&V) -> Key,
+        Key: Ord,
+    {
+        let (left, nth, right) = self.raw.select_nth_unstable_by_key(index.into(), f);
+        (Self::from_mut(left), nth, Self::from_mut(right))
+    }
+
     /// Rotates the slice in-place such that the first `mid` elements of the
     /// slice move to the end while the last `self.next_key() - mid` elements move to
     /// the front. After calling `rotate_left`, the element previously at index
@@ -1208,6 +1442,32 @@ impl<K, V> TiSlice<K, V> {
         usize: From<K>,
     {
         self.raw.rotate_right(k.into());
+    }
+
+    /// Fills `self` with elements by cloning `value`.
+    ///
+    /// See [`slice::fill`] for more details.
+    ///
+    /// [`slice::fill`]: https://doc.rust-lang.org/std/primitive.slice.html#method.fill
+    #[inline]
+    pub fn fill(&mut self, value: V)
+    where
+        V: Clone,
+    {
+        self.raw.fill(value);
+    }
+
+    /// Fills `self` with elements returned by calling a closure repeatedly.
+    ///
+    /// See [`slice::fill_with`] for more details.
+    ///
+    /// [`slice::fill_with`]: https://doc.rust-lang.org/std/primitive.slice.html#method.fill_with
+    #[inline]
+    pub fn fill_with<F>(&mut self, f: F)
+    where
+        F: FnMut() -> V,
+    {
+        self.raw.fill_with(f);
     }
 
     /// Copies the elements from `src` into `self`.
@@ -1296,6 +1556,22 @@ impl<K, V> TiSlice<K, V> {
         let (first, mid, last) = self.raw.align_to_mut();
         (first.as_mut(), mid.as_mut(), last.as_mut())
     }
+
+    /// Returns the index of the partition point according to the given predicate
+    /// (the index of the first element of the second partition).
+    ///
+    /// See [`slice::partition_point`] for more details.
+    ///
+    /// [`slice::partition_point`]: https://doc.rust-lang.org/std/primitive.slice.html#method.partition_point
+    #[inline]
+    #[must_use]
+    pub fn partition_point<P>(&self, pred: P) -> K
+    where
+        K: From<usize>,
+        P: FnMut(&V) -> bool,
+    {
+        self.raw.partition_point(pred).into()
+    }
 }
 
 impl<K> TiSlice<K, u8> {
@@ -1339,6 +1615,64 @@ impl<K> TiSlice<K, u8> {
     #[inline]
     pub fn make_ascii_lowercase(&mut self) {
         self.raw.make_ascii_lowercase();
+    }
+
+    /// Returns an iterator that produces an escaped version of this slice,
+    /// treating it as an ASCII string.
+    ///
+    /// See [`slice::escape_ascii`] for more details.
+    ///
+    /// [`slice::escape_ascii`]: https://doc.rust-lang.org/std/primitive.slice.html#method.escape_ascii
+    #[must_use = "this returns the escaped bytes as an iterator, \
+                  without modifying the original"]
+    #[inline]
+    pub fn escape_ascii(&self) -> EscapeAscii<'_> {
+        self.raw.escape_ascii()
+    }
+
+    /// Returns a byte slice with leading ASCII whitespace bytes removed.
+    ///
+    /// See [`slice::trim_ascii_start`] for more details.
+    ///
+    /// [`slice::trim_ascii_start`]: https://doc.rust-lang.org/std/primitive.slice.html#method.trim_ascii_start
+    #[inline]
+    #[must_use]
+    pub const fn trim_ascii_start(&self) -> &Self {
+        Self::from_ref(self.raw.trim_ascii_start())
+    }
+
+    /// Returns a byte slice with trailing ASCII whitespace bytes removed.
+    ///
+    /// See [`slice::trim_ascii_end`] for more details.
+    ///
+    /// [`slice::trim_ascii_end`]: https://doc.rust-lang.org/std/primitive.slice.html#method.trim_ascii_end
+    #[inline]
+    #[must_use]
+    pub const fn trim_ascii_end(&self) -> &Self {
+        Self::from_ref(self.raw.trim_ascii_end())
+    }
+
+    /// Returns a byte slice with leading and trailing ASCII whitespace bytes
+    /// removed.
+    ///
+    /// See [`slice::trim_ascii`] for more details.
+    ///
+    /// [`slice::trim_ascii`]: https://doc.rust-lang.org/std/primitive.slice.html#method.trim_ascii
+    #[inline]
+    #[must_use]
+    pub const fn trim_ascii(&self) -> &Self {
+        Self::from_ref(self.raw.trim_ascii())
+    }
+
+    /// Creates an iterator over the contiguous valid UTF-8 ranges of this
+    /// slice, and the non-UTF-8 fragments in between.
+    ///
+    /// See [`slice::utf8_chunks`] for more details.
+    ///
+    /// [`slice::utf8_chunks`]: https://doc.rust-lang.org/std/primitive.slice.html#method.utf8_chunks
+    #[inline]
+    pub fn utf8_chunks(&self) -> Utf8Chunks<'_> {
+        self.raw.utf8_chunks()
     }
 }
 
@@ -1547,7 +1881,7 @@ impl<K, V> AsMut<TiSlice<K, V>> for [V] {
     }
 }
 
-impl<I, K, V> ops::Index<I> for TiSlice<K, V>
+impl<I, K, V> Index<I> for TiSlice<K, V>
 where
     I: TiSliceIndex<K, V>,
 {
@@ -1559,7 +1893,7 @@ where
     }
 }
 
-impl<I, K, V> ops::IndexMut<I> for TiSlice<K, V>
+impl<I, K, V> IndexMut<I> for TiSlice<K, V>
 where
     I: TiSliceIndex<K, V>,
 {

@@ -1,5 +1,6 @@
-use crate::TiSlice;
 use core::{iter, ops};
+
+use crate::TiSlice;
 
 /// An iterator over all key-value pairs.
 ///

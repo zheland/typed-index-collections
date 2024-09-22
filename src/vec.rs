@@ -1,17 +1,22 @@
-use core::{
-    borrow::{Borrow, BorrowMut},
-    cmp::Ordering,
-    fmt,
-    hash::{Hash, Hasher},
-    iter::FromIterator,
-    marker::PhantomData,
-    ops, slice,
-};
+use core::borrow::{Borrow, BorrowMut};
+use core::cmp::Ordering;
+use core::fmt;
+use core::hash::{Hash, Hasher};
+use core::iter::FromIterator;
+use core::marker::PhantomData;
+use core::mem::MaybeUninit;
+use core::ops::{Deref, DerefMut, Index, IndexMut, RangeBounds};
+use core::slice;
 
-use alloc::{
-    boxed::Box,
-    vec::{self, Drain, Splice, Vec},
-};
+#[cfg(feature = "std")]
+use std::io::{IoSlice, Result as IoResult, Write};
+
+use alloc::borrow::Cow;
+use alloc::boxed::Box;
+use alloc::collections::TryReserveError;
+use alloc::ffi::CString;
+use alloc::string::String;
+use alloc::vec::{self, Drain, Splice, Vec};
 
 #[cfg(feature = "serde")]
 use serde::ser::{Serialize, Serializer};
@@ -19,7 +24,7 @@ use serde::ser::{Serialize, Serializer};
 #[cfg(any(feature = "serde-alloc", feature = "serde-std"))]
 use serde::de::{Deserialize, Deserializer};
 
-use crate::{TiEnumerated, TiRangeBounds, TiSlice};
+use crate::{TiEnumerated, TiRangeBounds, TiSlice, TiSliceIndex};
 
 /// A contiguous growable array type
 /// that only accepts keys of the type `K`.
@@ -187,7 +192,7 @@ impl<K, V> TiVec<K, V> {
     /// let vec: &mut TiVec<Id, usize> = TiVec::from_mut(&mut vec![1, 2, 4]);
     /// ```
     ///
-    /// [`&std::vec::mut Vec<V>`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
+    /// [`&mut std::vec::Vec<V>`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
     #[inline]
     pub fn from_mut(raw: &mut Vec<V>) -> &mut Self {
         // SAFETY: `TiVec<K, V>` is `repr(transparent)` over a `Vec<V>` type.
@@ -233,6 +238,38 @@ impl<K, V> TiVec<K, V> {
         self.raw.reserve_exact(additional);
     }
 
+    /// Tries to reserve capacity for at least `additional` more elements to be inserted
+    /// in the given `Vec<T>`.
+    ///
+    /// See [`Vec::try_reserve`] for more details.
+    ///
+    /// # Errors
+    ///
+    /// If the capacity overflows, or the allocator reports a failure, then an error
+    /// is returned.
+    ///
+    /// [`Vec::try_reserve`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.try_reserve
+    #[inline]
+    pub fn try_reserve(&mut self, additional: usize) -> Result<(), TryReserveError> {
+        self.raw.try_reserve(additional)
+    }
+
+    /// Tries to reserve the minimum capacity for at least `additional`
+    /// elements to be inserted in the given `Vec<T>`.
+    ///
+    /// See [`Vec::try_reserve_exact`] for more details.
+    ///
+    /// # Errors
+    ///
+    /// If the capacity overflows, or the allocator reports a failure, then an error
+    /// is returned.
+    ///
+    /// [`Vec::try_reserve_exact`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.try_reserve_exact
+    #[inline]
+    pub fn try_reserve_exact(&mut self, additional: usize) -> Result<(), TryReserveError> {
+        self.raw.try_reserve_exact(additional)
+    }
+
     /// Shrinks the capacity of the vector as much as possible.
     ///
     /// See [`Vec::shrink_to_fit`] for more details.
@@ -243,6 +280,15 @@ impl<K, V> TiVec<K, V> {
         self.raw.shrink_to_fit();
     }
 
+    /// Shrinks the capacity of the vector with a lower bound.
+    ///
+    /// See [`Vec::shrink_to`] for more details.
+    ///
+    /// [`Vec::shrink_to`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.shrink_to
+    #[inline]
+    pub fn shrink_to(&mut self, min_capacity: usize) {
+        self.raw.shrink_to(min_capacity);
+    }
     /// Converts the vector into [`Box<TiSlice<K, V>>`][`Box`].
     ///
     /// See [`Vec::into_boxed_slice`] for more details.
@@ -378,6 +424,19 @@ impl<K, V> TiVec<K, V> {
         F: FnMut(&V) -> bool,
     {
         self.raw.retain(f);
+    }
+
+    /// Retains only the elements specified by the predicate, passing a mutable reference to it.
+    ///
+    /// See [`Vec::retain_mut`] for more details.
+    ///
+    /// [`Vec::retain_mut`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.retain_mut
+    #[inline]
+    pub fn retain_mut<F>(&mut self, f: F)
+    where
+        F: FnMut(&mut V) -> bool,
+    {
+        self.raw.retain_mut(f);
     }
 
     /// Removes all but the first of consecutive elements in the vector that resolve to the same
@@ -629,6 +688,31 @@ impl<K, V> TiVec<K, V> {
         self.raw.resize(new_len, value);
     }
 
+    /// Consumes and leaks the `Vec`, returning a mutable reference to the contents,
+    /// `&'a mut [T]`. Note that the type `T` must outlive the chosen lifetime
+    /// `'a`. If the type has only static references, or none at all, then this
+    /// may be chosen to be `'static`.
+    ///
+    /// See [`Vec::leak`] for more details.
+    ///
+    /// [`Vec::leak`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.leak
+    #[expect(clippy::must_use_candidate, reason = "not used in `Vec::leak`")]
+    #[inline]
+    pub fn leak<'a>(self) -> &'a mut TiSlice<K, V> {
+        self.raw.leak().as_mut()
+    }
+
+    /// Returns the remaining spare capacity of the vector as a slice of
+    /// `MaybeUninit<T>`.
+    ///
+    /// See [`Vec::spare_capacity_mut`] for more details.
+    ///
+    /// [`Vec::spare_capacity_mut`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.spare_capacity_mut
+    #[inline]
+    pub fn spare_capacity_mut(&mut self) -> &mut TiSlice<K, MaybeUninit<V>> {
+        self.raw.spare_capacity_mut().as_mut()
+    }
+
     /// Clones and appends all elements in a slice to the `TiVec`.
     ///
     /// See [`Vec::extend_from_slice`] for more details.
@@ -640,6 +724,25 @@ impl<K, V> TiVec<K, V> {
         V: Clone,
     {
         self.raw.extend_from_slice(&other.raw);
+    }
+
+    /// Copies elements from `src` range to the end of the vector.
+    ///
+    /// See [`Vec::extend_from_within`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the starting point is greater than the end point or if
+    /// the end point is greater than the length of the vector.
+    ///
+    /// [`Vec::extend_from_within`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.extend_from_within
+    #[inline]
+    pub fn extend_from_within<R>(&mut self, src: R)
+    where
+        V: Clone,
+        R: RangeBounds<usize>,
+    {
+        self.raw.extend_from_within(src);
     }
 
     /// Removes consecutive repeated elements in the vector according to the
@@ -804,7 +907,7 @@ impl<K, V> BorrowMut<TiSlice<K, V>> for TiVec<K, V> {
     }
 }
 
-impl<K, V> ops::Deref for TiVec<K, V> {
+impl<K, V> Deref for TiVec<K, V> {
     type Target = TiSlice<K, V>;
 
     #[inline]
@@ -813,7 +916,7 @@ impl<K, V> ops::Deref for TiVec<K, V> {
     }
 }
 
-impl<K, V> ops::DerefMut for TiVec<K, V> {
+impl<K, V> DerefMut for TiVec<K, V> {
     #[inline]
     fn deref_mut(&mut self) -> &mut TiSlice<K, V> {
         Self::Target::from_mut(&mut self.raw)
@@ -854,6 +957,26 @@ where
     }
 }
 
+impl<K, A, B> PartialEq<TiSlice<K, B>> for TiVec<K, A>
+where
+    A: PartialEq<B>,
+{
+    #[inline]
+    fn eq(&self, other: &TiSlice<K, B>) -> bool {
+        *self.raw == other.raw
+    }
+}
+
+impl<K, A, B> PartialEq<TiVec<K, B>> for TiSlice<K, A>
+where
+    A: PartialEq<B>,
+{
+    #[inline]
+    fn eq(&self, other: &TiVec<K, B>) -> bool {
+        self.raw == *other.raw
+    }
+}
+
 impl<'a, K, A, B> PartialEq<&'a TiSlice<K, B>> for TiVec<K, A>
 where
     A: PartialEq<B>,
@@ -864,6 +987,16 @@ where
     }
 }
 
+impl<K, A, B> PartialEq<TiVec<K, B>> for &TiSlice<K, A>
+where
+    A: PartialEq<B>,
+{
+    #[inline]
+    fn eq(&self, other: &TiVec<K, B>) -> bool {
+        self.raw == *other.raw
+    }
+}
+
 impl<'a, K, A, B> PartialEq<&'a mut TiSlice<K, B>> for TiVec<K, A>
 where
     A: PartialEq<B>,
@@ -871,6 +1004,16 @@ where
     #[inline]
     fn eq(&self, other: &&'a mut TiSlice<K, B>) -> bool {
         *self.raw == other.raw
+    }
+}
+
+impl<K, A, B> PartialEq<TiVec<K, B>> for &mut TiSlice<K, A>
+where
+    A: PartialEq<B>,
+{
+    #[inline]
+    fn eq(&self, other: &TiVec<K, B>) -> bool {
+        self.raw == *other.raw
     }
 }
 
@@ -913,6 +1056,28 @@ where
     }
 }
 
+impl<I, K, V> Index<I> for TiVec<K, V>
+where
+    I: TiSliceIndex<K, V>,
+{
+    type Output = I::Output;
+
+    #[inline]
+    fn index(&self, index: I) -> &Self::Output {
+        index.index(self)
+    }
+}
+
+impl<I, K, V> IndexMut<I> for TiVec<K, V>
+where
+    I: TiSliceIndex<K, V>,
+{
+    #[inline]
+    fn index_mut(&mut self, index: I) -> &mut Self::Output {
+        index.index_mut(self)
+    }
+}
+
 impl<K, V> Ord for TiVec<K, V>
 where
     V: Ord,
@@ -937,6 +1102,67 @@ impl<K, V> From<TiVec<K, V>> for Vec<V> {
     #[inline]
     fn from(vec: TiVec<K, V>) -> Self {
         vec.raw
+    }
+}
+
+impl<K, V> From<&TiSlice<K, V>> for TiVec<K, V>
+where
+    V: Clone,
+{
+    #[inline]
+    fn from(slice: &TiSlice<K, V>) -> Self {
+        slice.to_vec()
+    }
+}
+
+impl<K, V> From<&mut TiSlice<K, V>> for TiVec<K, V>
+where
+    V: Clone,
+{
+    #[inline]
+    fn from(slice: &mut TiSlice<K, V>) -> Self {
+        slice.to_vec()
+    }
+}
+
+impl<K, V> From<Cow<'_, TiSlice<K, V>>> for TiVec<K, V>
+where
+    V: Clone,
+{
+    #[inline]
+    fn from(slice: Cow<'_, TiSlice<K, V>>) -> Self {
+        slice.into_owned()
+    }
+}
+
+impl<K, V> From<TiVec<K, V>> for Cow<'_, TiSlice<K, V>>
+where
+    V: Clone,
+{
+    #[inline]
+    fn from(vec: TiVec<K, V>) -> Self {
+        Cow::Owned(vec)
+    }
+}
+
+impl<K> From<&str> for TiVec<K, u8> {
+    #[inline]
+    fn from(s: &str) -> Self {
+        s.as_bytes().to_vec().into()
+    }
+}
+
+impl<K> From<String> for TiVec<K, u8> {
+    #[inline]
+    fn from(s: String) -> Self {
+        s.into_bytes().into()
+    }
+}
+
+impl<K> From<CString> for TiVec<K, u8> {
+    #[inline]
+    fn from(s: CString) -> Self {
+        s.into_bytes().into()
     }
 }
 
@@ -967,6 +1193,31 @@ impl<'a, K, V> IntoIterator for &'a mut TiVec<K, V> {
     #[inline]
     fn into_iter(self) -> slice::IterMut<'a, V> {
         self.raw.iter_mut()
+    }
+}
+
+/// Write is implemented for `Vec<u8>` by appending to the vector.
+/// The vector will grow as needed.
+#[cfg(feature = "std")]
+impl<K> Write for TiVec<K, u8> {
+    #[inline]
+    fn write(&mut self, buf: &[u8]) -> IoResult<usize> {
+        self.raw.write(buf)
+    }
+
+    #[inline]
+    fn write_vectored(&mut self, bufs: &[IoSlice<'_>]) -> IoResult<usize> {
+        self.raw.write_vectored(bufs)
+    }
+
+    #[inline]
+    fn write_all(&mut self, buf: &[u8]) -> IoResult<()> {
+        self.raw.write_all(buf)
+    }
+
+    #[inline]
+    fn flush(&mut self) -> IoResult<()> {
+        self.raw.flush()
     }
 }
 

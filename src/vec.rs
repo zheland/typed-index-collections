@@ -1014,15 +1014,12 @@ mod test {
                 assert_eq!(vec_ptr_mut, ti_vec_ptr_mut);
             }
             assert_eq_api!(vec.clone() => |vec| {
-                const NUM_ADDED_ITEMS: usize = 4;
                 let mut vec = vec.into_t();
-                let initial_len = vec.len();
-                vec.reserve(NUM_ADDED_ITEMS);
+                let len = vec.len();
                 unsafe {
-                    for j in 0..NUM_ADDED_ITEMS {
-                        *vec.as_mut_slice().into_t().get_unchecked_mut(initial_len + j) = j;
+                    for j in 0..len {
+                        *vec.as_mut_slice().into_t().get_unchecked_mut(j) = j;
                     }
-                    vec.set_len(initial_len + NUM_ADDED_ITEMS);
                 }
                 vec.into_t().and_capacity()
             });

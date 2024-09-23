@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.0] - 2024-09-23
+### Added
+- `ti_vec!` macro similar to `vec!` macro.
+- Some previously missed implementations for `TiSlice` and `TiVec`.
+- Compatible methods and trait implementations for `TiSlice` and `TiVec`
+  to mirror the stable Rust API for `[]` and `Vec` up to Rust 1.81.0.
+
+### Changed
+- `The minimum supported Rust version has been increased to 1.81.0.
+
 ## [3.1.0] - 2022-09-02
 ### Changed
 - `The minimum supported Rust version has been increased to 1.46.0.
@@ -117,7 +127,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `TiSlice` API compatibility tests.
 - Crate API documentation with examples.
 
-[Unreleased]: https://github.com/zheland/typed-index-collections/compare/v3.1.0...HEAD
+[Unreleased]: https://github.com/zheland/typed-index-collections/compare/v3.2.0...HEAD
+[3.2.0]: https://github.com/zheland/typed-index-collections/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/zheland/typed-index-collections/compare/v3.0.3...v3.1.0
 [3.0.3]: https://github.com/zheland/typed-index-collections/compare/v3.0.2...v3.0.3
 [3.0.2]: https://github.com/zheland/typed-index-collections/compare/v3.0.1...v3.0.2

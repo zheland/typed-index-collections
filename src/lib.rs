@@ -32,7 +32,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! typed-index-collections = "3.1.0"
+//! typed-index-collections = "3.2.0"
 //! ```
 //!
 //! This crate depends on the standard library by default that is useful
@@ -42,7 +42,7 @@
 //!
 //! ```toml
 //! [dependencies.typed-index-collections]
-//! version = "3.1.0"
+//! version = "3.2.0"
 //! default-features = false
 //! features = ["alloc"]
 //! ```
@@ -54,7 +54,7 @@
 //! ```toml
 //! [dependencies]
 //! derive_more = "0.99"
-//! typed-index-collections = "3.1.0"
+//! typed-index-collections = "3.2.0"
 //! ```
 //!
 //! # Examples

@@ -5,7 +5,7 @@ set -Eeuo pipefail
 echo_and_run() { echo "$ ${*@Q}"; "$@"; }
 
 toolchains=( stable beta nightly "1.81.0" )
-feature_sets=( "" "alloc" "std" "serde-alloc" "serde-alloc std" "serde-std")
+feature_sets=( "" "alloc" "std" "serde" "serde-alloc" "std serde-alloc" "serde-std")
 
 echo_and_run cargo +nightly fmt --all -- --check
 echo_and_run cargo outdated --exit-code 1
@@ -43,6 +43,11 @@ for features in "${feature_sets[@]}"; do
     echo_and_run cargo semver-checks --only-explicit-features "${args[@]}"
 done
 
-echo_and_run deny --workspace --all-features check
+echo_and_run cargo deny --workspace --all-features check
+
+echo_and_run cargo +nightly llvm-cov --doctests --all-features --html \
+    --fail-uncovered-functions 0 \
+    --fail-uncovered-lines 10 \
+    --fail-uncovered-regions 10
 
 echo "All checks are successful." 1>&2

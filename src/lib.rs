@@ -199,7 +199,7 @@
 
 #![no_std]
 
-#[cfg(feature = "alloc")]
+#[cfg(any(feature = "alloc", test))]
 extern crate alloc;
 
 #[cfg(feature = "std")]
@@ -207,7 +207,7 @@ extern crate std;
 
 #[cfg(test)]
 #[macro_use]
-mod test;
+mod test_util;
 
 mod iter;
 mod range;
@@ -227,7 +227,7 @@ pub use vec::TiVec;
 
 #[cfg(test)]
 mod integration_tests_deps {
-    use {readme_sync as _, version_sync as _};
+    use {readme_sync as _, serde_json as _, version_sync as _};
 }
 
 #[doc(hidden)]

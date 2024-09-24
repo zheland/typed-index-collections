@@ -994,7 +994,7 @@ impl<K> From<String> for TiVec<K, u8> {
     }
 }
 
-#[cfg(feature = "std")]
+#[cfg(feature = "alloc")]
 impl<K> From<CString> for TiVec<K, u8> {
     #[inline]
     fn from(s: CString) -> Self {
@@ -1238,185 +1238,342 @@ impl<'de, K, V: Deserialize<'de>> Deserialize<'de> for TiVec<K, V> {
     }
 }
 
+#[expect(
+    dead_code,
+    unused_imports,
+    unused_mut,
+    clippy::into_iter_on_ref,
+    clippy::op_ref,
+    clippy::too_many_lines,
+    clippy::undocumented_unsafe_blocks,
+    clippy::unwrap_used,
+    reason = "okay in tests"
+)]
 #[cfg(test)]
 mod test {
-    use crate::test::Id;
+    use core::borrow::{Borrow, BorrowMut};
+    use core::hash::{Hash, Hasher};
+    use core::ops::Bound;
 
-    trait VecWithCapacity
-    where
-        Self: Sized,
-    {
-        fn and_capacity(self) -> (usize, Self);
-    }
+    use alloc::borrow::{Cow, ToOwned};
+    use alloc::boxed::Box;
+    use alloc::ffi::CString;
+    use alloc::string::ToString;
+    use alloc::vec::Vec;
 
-    impl<T> VecWithCapacity for alloc::vec::Vec<T> {
-        fn and_capacity(self) -> (usize, Self) {
-            (self.capacity(), self)
-        }
-    }
+    #[cfg(feature = "std")]
+    use std::hash::DefaultHasher;
+    #[cfg(feature = "std")]
+    use std::io::{IoSlice, Write};
 
-    macro_rules! assert_eq_vec_api {
-        ($source:expr => |&$arg:ident| $expr:expr) => {
-            assert_eq_api!($source.clone() => |$arg| {
-                let $arg = $arg.into_t();
-                let value = $expr;
-                (value, $arg.into_t().and_capacity())
-            });
-        };
-        ($source:expr => |&mut $arg:ident| $expr:expr) => {
-            assert_eq_api!($source.clone() => |$arg| {
-                let mut $arg = $arg.into_t();
-                let value = $expr;
-                (value, $arg.into_t().and_capacity())
-            });
-        };
-    }
+    use crate::test_util::{AsSliceAndCapacity, Id};
+    use crate::{TiSlice, TiVec};
 
-    #[expect(
-        clippy::allow_attributes,
-        clippy::too_many_lines,
-        clippy::undocumented_unsafe_blocks,
-        clippy::unwrap_used,
-        reason = "okay in tests"
-    )]
     #[test]
-    fn api_compatibility() {
-        use crate::TiVec;
-        use alloc::vec;
-        use alloc::vec::Vec;
-
-        assert_eq_api!(UsizeVec::new().into_t().and_capacity());
-        for &j in &[0, 1, 2, 4] {
-            assert_eq_api!(UsizeVec::with_capacity(j).into_t().and_capacity());
+    fn test_vec_read_api_compatibility() {
+        assert_eq!(
+            TiVec::<Id, u32>::new().as_slice_and_capacity(),
+            Vec::<u32>::new().as_slice_and_capacity(),
+        );
+        for c in [0, 1, 2, 4] {
+            assert_eq!(
+                TiVec::<Id, u32>::with_capacity(c).as_slice_and_capacity(),
+                Vec::<u32>::with_capacity(c).as_slice_and_capacity(),
+            );
         }
-        for vec in &[
-            vec![0; 0],
-            vec![1],
-            vec![1, 2],
-            vec![1, 2, 4],
-            vec![1, 2, 4, 8],
-            vec![1, 3],
-            vec![7, 3, 5],
-            vec![10, 6, 35, 4],
-            vec![1, 3, 3, 2, 4, 4, 4],
+
+        for v in [
+            &[0_u32; 0][..],
+            &[1],
+            &[1, 1234],
+            &[1, 2, 4],
+            &[1, 5, 3, 2],
+            &[1, 1, 9, 2, 4, 1, 12345, 12],
         ] {
-            assert_eq_api!(vec.clone() => |vec| {
-                let mut vec = core::mem::ManuallyDrop::new(vec);
-                unsafe {
-                    UsizeVec::from_raw_parts(vec.as_mut_ptr(), vec.len(), vec.capacity())
-                }.into_t()
-            });
-            assert_eq_api!(vec.clone() => |vec| vec.into_t().capacity());
-            for j in 0..8 {
-                assert_eq_vec_api!(vec => |&mut vec| vec.reserve(j));
-                assert_eq_vec_api!(vec => |&mut vec| vec.reserve_exact(j));
-                assert_eq_vec_api!(vec => |&mut vec| {
-                    vec.reserve(j);
-                    vec.shrink_to_fit();
-                });
-            }
-            assert_eq_api!(vec.clone() => |vec| vec.into_t().into_boxed_slice().into_t());
-            for j in 0..8 {
-                assert_eq_vec_api!(vec => |&mut vec| vec.truncate(j));
-            }
-            assert_eq_api!(vec.clone() => |vec| vec.into_t().as_slice().into_t());
-            assert_eq_api!(vec.clone() => |vec| vec.into_t().as_mut_slice().into_t());
-            assert_eq_api!(&vec => |vec| vec.into_t().as_ptr());
-            {
-                let mut vec = vec.clone();
-                let vec_ref_mut = &mut vec;
-                let vec_ptr_mut = vec_ref_mut.as_mut_ptr();
-                let ti_vec_ref_mut: &mut TiVec<Id, _> = vec_ref_mut.as_mut();
-                let ti_vec_ptr_mut = ti_vec_ref_mut.as_mut_ptr();
-                assert_eq!(vec_ptr_mut, ti_vec_ptr_mut);
-            }
-            assert_eq_api!(vec.clone() => |vec| {
-                let mut vec = vec.into_t();
-                let len = vec.len();
-                unsafe {
-                    for j in 0..len {
-                        *vec.as_mut_slice().into_t().get_unchecked_mut(j) = j;
-                    }
-                }
-                vec.into_t().and_capacity()
-            });
-            for j in 0..vec.len() {
-                assert_eq_vec_api!(vec => |&mut vec| vec.swap_remove(j.into_t()));
-                assert_eq_vec_api!(vec => |&mut vec| vec.insert(j.into_t(), 123));
-                assert_eq_vec_api!(vec => |&mut vec| vec.remove(j.into_t()));
-            }
-            assert_eq_vec_api!(vec => |&mut vec|
-                vec.retain(|value| value % 3 == 0 || value % 4 == 0));
-            assert_eq_vec_api!(vec => |&mut vec|
-                vec.dedup_by_key(|value| *value % 3 == 0 || *value % 4 == 0));
-            assert_eq_vec_api!(vec => |&mut vec| vec.dedup_by(|lhs, rhs| lhs < rhs));
-            assert_eq_vec_api!(vec => |&mut vec| vec.push(123));
-            assert_eq_vec_api!(vec => |&mut vec| vec.pop());
-            for other_vec in &[
-                vec![0; 0],
-                vec![1],
-                vec![1, 2],
-                vec![1, 2, 4],
-                vec![1, 2, 4, 8],
-                vec![1, 3],
-                vec![7, 3, 5],
-                vec![10, 6, 35, 4],
-            ] {
-                assert_eq_api!({
-                    let mut vec = vec.clone().into_t();
-                    let mut other_vec = other_vec.clone().into_t();
-                    vec.append(&mut other_vec);
-                    vec.into_t().and_capacity()
-                });
-            }
-            for start in 0..vec.len() {
-                for end in start..vec.len() {
-                    assert_eq_vec_api!(vec => |&mut vec| {
-                        let iter = vec.drain(start.into_t()..end.into_t());
-                        let vec: Vec<_> = iter.collect();
-                        vec
-                    });
-                }
+            let cv = (v.to_vec(), TiVec::<Id, _>::from(v.to_vec()));
+            let mut cv = (&cv.0, &cv.1);
+
+            let mut mv = (v.to_vec(), TiVec::<Id, _>::from(v.to_vec()));
+            let mut mv = (&mut mv.0, &mut mv.1);
+
+            assert_eq_api!(cv, v => AsRef::<[_]>::as_ref(v));
+            assert_eq_api!(mv, v => AsMut::<[_]>::as_mut(v));
+            assert_eq_api!(cv, v => AsRef::<Vec<_>>::as_ref(v));
+            assert_eq_api!(mv, v => AsMut::<Vec<_>>::as_mut(v));
+            assert_eq_api!(cv, v => AsRef::<TiVec<_, _>>::as_ref(v));
+            assert_eq_api!(mv, v => AsMut::<TiVec<_, _>>::as_mut(v));
+            assert_eq!(
+                AsRef::<[_]>::as_ref(cv.0),
+                AsRef::<[_]>::as_ref(AsRef::<TiSlice<_, _>>::as_ref(cv.1))
+            );
+            assert_eq!(
+                AsMut::<[_]>::as_mut(mv.0),
+                AsMut::<[_]>::as_mut(AsMut::<TiSlice<_, _>>::as_mut(mv.1))
+            );
+            assert_eq!(
+                Borrow::<[_]>::borrow(cv.0),
+                AsRef::<[_]>::as_ref(Borrow::<TiSlice<_, _>>::borrow(cv.1))
+            );
+            assert_eq!(
+                BorrowMut::<[_]>::borrow_mut(mv.0),
+                AsMut::<[_]>::as_mut(BorrowMut::<TiSlice<_, _>>::borrow_mut(mv.1))
+            );
+
+            assert_eq_api!(cv, v => v.len());
+            assert_eq_api!(cv, v => v.is_empty());
+            assert_eq_api!(cv, v => v.capacity());
+            assert_eq_api!(cv, v => v.as_slice().into_std());
+            assert_eq_api!(mv, v => v.as_mut_slice().into_std());
+            assert_eq_api!(cv, v => TheVec::from(v.as_slice()).into_std());
+            assert_eq_api!(mv, v => TheVec::from(v.as_mut_slice()).into_std());
+            assert_eq_api!(cv, v => TheVec::from(Cow::Borrowed(v.as_slice())).into_std());
+            assert_eq_api!(mv, v => Cow::from(v.clone()).into_std());
+
+            if !v.is_empty() {
+                assert_ne!(cv.0.as_ptr(), cv.1.as_ptr());
+                assert_ne!(cv.0.as_ptr_range(), cv.1.as_ptr_range());
+                assert_ne!(mv.0.as_mut_ptr(), mv.1.as_mut_ptr());
+                assert_ne!(mv.0.as_mut_ptr_range(), mv.1.as_mut_ptr_range());
             }
 
-            assert_eq_vec_api!(vec => |&mut vec| vec.clear());
-            assert_eq_vec_api!(vec => |&vec| vec.len());
-            assert_eq_vec_api!(vec => |&vec| vec.is_empty());
-            for j in 0..vec.len() {
-                assert_eq_vec_api!(vec => |&mut vec| vec.split_off(j.into_t()).into_t());
+            assert_eq_api!(cv, v => *v == TheVec::<u32>::default());
+            assert_eq_api!(cv, v => v == v.as_slice());
+            assert_eq_api!(cv, v => v.as_slice() == v);
+            assert_eq_api!(cv, v => v == &v.as_slice());
+            assert_eq_api!(cv, v => &v.as_slice() == v);
+            assert_eq_api!(mv, v => v == &(&mut [1_u32, 1234][..]).into_tic());
+            assert_eq_api!(mv, v => &(&mut [1_u32, 1234][..]).into_tic() == v);
+            assert_eq_api!(cv, v => v.cmp(&alloc::vec![1, 1234].into_tic()));
+            assert_eq_api!(cv, v => v.partial_cmp(&alloc::vec![1, 1234].into_tic()));
+
+            for i in 0..v.len() {
+                assert_eq_api!(cv, v => v[i.into_tic()]);
+                assert_eq_api!(mv, v => v[i.into_tic()] = v[i.into_tic()]);
             }
-            for j in 0..8 {
-                assert_eq_vec_api!(vec => |&mut vec| {
-                    let mut items = 0..;
-                    vec.resize_with(j, || items.next().unwrap());
+
+            unsafe {
+                assert_eq_api!(cv, v => {
+                    let mut v = core::mem::ManuallyDrop::new(v.clone());
+                    TheVec::from_raw_parts(v.as_mut_ptr(), v.len(), v.capacity()).into_std()
                 });
-                assert_eq_vec_api!(vec => |&mut vec| vec.resize(j, 123));
-            }
-            #[allow(clippy::unnecessary_to_owned, reason = "okay in tests")]
-            for slice in &[
-                &[0; 0][..],
-                &[1],
-                &[1, 2],
-                &[1, 2, 4],
-                &[1, 2, 4, 8],
-                &[1, 3],
-                &[7, 3, 5],
-                &[10, 6, 35, 4],
-            ] {
-                assert_eq_vec_api!(vec => |&mut vec| vec.extend_from_slice(slice.into_t()));
-                assert_eq_vec_api!(vec => |&mut vec| vec.extend(slice.iter()));
-                assert_eq_vec_api!(vec => |&mut vec| vec.extend(slice.to_vec().into_iter()));
-            }
-            assert_eq_vec_api!(vec => |&mut vec| vec.dedup());
-            for start in 0..vec.len() {
-                for end in start..vec.len() {
-                    assert_eq_vec_api!(vec => |&mut vec| {
-                        let iter = vec.splice(start.into_t()..end.into_t(), 10..20);
-                        let vec: Vec<_> = iter.collect();
-                        vec
-                    });
-                }
             }
         }
+    }
+
+    #[test]
+    fn test_vec_write_api_compatibility() {
+        for v in [
+            &[0_u32; 0][..],
+            &[1],
+            &[1, 1234],
+            &[1, 2, 4],
+            &[1, 5, 3, 2],
+            &[1, 1, 9, 2, 4, 1, 12345, 12],
+        ] {
+            let mut mv = (v.to_vec(), TiVec::<Id, _>::from(v.to_vec()));
+            let mut mv = (&mut mv.0, &mut mv.1);
+
+            let restore = |mv: &mut (&mut Vec<u32>, &mut TiVec<Id, u32>)| {
+                *mv.0 = v.to_vec();
+                *mv.1 = TiVec::from(v.to_vec());
+            };
+
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.try_reserve(usize::MAX));
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.try_reserve_exact(usize::MAX));
+
+            for i in 0..8 {
+                restore(&mut mv);
+                assert_eq_api!(mv, v => v.resize(i, 123));
+                restore(&mut mv);
+                assert_eq_api!(mv, v => { let mut a = 1; v.resize_with(i, || { a *= 2; a }) });
+                restore(&mut mv);
+                assert_eq_api!(mv, v => v.reserve(i));
+                assert_eq_api!(mv, v => v.spare_capacity_mut().len());
+                restore(&mut mv);
+                assert_eq_api!(mv, v => v.try_reserve(i));
+                restore(&mut mv);
+                assert_eq_api!(mv, v => v.reserve_exact(i));
+                restore(&mut mv);
+                assert_eq_api!(mv, v => v.try_reserve_exact(i));
+                restore(&mut mv);
+                assert_eq_api!(mv, v => v.reserve_exact(i));
+                assert_eq_api!(mv, v => v.shrink_to_fit());
+                restore(&mut mv);
+                assert_eq_api!(mv, v => v.reserve_exact(i * 2));
+                assert_eq_api!(mv, v => v.shrink_to(i));
+                restore(&mut mv);
+                assert_eq_api!(mv, v => v.truncate(i));
+            }
+
+            let l1: Vec<_> = mv.0.clone();
+            let l1c = l1.capacity();
+            let l1 = l1.leak();
+            let l2: TiVec<_, _> = mv.1.clone();
+            let l2c = l2.capacity();
+            let l2 = l2.leak();
+            assert_eq!(l1, &l2.raw);
+            drop(unsafe { Vec::from_raw_parts(l1.as_mut_ptr(), l1.len(), l1c) });
+            drop(unsafe { TiVec::<Id, _>::from_raw_parts(l2.as_mut_ptr(), l2.len(), l2c) });
+
+            restore(&mut mv);
+            assert_eq_api!(mv, v => (&*v).into_iter().copied().collect::<Vec<_>>());
+            assert_eq_api!(mv, v => v.iter_mut().collect::<Vec<_>>());
+            assert_eq_api!(mv, v => v.clone().into_iter().collect::<Vec<_>>());
+
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.pop());
+            assert_eq_api!(mv, v => v.push(123));
+            assert_eq_api!(mv, v => v.pop());
+            assert_eq_api!(mv, v => v.append(&mut v.clone()));
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.extend(v.clone().as_slice()));
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.extend(v.clone().iter().copied()));
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.extend_from_slice(&v.clone()));
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.into_iter().collect::<TheVec<_>>().into_std());
+
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.retain(|value| value % 3 == 0 || value % 4 == 0));
+
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.retain_mut(|value| {
+                *value += 1;
+                *value % 3 == 0 || *value % 4 == 0
+            }));
+
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.dedup());
+
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.dedup_by(|lhs, rhs| lhs < rhs));
+
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.dedup_by_key(|value| *value % 3));
+
+            for i in 0..v.len() {
+                restore(&mut mv);
+                assert_eq_api!(mv, v => v.swap_remove(i.into_tic()));
+                restore(&mut mv);
+                assert_eq_api!(mv, v => v.insert(i.into_tic(), 123));
+                restore(&mut mv);
+                assert_eq_api!(mv, v => v.remove(i.into_tic()));
+                restore(&mut mv);
+                unsafe { assert_eq_api!(mv, v => v.set_len(i)) };
+                restore(&mut mv);
+                assert_eq_api!(mv, v => v.split_off(i.into_tic()).into_std());
+            }
+
+            for a in 0..v.len() {
+                for b in a..v.len() {
+                    restore(&mut mv);
+                    assert_eq_api!(mv, v => v.drain((a..b).into_tic()).collect::<Vec<_>>());
+                    restore(&mut mv);
+                    assert_eq_api!(mv, v => v.extend_from_within(a..b));
+                    restore(&mut mv);
+                    assert_eq_api!(
+                        mv, v => v.splice((a..b).into_tic(), [1, 2, 3]).collect::<Vec<_>>()
+                    );
+                }
+            }
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.splice(.., [1, 2, 3]).collect::<Vec<_>>());
+
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.clear());
+        }
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_vec_hash_compatibility() {
+        for v in [
+            &[0_u32; 0][..],
+            &[1],
+            &[1, 1234],
+            &[1, 2, 4],
+            &[1, 5, 3, 2],
+            &[1, 1, 9, 2, 4, 1, 12345, 12],
+        ] {
+            let cv = (v.to_vec(), TiVec::<Id, _>::from(v.to_vec()));
+            let mut cv = (&cv.0, &cv.1);
+            assert_eq_api!(cv, v => {
+                let mut hasher = DefaultHasher::new();
+                v.hash(&mut hasher);
+                hasher.finish()
+            });
+        }
+    }
+
+    #[test]
+    fn test_u8_vec_api_compatibility() {
+        assert_eq!(
+            Vec::from(TiVec::<Id, u8>::from("abc")),
+            Vec::<u8>::from("abc"),
+        );
+        assert_eq!(
+            Vec::from(TiVec::<Id, u8>::from("abc".to_owned())),
+            Vec::<u8>::from("abc".to_owned()),
+        );
+        assert_eq!(
+            Vec::from(TiVec::<Id, u8>::from(CString::new("abc").unwrap())),
+            Vec::<u8>::from(CString::new("abc").unwrap()),
+        );
+
+        for v in [&b"abc"[..], b"aBc", b"ABC", b"abd", b"a\x80\x81b"] {
+            let cv = (v.to_vec(), TiVec::<Id, _>::from(v.to_vec()));
+            let mut cv = (&cv.0, &cv.1);
+
+            assert_eq_api!(cv, v => TheVec::from(v.as_slice()).into_std());
+        }
+    }
+
+    #[test]
+    fn test_vec_debug() {
+        let s0: TiVec<Id, u32> = TiVec::from(alloc::vec![]);
+        let s1: TiVec<Id, u32> = TiVec::from(alloc::vec![12]);
+        let s2: TiVec<Id, u32> = TiVec::from(alloc::vec![23, 34]);
+        assert_eq!(&alloc::format!("{s0:?}"), "{}");
+        assert_eq!(&alloc::format!("{s1:?}"), "{Id(0): 12}");
+        assert_eq!(&alloc::format!("{s2:?}"), "{Id(0): 23, Id(1): 34}");
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_vec_write() {
+        let mut mv = (Vec::<u8>::new(), TiVec::<Id, u8>::new());
+        let mut mv = (&mut mv.0, &mut mv.1);
+
+        assert_eq_api!(mv, v => v.write(&[1, 2, 3]).unwrap());
+        assert_eq_api!(mv, v => v.write_vectored(
+            &[IoSlice::new(&[1, 2, 3]), IoSlice::new(&[4, 5])]
+        ).unwrap());
+        assert_eq_api!(mv, v => v.write_all(&[1, 2, 3]).unwrap());
+        assert_eq_api!(mv, v => v.flush().unwrap());
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_vec_serialize() {
+        let s0: TiVec<Id, u32> = TiVec::from(alloc::vec![]);
+        let s1: TiVec<Id, u32> = TiVec::from(alloc::vec![12]);
+        let s2: TiVec<Id, u32> = TiVec::from(alloc::vec![23, 34]);
+        assert_eq!(&serde_json::to_string(&s0).unwrap(), "[]");
+        assert_eq!(&serde_json::to_string(&s1).unwrap(), "[12]");
+        assert_eq!(&serde_json::to_string(&s2).unwrap(), "[23,34]");
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_vec_deserialize() {
+        let s0: TiVec<Id, u32> = serde_json::from_str("[]").unwrap();
+        let s1: TiVec<Id, u32> = serde_json::from_str("[12]").unwrap();
+        let s2: TiVec<Id, u32> = serde_json::from_str("[23, 34]").unwrap();
+        assert_eq!(s0.as_slice().raw, [0; 0][..]);
+        assert_eq!(s1.as_slice().raw, [12][..]);
+        assert_eq!(s2.as_slice().raw, [23, 34][..]);
     }
 }

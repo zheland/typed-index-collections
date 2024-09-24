@@ -22,10 +22,16 @@ use core::slice::{
 use core::str::Utf8Chunks;
 
 #[cfg(feature = "alloc")]
-use alloc::borrow::Cow;
-
+use alloc::borrow::{Cow, ToOwned};
 #[cfg(feature = "alloc")]
-use alloc::{borrow::ToOwned, boxed::Box};
+use alloc::boxed::Box;
+#[cfg(feature = "std")]
+use alloc::string::String;
+#[cfg(feature = "std")]
+use alloc::vec::Vec;
+
+#[cfg(feature = "std")]
+use std::io::{BufRead, IoSlice, IoSliceMut, Read, Result as IoResult, Write};
 
 #[cfg(feature = "serde")]
 use serde::ser::{Serialize, Serializer};
@@ -2106,535 +2112,643 @@ impl<K, V: Serialize> Serialize for TiSlice<K, V> {
     }
 }
 
+#[expect(
+    dead_code,
+    unused_imports,
+    unused_mut,
+    clippy::fallible_impl_from,
+    clippy::into_iter_on_ref,
+    clippy::too_many_lines,
+    clippy::undocumented_unsafe_blocks,
+    clippy::unwrap_used,
+    clippy::zero_repeat_side_effects,
+    reason = "okay in tests"
+)]
 #[cfg(test)]
 mod test {
-    use crate::{test::Id, TiSlice};
+    use core::borrow::{Borrow, BorrowMut};
+    use core::hash::{Hash, Hasher};
+    use core::ops::Bound;
+
+    #[cfg(feature = "alloc")]
+    use alloc::borrow::{Cow, ToOwned};
+    #[cfg(feature = "alloc")]
+    use alloc::boxed::Box;
+    #[cfg(feature = "std")]
+    use alloc::string::{String, ToString};
+    #[cfg(feature = "alloc")]
+    use alloc::vec::Vec;
+
+    #[cfg(feature = "std")]
+    use std::hash::DefaultHasher;
+    #[cfg(feature = "std")]
+    use std::io::{BufRead, IoSlice, IoSliceMut, Read, Write};
+
+    use crate::test_util::CollectToVec;
+    use crate::{test_util::Id, TiSlice};
 
     #[derive(Clone, Debug, Eq, PartialEq)]
     struct NonCopy<T>(pub T);
 
-    // Function used to avoid allocations for no_std and no_alloc targets
-    #[rustfmt::skip]
-    fn array_32_from<T, F>(mut func: F) -> [T; 32]
-    where
-        F: FnMut() -> T,
-    {
-        [
-            func(), func(), func(), func(), func(), func(), func(), func(),
-            func(), func(), func(), func(), func(), func(), func(), func(),
-            func(), func(), func(), func(), func(), func(), func(), func(),
-            func(), func(), func(), func(), func(), func(), func(), func(),
-        ]
-    }
-
-    #[expect(
-        clippy::modulo_arithmetic,
-        clippy::too_many_lines,
-        clippy::undocumented_unsafe_blocks,
-        clippy::unwrap_used,
-        clippy::zero_repeat_side_effects,
-        reason = "okay in tests"
-    )]
     #[test]
-    fn no_std_api_compatibility() {
-        for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {
-            assert_eq_api!(arr => |arr| arr.as_ref().into_t().len());
-            assert_eq_api!(arr => |arr| arr.as_ref().into_t().is_empty());
-            assert_eq_api!(arr => |&arr| arr.as_ref().into_t().first());
-            assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t().first_mut());
-            assert_eq_api!(arr => |&arr| arr.as_ref().into_t().split_first().into_t());
-            assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t().split_first_mut().into_t());
-            assert_eq_api!(arr => |&arr| arr.as_ref().into_t().split_last().into_t());
-            assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t().split_last_mut().into_t());
-            assert_eq_api!(arr => |&arr| arr.as_ref().into_t().last());
-            assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t().last_mut());
-            for index in 0..5_usize {
-                assert_eq_api!(arr => |&arr| arr.as_ref().into_t().get(index.into_t()));
-                assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t().get_mut(index.into_t()));
+    fn test_slice_read_core_api_compatibility() {
+        for v in [
+            &[0_u32; 0][..],
+            &[1],
+            &[1, 1234],
+            &[1, 2, 4],
+            &[1, 5, 3, 2],
+            &[1, 1, 9, 2, 4, 1, 12345, 12],
+        ] {
+            let mut cv = (v, TiSlice::from_ref(v));
+
+            let mut mv = (v.to_vec(), v.to_vec());
+            let mut mv = (mv.0.as_mut_slice(), TiSlice::from_mut(mv.1.as_mut_slice()));
+
+            assert_eq_api!(cv, v => AsRef::<[_]>::as_ref(v));
+            assert_eq_api!(mv, v => AsMut::<[_]>::as_mut(v));
+            assert_eq_api!(cv, v => AsRef::<TiSlice<_, _>>::as_ref(v));
+            assert_eq_api!(mv, v => AsMut::<TiSlice<_, _>>::as_mut(v));
+
+            assert_eq_api!(cv, v => v.len());
+            assert_eq_api!(cv, v => v.is_empty());
+            assert_eq_api!(cv, v => v.first());
+            assert_eq_api!(mv, v => v.first_mut());
+            assert_eq_api!(cv, v => v.last());
+            assert_eq_api!(mv, v => v.last_mut());
+            assert_eq_api!(cv, v => v.split_first().into_std());
+            assert_eq_api!(mv, v => v.split_first_mut().into_std());
+            assert_eq_api!(cv, v => v.split_last().into_std());
+            assert_eq_api!(mv, v => v.split_last_mut().into_std());
+
+            assert_eq_api!(cv, v => v.as_ptr());
+            assert_eq_api!(cv, v => v.as_ptr_range());
+            if !v.is_empty() {
+                assert_ne!(mv.0.as_mut_ptr(), mv.1.as_mut_ptr());
+                assert_ne!(mv.0.as_mut_ptr_range(), mv.1.as_mut_ptr_range());
             }
-            for index in 0..arr.len() {
+            assert_eq!(
+                mv.0.as_mut_ptr(),
+                TiSlice::<Id, _>::from_mut(mv.0).as_mut_ptr()
+            );
+            assert_eq!(
+                mv.0.as_mut_ptr_range(),
+                TiSlice::<Id, _>::from_mut(mv.0).as_mut_ptr_range()
+            );
+
+            assert_eq_api!(cv, v => v == <&TheSlice<u32>>::default());
+            assert_eq_api!(cv, v => v == <&mut TheSlice<u32>>::default());
+            assert_eq_api!(cv, v => v.cmp([1, 1234][..].into_tic()));
+            assert_eq_api!(cv, v => v.partial_cmp([1, 1234][..].into_tic()));
+
+            assert_eq_api!(cv, v => v.get((Bound::Unbounded, Bound::Unbounded)).into_std());
+            assert_eq_api!(mv, v => v.get_mut((Bound::Unbounded, Bound::Unbounded)).into_std());
+
+            for i in 0..5_usize {
+                assert_eq_api!(cv, v => v.get(i.into_tic()));
+                assert_eq_api!(mv, v => v.get_mut(i.into_tic()));
+
+                assert_eq_api!(cv, v => v.get(i.into_tic()..).into_std());
+                assert_eq_api!(mv, v => v.get_mut(i.into_tic()..).into_std());
+
+                assert_eq_api!(cv, v => v.get(..i.into_tic()).into_std());
+                assert_eq_api!(mv, v => v.get_mut(..i.into_tic()).into_std());
+
+                assert_eq_api!(cv, v => v.get(..=i.into_tic()).into_std());
+                assert_eq_api!(mv, v => v.get_mut(..=i.into_tic()).into_std());
+
+                let r = (Bound::Included(i), Bound::Unbounded);
+                assert_eq_api!(cv, v => v.get(r.into_tic()).into_std());
+                assert_eq_api!(mv, v => v.get_mut(r.into_tic()).into_std());
+
+                let r = (Bound::Unbounded, Bound::Excluded(i));
+                assert_eq_api!(cv, v => v.get(r.into_tic()).into_std());
+                assert_eq_api!(mv, v => v.get_mut(r.into_tic()).into_std());
+
+                let r = (Bound::Excluded(i), Bound::Unbounded);
+                assert_eq_api!(cv, v => v.get(r.into_tic()).into_std());
+                assert_eq_api!(mv, v => v.get_mut(r.into_tic()).into_std());
+
+                let r = (Bound::Unbounded, Bound::Included(i));
+                assert_eq_api!(cv, v => v.get(r.into_tic()).into_std());
+                assert_eq_api!(mv, v => v.get_mut(r.into_tic()).into_std());
+            }
+
+            for i in 0..=v.len() {
                 unsafe {
-                    assert_eq_api!(arr => |&arr| arr.as_ref().into_t()
-                        .get_unchecked(index.into_t()));
-                    assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t()
-                        .get_unchecked_mut(index.into_t()));
-                }
-            }
-            for start in 0..5usize {
-                for end in 0..5usize {
-                    assert_eq_api!(arr => |&arr| arr.as_ref().into_t()
-                        .get(start.into_t()..end.into_t()).into_t());
-                    assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t()
-                        .get_mut(start.into_t()..end.into_t()).into_t());
-                    assert_eq_api!(arr => |&arr| arr.as_ref().into_t()
-                        .get(start.into_t()..=end.into_t()).into_t());
-                    assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t()
-                        .get_mut(start.into_t()..=end.into_t()).into_t());
-                }
-            }
-            unsafe {
-                for start in 0..arr.len() {
-                    for end in start..arr.len() {
-                        assert_eq_api!(arr => |&arr| arr.as_ref().into_t()
-                            .get_unchecked(start.into_t()..end.into_t()).into_t());
-                        assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t()
-                            .get_unchecked_mut(start.into_t()..end.into_t()).into_t());
+                    if i < v.len() {
+                        assert_eq_api!(cv, v => v.get_unchecked(i.into_tic()));
+                        assert_eq_api!(mv, v => v.get_unchecked_mut(i.into_tic()));
+                        assert_eq_api!(cv, v => v[i.into_tic()]);
+                        assert_eq_api!(mv, v => v[i.into_tic()] = v[i.into_tic()]);
+                    }
+
+                    assert_eq_api!(cv, v => v[i.into_tic()..].into_std());
+                    assert_eq_api!(cv, v => v.get_unchecked(i.into_tic()..).into_std());
+                    assert_eq_api!(mv, v => v.get_unchecked_mut(i.into_tic()..).into_std());
+
+                    assert_eq_api!(cv, v => v[..i.into_tic()].into_std());
+                    assert_eq_api!(cv, v => v.get_unchecked(..i.into_tic()).into_std());
+                    assert_eq_api!(mv, v => v.get_unchecked_mut(..i.into_tic()).into_std());
+
+                    if i < v.len() {
+                        assert_eq_api!(cv, v => v[..=i.into_tic()].into_std());
+                        assert_eq_api!(cv, v => v.get_unchecked(..=i.into_tic()).into_std());
+                        assert_eq_api!(mv, v => v.get_unchecked_mut(..=i.into_tic()).into_std());
+                    }
+
+                    let r = (Bound::Included(i), Bound::Unbounded);
+                    assert_eq_api!(cv, v => v.get_unchecked(r.into_tic()).into_std());
+                    assert_eq_api!(mv, v => v.get_unchecked_mut(r.into_tic()).into_std());
+
+                    let r = (Bound::Unbounded, Bound::Excluded(i));
+                    assert_eq_api!(cv, v => v.get_unchecked(r.into_tic()).into_std());
+                    assert_eq_api!(mv, v => v.get_unchecked_mut(r.into_tic()).into_std());
+
+                    if i < v.len() {
+                        let r = (Bound::Excluded(i), Bound::Unbounded);
+                        assert_eq_api!(cv, v => v.get_unchecked(r.into_tic()).into_std());
+                        assert_eq_api!(mv, v => v.get_unchecked_mut(r.into_tic()).into_std());
+
+                        let r = (Bound::Unbounded, Bound::Included(i));
+                        assert_eq_api!(cv, v => v.get_unchecked(r.into_tic()).into_std());
+                        assert_eq_api!(mv, v => v.get_unchecked_mut(r.into_tic()).into_std());
                     }
                 }
-                if !arr.is_empty() {
-                    for start in 0..arr.len() - 1 {
-                        for end in start..arr.len() - 1 {
-                            assert_eq_api!(arr => |&arr| arr.as_ref().into_t()
-                                .get_unchecked(start.into_t()..=end.into_t()).into_t());
-                            assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t()
-                                .get_unchecked_mut(start.into_t()..=end.into_t()).into_t());
+            }
+
+            for a in 0..5usize {
+                for b in 0..5usize {
+                    assert_eq_api!(cv, v => v.get((a..b).into_tic()).into_std());
+                    assert_eq_api!(mv, v => v.get_mut((a..b).into_tic()).into_std());
+
+                    assert_eq_api!(cv, v => v.get((a..=b).into_tic()).into_std());
+                    assert_eq_api!(mv, v => v.get_mut((a..=b).into_tic()).into_std());
+
+                    let r = (Bound::Included(a), Bound::Excluded(b));
+                    assert_eq_api!(cv, v => v.get(r.into_tic()).into_std());
+                    assert_eq_api!(mv, v => v.get_mut(r.into_tic()).into_std());
+
+                    let r = (Bound::Included(a), Bound::Included(b));
+                    assert_eq_api!(cv, v => v.get(r.into_tic()).into_std());
+                    assert_eq_api!(mv, v => v.get_mut(r.into_tic()).into_std());
+
+                    let r = (Bound::Excluded(a), Bound::Excluded(b));
+                    assert_eq_api!(cv, v => v.get(r.into_tic()).into_std());
+                    assert_eq_api!(mv, v => v.get_mut(r.into_tic()).into_std());
+
+                    let r = (Bound::Excluded(a), Bound::Included(b));
+                    assert_eq_api!(cv, v => v.get(r.into_tic()).into_std());
+                    assert_eq_api!(mv, v => v.get_mut(r.into_tic()).into_std());
+                }
+            }
+
+            for a in 0..=v.len() {
+                for b in a..=v.len() {
+                    unsafe {
+                        assert_eq_api!(cv, v => v[(a..b).into_tic()].into_std());
+                        assert_eq_api!(cv, v => v.get_unchecked((a..b).into_tic()).into_std());
+                        assert_eq_api!(mv, v => v.get_unchecked_mut((a..b).into_tic()).into_std());
+
+                        if a < v.len() && b < v.len() {
+                            assert_eq_api!(cv, v => v[(a..=b).into_tic()].into_std());
+                            assert_eq_api!(cv, v => v.get_unchecked((a..=b).into_tic()).into_std());
+                            assert_eq_api!(mv, v => v.get_unchecked_mut((a..=b).into_tic()).into_std());
+                        }
+
+                        let r = (Bound::Included(a), Bound::Excluded(b));
+                        assert_eq_api!(cv, v => v.get_unchecked(r.into_tic()).into_std());
+                        assert_eq_api!(mv, v => v.get_unchecked_mut(r.into_tic()).into_std());
+
+                        if a < v.len() && b < v.len() {
+                            let r = (Bound::Included(a), Bound::Included(b));
+                            assert_eq_api!(cv, v => v.get_unchecked(r.into_tic()).into_std());
+                            assert_eq_api!(mv, v => v.get_unchecked_mut(r.into_tic()).into_std());
+                        }
+
+                        if a < b {
+                            let r = (Bound::Excluded(a), Bound::Excluded(b));
+                            assert_eq_api!(cv, v => v.get_unchecked(r.into_tic()).into_std());
+                            assert_eq_api!(mv, v => v.get_unchecked_mut(r.into_tic()).into_std());
+                        }
+
+                        if a < v.len() && b < v.len() {
+                            let r = (Bound::Excluded(a), Bound::Included(b));
+                            assert_eq_api!(cv, v => v.get_unchecked(r.into_tic()).into_std());
+                            assert_eq_api!(mv, v => v.get_unchecked_mut(r.into_tic()).into_std());
                         }
                     }
                 }
             }
-            for start in 0..5usize {
-                assert_eq_api!(arr => |&arr| arr.as_ref().into_t()
-                    .get(start.into_t()..).into_t());
-                assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t()
-                    .get_mut(start.into_t()..).into_t());
+
+            assert_eq_api!(cv, v => v.iter().collect_to_vec());
+            assert_eq_api!(cv, v => v.into_iter().collect_to_vec());
+
+            assert_eq_api!(mv, v => v.iter().collect_to_vec());
+            assert_eq_api!(mv, v => v.iter_mut().collect_to_vec());
+            assert_eq_api!(mv, v => v.into_iter().collect_to_vec());
+
+            for l in 1..5 {
+                assert_eq_api!(cv, v => v.windows(l).map_into_std().collect_to_vec());
+                assert_eq_api!(cv, v => v.chunks(l).map_into_std().collect_to_vec());
+                assert_eq_api!(mv, v => v.chunks_mut(l).map_into_std().collect_to_vec());
+                assert_eq_api!(cv, v => v.chunks_exact(l).map_into_std().collect_to_vec());
+                assert_eq_api!(mv, v => v.chunks_exact_mut(l).map_into_std().collect_to_vec());
+                assert_eq_api!(cv, v => v.rchunks(l).map_into_std().collect_to_vec());
+                assert_eq_api!(mv, v => v.rchunks_mut(l).map_into_std().collect_to_vec());
+                assert_eq_api!(cv, v => v.rchunks(l).map_into_std().collect_to_vec());
+                assert_eq_api!(mv, v => v.rchunks_mut(l).map_into_std().collect_to_vec());
+                assert_eq_api!(cv, v => v.rchunks(l).map_into_std().collect_to_vec());
+                assert_eq_api!(mv, v => v.rchunks_mut(l).map_into_std().collect_to_vec());
+                assert_eq_api!(cv, v => v.rchunks_exact(l).map_into_std().collect_to_vec());
+                assert_eq_api!(mv, v => v.rchunks_exact_mut(l).map_into_std().collect_to_vec());
+
+                assert_eq_api!(
+                    cv, v => v.chunk_by(|a, b| a.abs_diff(*b) < 2)
+                        .map_into_std().collect_to_vec()
+                );
+                assert_eq_api!(
+                    mv, v => v.chunk_by_mut(|a, b| a.abs_diff(*b) < 2)
+                        .map_into_std().collect_to_vec()
+                );
             }
-            unsafe {
-                for start in 0..arr.len() {
-                    assert_eq_api!(arr => |&arr| arr.as_ref().into_t()
-                        .get_unchecked(start.into_t()..).into_t());
-                    assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t()
-                        .get_unchecked_mut(start.into_t()..).into_t());
+
+            for i in 0..5 {
+                assert_eq_api!(cv, v => v.split_at_checked(i.into_tic()).into_std());
+                assert_eq_api!(mv, v => v.split_at_mut_checked(i.into_tic()).into_std());
+            }
+
+            for i in 0..v.len() {
+                assert_eq_api!(cv, v => v.split_at(i.into_tic()).into_std());
+                assert_eq_api!(mv, v => v.split_at_mut(i.into_tic()).into_std());
+                unsafe {
+                    assert_eq_api!(cv, v => v.split_at_unchecked(i.into_tic()).into_std());
+                    assert_eq_api!(mv, v => v.split_at_mut_unchecked(i.into_tic()).into_std());
                 }
             }
-            for end in 0..5usize {
-                assert_eq_api!(arr => |&arr| arr.as_ref().into_t()
-                    .get(..end.into_t()).into_t());
-                assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t()
-                    .get_mut(..end.into_t()).into_t());
-                assert_eq_api!(arr => |&arr| arr.as_ref().into_t()
-                    .get(..=end.into_t()).into_t());
-                assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t()
-                    .get_mut(..=end.into_t()).into_t());
-            }
-            unsafe {
-                for end in 0..arr.len() {
-                    assert_eq_api!(arr => |&arr| arr.as_ref().into_t()
-                        .get_unchecked(..end.into_t()).into_t());
-                    assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t()
-                        .get_unchecked_mut(..end.into_t()).into_t());
-                }
-                if !arr.is_empty() {
-                    for end in 0..arr.len() - 1 {
-                        assert_eq_api!(arr => |&arr| arr.as_ref().into_t()
-                            .get_unchecked(..=end.into_t()).into_t());
-                        assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t()
-                            .get_unchecked_mut(..=end.into_t()).into_t());
-                    }
-                }
-            }
-        });
-        for_in!(
-            for arr in [&[0; 0], &[1], &[1, 2], &[1, 2, 4], &[1, 2, 4, 8]] {
-                assert_eq_api!(arr => |arr| arr.into_t().as_ptr());
-            }
-        );
-        for_in!(for arr in [[1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {
-            assert_ne_api!(arr => |&mut arr| arr.as_mut().into_t().as_mut_ptr());
-        });
-        assert_eq_api!([1u32, 2, 3] => |&mut arr| {
-            arr.as_mut().into_t().swap(0.into_t(), 2.into_t());
-            arr
-        });
-        for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {
-            assert_eq_api!(arr => |&mut arr| {
-                arr.as_mut().into_t().reverse();
-                arr
-            });
-            assert_eq_api!(arr => |&arr| {
-                let mut iter = arr.as_ref().into_t().iter();
-                array_32_from(|| iter.next())
-            });
-            assert_eq_api!(arr => |&mut arr| {
-                arr.as_mut().into_t().iter_mut().for_each(|item| *item += 1);
-                arr
-            });
-            for chunk_size in 1..5 {
-                assert_eq_api!(arr => |&arr| {
-                    let mut windows = arr.as_ref().into_t().windows(chunk_size);
-                    array_32_from(|| windows.next().into_t())
-                });
-                assert_eq_api!(arr => |&arr| {
-                    let mut chunks = arr.as_ref().into_t().chunks(chunk_size);
-                    array_32_from(|| chunks.next().into_t())
-                });
-                assert_eq_api!(arr => |&mut arr| {
-                    arr.as_mut().into_t().chunks_mut(chunk_size)
-                        .for_each(|slice| slice.iter_mut().for_each(|item| *item += 1));
-                    arr
-                });
-                assert_eq_api!(arr => |&arr| {
-                    let mut chunks = arr.as_ref().into_t().chunks_exact(chunk_size);
-                    array_32_from(|| chunks.next().into_t())
-                });
-                assert_eq_api!(arr => |&mut arr| {
-                    arr.as_mut().into_t().chunks_exact_mut(chunk_size)
-                        .for_each(|slice| slice.iter_mut().for_each(|item| *item += 1));
-                    arr
-                });
-                assert_eq_api!(arr => |&arr| {
-                    let mut chunks = arr.as_ref().into_t().rchunks(chunk_size);
-                    array_32_from(|| chunks.next().into_t())
-                });
-                assert_eq_api!(arr => |&mut arr| {
-                    arr.as_mut().into_t().rchunks_mut(chunk_size)
-                        .for_each(|slice| slice.iter_mut().for_each(|item| *item += 1));
-                    arr
-                });
-                assert_eq_api!(arr => |&arr| {
-                    let mut chunks = arr.as_ref().into_t().rchunks_exact(chunk_size);
-                    array_32_from(|| chunks.next().into_t())
-                });
-                assert_eq_api!(arr => |&mut arr| {
-                    arr.as_mut().into_t().rchunks_exact_mut(chunk_size)
-                        .for_each(|slice| slice.iter_mut().for_each(|item| *item += 1));
-                    arr
-                });
-            }
-        });
-        for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {
-            for mid in 0..arr.len() {
-                assert_eq_api!(arr => |&arr| {
-                    arr.as_ref().into_t().split_at(mid.into_t()).into_t()
-                });
-                assert_eq_api!(arr => |&mut arr| {
-                    arr.as_mut().into_t().split_at_mut(mid.into_t()).into_t()
-                });
-            }
-            for div in 1..5 {
-                assert_eq_api!(arr => |&arr| {
-                    let mut split = arr.as_ref().into_t().split(|v| v % div == 0);
-                    array_32_from(|| split.next().into_t())
-                });
-                assert_eq_api!(arr => |&mut arr| {
-                    let mut split = arr.as_mut().into_t().split_mut(|v| v % div == 0);
-                    array_32_from(|| split.next().into_t())
-                });
-                assert_eq_api!(arr => |&arr| {
-                    let mut split = arr.as_ref().into_t().rsplit(|v| v % div == 0);
-                    array_32_from(|| split.next().into_t())
-                });
-                assert_eq_api!(arr => |&mut arr| {
-                    let mut split = arr.as_mut().into_t().rsplit_mut(|v| v % div == 0);
-                    array_32_from(|| split.next().into_t())
-                });
-                for num in 1..5 {
-                    assert_eq_api!(arr => |&arr| {
-                        let mut split = arr.as_ref().into_t().splitn(num, |v| v % div == 0);
-                        array_32_from(|| split.next().into_t())
-                    });
-                    assert_eq_api!(arr => |&mut arr| {
-                        let mut split = arr.as_mut().into_t().splitn_mut(num, |v| v % div == 0);
-                        array_32_from(|| split.next().into_t())
-                    });
-                    assert_eq_api!(arr => |&arr| {
-                        let mut split = arr.as_ref().into_t().rsplitn(num, |v| v % div == 0);
-                        array_32_from(|| split.next().into_t())
-                    });
-                    assert_eq_api!(arr => |&mut arr| {
-                        let mut split = arr.as_mut().into_t().rsplitn_mut(num, |v| v % div == 0);
-                        array_32_from(|| split.next().into_t())
-                    });
+
+            for d in 1..5 {
+                assert_eq_api!(
+                    cv, v => v.split(|v| v % d == 0)
+                        .map_into_std().collect_to_vec()
+                );
+                assert_eq_api!(
+                    mv, v => v.split_mut(|v| v % d == 0)
+                        .map_into_std().collect_to_vec()
+                );
+                assert_eq_api!(
+                    cv, v => v.rsplit(|v| v % d == 0)
+                        .map_into_std().collect_to_vec()
+                );
+                assert_eq_api!(
+                    mv, v => v.rsplit_mut(|v| v % d == 0)
+                        .map_into_std().collect_to_vec()
+                );
+                assert_eq_api!(
+                    cv, v => v.split_inclusive(|v| v % d == 0)
+                        .map_into_std().collect_to_vec()
+                );
+                assert_eq_api!(
+                    mv, v => v.split_inclusive_mut(|v| v % d == 0)
+                        .map_into_std().collect_to_vec()
+                );
+                for n in 0..5 {
+                    assert_eq_api!(
+                        cv, v => v.splitn(n, |v| v % d == 0)
+                            .map_into_std().collect_to_vec()
+                    );
+                    assert_eq_api!(
+                        mv, v => v.splitn_mut(n, |v| v % d == 0)
+                            .map_into_std().collect_to_vec()
+                    );
+                    assert_eq_api!(
+                        cv, v => v.rsplitn(n, |v| v % d == 0)
+                            .map_into_std().collect_to_vec()
+                    );
+                    assert_eq_api!(
+                        mv, v => v.rsplitn_mut(n, |v| v % d == 0)
+                            .map_into_std().collect_to_vec()
+                    );
                 }
             }
-        });
-        for_in!(for arr in [[0; 0], [1], [1, 2], [1, 3, 5], [1, 2, 3, 4]] {
-            for value in 0..5 {
-                assert_eq_api!(arr => |&arr| arr.as_ref().into_t().contains(&value));
+
+            for a in 1..5 {
+                assert_eq_api!(cv, v => v.contains(&a));
+                assert_eq_api!(cv, v => v.binary_search(&a).into_std());
+                assert_eq_api!(cv, v => v.binary_search_by(|b| b.cmp(&a).reverse()).into_std());
+                assert_eq_api!(
+                    cv, v => v.binary_search_by_key(&a, |b| 10_u32.wrapping_sub(*b)).into_std()
+                );
             }
-            for needle in &[
-                &[][..],
-                &[0][..],
-                &[1, 2][..],
-                &[3, 4][..],
-                &[1, 3][..],
-                &[3, 5][..],
-            ] {
-                assert_eq_api!(arr => |&arr| arr.as_ref().into_t().starts_with(needle.into_t()));
-                assert_eq_api!(arr => |&arr| arr.as_ref().into_t().ends_with(needle.into_t()));
+
+            for a in &[&[][..], &[0], &[1, 2], &[3, 4], &[1, 3], &[3, 5]] {
+                assert_eq_api!(cv, v => v.starts_with(a.into_tic()));
+                assert_eq_api!(cv, v => v.ends_with(a.into_tic()));
             }
-            for value in 0..5 {
-                assert_eq_api!(arr => |&arr| arr.as_ref().into_t().contains(&value));
-                assert_eq_api!(arr => |&arr| arr.as_ref().into_t().binary_search(&value).into_t());
-                assert_eq_api!(arr => |&arr| arr.as_ref().into_t()
-                    .binary_search_by(|item| item.cmp(&value)).into_t());
-                assert_eq_api!(arr => |&arr| arr.as_ref().into_t()
-                    .binary_search_by_key(&value, |item| 5 - item).into_t());
-            }
-        });
-        for_in!(
-            for arr in [[0; 0], [1], [1, 3], [7, 3, 5], [10, 6, 35, 4]] {
-                assert_eq_api!(arr => |&mut arr| {
-                    arr.as_mut().into_t().sort_unstable();
-                    arr
-                });
-                assert_eq_api!(arr => |&mut arr| {
-                    arr.as_mut().into_t()
-                        .sort_unstable_by(|lhs, rhs| rhs.partial_cmp(lhs).unwrap());
-                    arr
-                });
-                assert_eq_api!(arr => |&mut arr| {
-                    arr.as_mut().into_t()
-                        .sort_unstable_by_key(|&value| value * (value % 3));
-                    arr
-                });
-                for mid in 0..arr.len() {
-                    assert_eq_api!(arr => |&mut arr| {
-                        arr.as_mut().into_t().rotate_left(mid.into_t());
-                        arr
-                    });
-                    assert_eq_api!(arr => |&mut arr| {
-                        arr.as_mut().into_t().rotate_right(mid.into_t());
-                        arr
-                    });
+
+            for i in 0..v.len() {
+                unsafe {
+                    assert_eq_api!(cv, v => v[i.into_tic()..].align_to::<u64>().into_std());
+                    let mv = &mut *mv.0;
+                    let slices = mv.align_to_mut::<u64>();
+                    let ptrs1 = (
+                        slices.0.as_ptr_range(),
+                        slices.1.as_ptr_range(),
+                        slices.2.as_ptr_range(),
+                    );
+                    let slices = TiSlice::<Id, _>::from_mut(mv).align_to_mut::<u64>();
+                    let ptrs2 = (
+                        slices.0.as_ptr_range(),
+                        slices.1.as_ptr_range(),
+                        slices.2.as_ptr_range(),
+                    );
+                    assert_eq!(ptrs1, ptrs2);
                 }
             }
-        );
-        for_in!(for src in [
-            [NonCopy(0); 0],
-            [NonCopy(1)],
-            [NonCopy(1), NonCopy(3)],
-            [NonCopy(7), NonCopy(3), NonCopy(5)],
-            [NonCopy(10), NonCopy(6), NonCopy(35), NonCopy(4)]
-        ] {
-            assert_eq_api!([
-                NonCopy(1),
-                NonCopy(2),
-                NonCopy(3),
-                NonCopy(4),
-                NonCopy(5),
-                NonCopy(6),
-            ] => |&mut arr| {
-                arr.as_mut().into_t()[..src.len().into_t()]
-                    .clone_from_slice(src.as_ref().into_t());
-                arr
-            });
-        });
-        for_in!(
-            for src in [[0; 0], [1], [1, 3], [7, 3, 5], [10, 6, 35, 4]] {
-                assert_eq_api!([1, 2, 3, 4, 5, 6] => |&mut arr| {
-                    arr.as_mut().into_t()[..src.len().into_t()]
-                        .copy_from_slice(src.as_ref().into_t());
-                    arr
-                });
-            }
-        );
-        assert_eq_api!([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] => |&mut arr| {
-            arr.as_mut().into_t().copy_within(1.into_t()..4.into_t(), 6.into_t());
-            arr
-        });
-        assert_eq_api!(([1, 2], [3, 4, 5, 6]) => |mut args| {
-            args.0.as_mut().into_t().swap_with_slice((&mut args.1[2..]).into_t());
-        });
-        {
-            let mut arr = [1u8, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
-            for start in 0..arr.len() {
-                for end in start..arr.len() {
-                    unsafe {
-                        assert_eq_api!(&arr => |&arr| {
-                            arr.as_ref()[start..end].into_t().align_to::<u64>().into_t()
-                        });
-                        assert_eq!(
-                            {
-                                let (prefix, values, suffixes) = arr.as_mut().align_to::<u64>();
-                                (prefix.to_vec(), values.to_vec(), suffixes.to_vec())
-                            },
-                            {
-                                let (prefix, values, suffixes) =
-                                    TiSlice::<Id, _>::from_mut(arr.as_mut()).align_to::<u64>();
-                                (
-                                    prefix.raw.to_vec(),
-                                    values.raw.to_vec(),
-                                    suffixes.raw.to_vec(),
-                                )
-                            }
-                        );
-                    }
-                }
+
+            for a in 1..5 {
+                assert_eq_api!(cv, v => v.partition_point(|b| *b < a).into_std());
             }
         }
     }
 
-    #[expect(
-        clippy::allow_attributes,
-        clippy::modulo_arithmetic,
-        clippy::unwrap_used,
-        reason = "okay in tests"
-    )]
-    #[cfg(feature = "alloc")]
     #[test]
-    fn std_api_compatibility() {
-        use alloc::boxed::Box;
+    fn test_slice_write_core_api_compatibility() {
+        for v in [
+            &[0_u32; 0][..],
+            &[1],
+            &[1, 1234],
+            &[1, 2, 4],
+            &[1, 5, 3, 2],
+            &[1, 1, 9, 2, 4, 1, 12345, 12],
+        ] {
+            let mut mv = (v.to_vec(), v.to_vec());
+            let mut mv = (mv.0.as_mut_slice(), TiSlice::from_mut(mv.1.as_mut_slice()));
+            let restore = |mv: &mut (&mut [u32], &mut TiSlice<Id, u32>)| {
+                mv.0.copy_from_slice(v);
+                mv.1.raw.copy_from_slice(v);
+            };
 
-        for_in!(
-            for arr in [[0; 0], [1], [1, 3], [7, 3, 5], [10, 6, 35, 4]] {
-                assert_eq_api!(arr => |&mut arr| {
-                    #[allow(clippy::stable_sort_primitive, reason = "okay in tests")]
-                    arr.as_mut().into_t().sort();
-                    arr
-                });
-                assert_eq_api!(arr => |&mut arr| {
-                    arr.as_mut().into_t().sort_by(|lhs, rhs| rhs.partial_cmp(lhs).unwrap());
-                    arr
-                });
-                assert_eq_api!(arr => |&mut arr| {
-                    arr.as_mut().into_t().sort_by_key(|&value| value * (value % 3));
-                    arr
-                });
-                assert_eq_api!(arr => |&mut arr| {
-                    arr.as_mut().into_t().sort_by_cached_key(|&value| value * (value % 3));
-                    arr
-                });
-                assert_eq_api!(arr => |&arr| arr.into_t().to_vec().as_slice().into_t());
-                assert_eq_api!(arr => |&arr| {
-                    let boxed = Box::new(arr.into_t().to_vec().into_boxed_slice());
-                    boxed.into_vec().as_slice().into_t()
-                });
-                assert_eq_api!(arr => |&arr| arr.into_t().repeat(5).as_slice().into_t());
-                assert_eq_api!([[1, 2], [3, 4]] => |arr| arr.into_t().concat().as_slice().into_t());
-                assert_eq_api!([[1, 2], [3, 4]] => |arr| arr.into_t().join(&0).as_slice().into_t());
-            }
-        );
-    }
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.into_iter().for_each(|item| *item += 1));
 
-    #[test]
-    fn no_std_u8_api_compatibility() {
-        for_in!(
-            for arr in [*b"abc", *b"aBc", *b"ABC", *b"abd", *b"\x80\x81"] {
-                assert_eq_api!(arr => |&arr| arr.into_t().is_ascii());
-                assert_eq_api!(arr => |&arr| arr.into_t().eq_ignore_ascii_case(b"aBc".into_t()));
-                assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t().make_ascii_uppercase());
-                assert_eq_api!(arr => |&mut arr| arr.as_mut().into_t().make_ascii_lowercase());
-            }
-        );
-    }
-
-    #[cfg(feature = "alloc")]
-    #[test]
-    fn std_u8_api_compatibility() {
-        for_in!(
-            for arr in [*b"abc", *b"aBc", *b"ABC", *b"abd", *b"\x80\x81"] {
-                assert_eq_api!(arr => |&arr| arr.into_t().to_ascii_uppercase().into_t());
-                assert_eq_api!(arr => |&arr| arr.into_t().to_ascii_lowercase().into_t());
-            }
-        );
-    }
-
-    #[expect(clippy::allow_attributes, reason = "okay in tests")]
-    #[test]
-    fn no_std_trait_api_compatibility() {
-        use core::slice::IterMut;
-        for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {
-            assert_eq_api!(arr => |&arr| AsRef::<UsizeSlice>::as_ref(arr.as_ref().into_t()).into_t());
-            assert_eq_api!(arr => |&mut arr| AsMut::<UsizeSlice>::as_mut(arr.as_mut().into_t()).into_t());
-            for index in 0..arr.len() {
-                assert_eq_api!(arr => |&arr| &arr.as_ref().into_t()[index.into_t()]);
-                assert_eq_api!(arr => |&mut arr| &mut arr.as_mut().into_t()[index.into_t()]);
-            }
-            for start in 0..arr.len() {
-                for end in start..arr.len() {
-                    assert_eq_api!(arr => |&arr| &arr.as_ref().into_t()
-                            [start.into_t()..end.into_t()].into_t());
-                    assert_eq_api!(arr => |&mut arr| &mut arr.as_mut().into_t()
-                            [start.into_t()..end.into_t()].into_t());
+            restore(&mut mv);
+            for i in 0..v.len() {
+                for j in 0..v.len() {
+                    assert_eq_api!(mv, v => v.swap(i.into_tic(), j.into_tic()));
                 }
             }
-            if !arr.is_empty() {
-                for start in 0..arr.len() - 1 {
-                    for end in start..arr.len() - 1 {
-                        assert_eq_api!(arr => |&arr| &arr.as_ref()
-                            .into_t()[start.into_t()..=end.into_t()].into_t());
-                        assert_eq_api!(arr => |&mut arr| &mut arr.as_mut()
-                            .into_t()[start.into_t()..=end.into_t()].into_t());
+
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.reverse());
+
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.sort_unstable());
+
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.sort_unstable_by(|a, b| b.cmp(a)));
+
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.sort_unstable_by_key(|a| a * (a % 3)));
+
+            for i in 0..v.len() {
+                restore(&mut mv);
+                assert_eq_api!(mv, v => v.select_nth_unstable(i.into_tic()).into_std());
+            }
+
+            for i in 0..v.len() {
+                restore(&mut mv);
+                assert_eq_api!(mv, v => v.select_nth_unstable_by(
+                    i.into_tic(), |a, b| b.cmp(a)
+                ).into_std());
+            }
+
+            for i in 0..v.len() {
+                restore(&mut mv);
+                assert_eq_api!(mv, v => v.select_nth_unstable_by_key(
+                    i.into_tic(), |a| a * (a % 3)
+                ).into_std());
+            }
+
+            for a in 0..v.len() {
+                restore(&mut mv);
+                assert_eq_api!(mv, v => v.rotate_left(a.into_tic()));
+                restore(&mut mv);
+                assert_eq_api!(mv, v => v.rotate_right(a.into_tic()));
+            }
+
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.fill(123));
+
+            restore(&mut mv);
+            assert_eq_api!(mv, v => { let mut a = 1; v.fill_with(|| { a *= 2; a }) });
+
+            for a in 0..v.len() {
+                for b in a..v.len() {
+                    for c in 0..v.len() - (b - a) {
+                        restore(&mut mv);
+                        assert_eq_api!(mv, v => v.copy_within((a..b).into_tic(), c.into_tic()));
                     }
                 }
             }
-            for start in 0..arr.len() {
-                assert_eq_api!(arr => |&arr| arr.as_ref()
-                    .into_t()[start.into_t()..].into_t());
-                assert_eq_api!(arr => |&mut arr| arr.as_mut()
-                    .into_t()[start.into_t()..].into_t());
+
+            restore(&mut mv);
+            //let w: Vec<_> = v.into_iter().map(|v| v ^ 0b1010_1010).collect();
+            let mut w = [0; 8];
+            w[0..v.len()].copy_from_slice(v);
+            for w in &mut w {
+                *w ^= 0b1010_1010;
             }
-            for end in 0..arr.len() {
-                assert_eq_api!(arr => |&arr| arr.as_ref()
-                    .into_t()[..end.into_t()].into_t());
-                assert_eq_api!(arr => |&mut arr| arr.as_mut()
-                    .into_t()[..end.into_t()].into_t());
+
+            let mut mw = (w, w);
+            let mut mw = (
+                &mut mw.0[0..v.len()],
+                TiSlice::from_mut(&mut mw.1[0..v.len()]),
+            );
+            mv.0.swap_with_slice(mw.0);
+            mv.1.swap_with_slice(mw.1);
+            assert_eq_api!(mv, v => (*v).into_std());
+            assert_eq_api!(mw, w => (*w).into_std());
+        }
+
+        let vs = [&[0; 0][..], &[1], &[1, 2], &[1, 2, 4], &[1, 2, 3, 5]];
+        for v in vs {
+            let mut mv = (v.to_vec(), v.to_vec());
+            let mut mv = (mv.0.as_mut_slice(), TiSlice::from_mut(mv.1.as_mut_slice()));
+
+            for w in vs {
+                let l = v.len().min(w.len());
+                assert_eq_api!(
+                    mv,
+                    v => v[..l.into_tic()].copy_from_slice(w[..l].into_tic())
+                );
             }
-            if !arr.is_empty() {
-                for end in 0..arr.len() - 1 {
-                    assert_eq_api!(arr => |&arr| arr.as_ref()
-                        .into_t()[..=end.into_t()].into_t());
-                    assert_eq_api!(arr => |&mut arr| arr.as_mut()
-                        .into_t()[..=end.into_t()].into_t());
-                }
+        }
+
+        let vs = [
+            &[NonCopy(0); 0][..],
+            &[NonCopy(1)],
+            &[NonCopy(1), NonCopy(2)],
+            &[NonCopy(1), NonCopy(2), NonCopy(4)],
+            &[NonCopy(1), NonCopy(2), NonCopy(3), NonCopy(5)],
+        ];
+        for v in vs {
+            let mut mv = (v.to_vec(), v.to_vec());
+            let mut mv = (mv.0.as_mut_slice(), TiSlice::from_mut(mv.1.as_mut_slice()));
+
+            for w in vs {
+                let l = v.len().min(w.len());
+                assert_eq_api!(
+                    mv,
+                    v => v[..l.into_tic()].clone_from_slice(w[..l].into_tic())
+                );
             }
-            assert_eq_api!(arr => |&arr| {
-                #[allow(clippy::into_iter_on_ref, reason = "okay in tests")]
-                let mut iter = arr.as_ref().into_t().into_iter();
-                array_32_from(|| iter.next())
+        }
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_slice_hash_compatibility() {
+        for v in [
+            &[0_u32; 0][..],
+            &[1],
+            &[1, 1234],
+            &[1, 2, 4],
+            &[1, 5, 3, 2],
+            &[1, 1, 9, 2, 4, 1, 12345, 12],
+        ] {
+            let mut cv = (v, TiSlice::<Id, _>::from_ref(v));
+            assert_eq_api!(cv, v => {
+                let mut hasher = DefaultHasher::new();
+                v.hash(&mut hasher);
+                hasher.finish()
             });
-            assert_eq_api!(arr => |&mut arr| {
-                #[allow(clippy::into_iter_on_ref, reason = "okay in tests")]
-                let mut iter: IterMut<'_, _> = arr.as_mut().into_t().into_iter();
-                array_32_from(|| iter.next())
-            });
-        });
-        for_in!(for lhs in [[0; 0], [1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {
-            for_in!(for rhs in [[0; 0], [1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {
-                let arrays = (lhs, rhs);
-                assert_eq_api!(arrays => |arrays| arrays.0.as_ref().into_t() == arrays.1.as_ref().into_t());
-            });
-        });
-        let default_slice_ref: &[usize] = Default::default();
-        let default_ti_slice_ref: &TiSlice<Id, usize> = Default::default();
-        assert_eq!(default_slice_ref, &default_ti_slice_ref.raw);
-        let default_slice_mut: &mut [usize] = Default::default();
-        let default_ti_slice_mut: &mut TiSlice<Id, usize> = Default::default();
-        assert_eq!(default_slice_mut, &mut default_ti_slice_mut.raw);
+        }
     }
 
     #[cfg(feature = "alloc")]
     #[test]
-    fn alloc_trait_api_compatibility() {
-        use alloc::borrow::ToOwned;
-        for_in!(for arr in [[0; 0], [1], [1, 2], [1, 2, 4], [1, 2, 4, 8]] {
-            assert_eq_api!(arr => |arr| arr.as_ref().into_t().to_owned().as_slice().into_t());
-        });
+    fn test_slice_read_alloc_api_compatibility() {
+        for v in [
+            &[0_u32; 0][..],
+            &[1],
+            &[1, 1234],
+            &[1, 2, 4],
+            &[1, 5, 3, 2],
+            &[1, 1, 9, 2, 4, 1, 12345, 12],
+        ] {
+            let mut cv = (v, TiSlice::from_ref(v));
+
+            assert_eq_api!(cv, v => Cow::from(v).into_std());
+            assert_eq_api!(cv, v => matches!(Cow::from(v), Cow::Borrowed(_)));
+            assert_eq_api!(cv, v => Cow::from(v).into_owned().into_std());
+            assert_eq_api!(cv, v => v.to_vec().into_std());
+            assert_eq_api!(cv, v => v.to_vec().into_boxed_slice().into_std());
+            assert_eq_api!(cv, v => v.to_vec().into_boxed_slice().into_vec().into_std());
+            assert_eq_api!(cv, v => v.to_owned().into_std());
+            assert_eq_api!(cv, v => v.repeat(5).into_std());
+        }
+
+        for v in [
+            &[&[1, 2][..], &[3, 4]][..],
+            &[&[1, 2], &[]],
+            &[&[], &[3, 4]],
+        ] {
+            let mut cv = (v, TiSlice::from_ref(v));
+
+            assert_eq_api!(cv, v => v.concat().into_std());
+            assert_eq_api!(cv, v => v.join(&0).into_std());
+            assert_eq_api!(cv, v => v.join(&[1, 2, 3][..]).into_std());
+        }
     }
 
-    #[expect(clippy::unwrap_used, reason = "okay in tests")]
+    #[cfg(feature = "alloc")]
+    #[expect(clippy::stable_sort_primitive, reason = "okay in tests")]
     #[test]
-    fn use_non_zero_indecies() {
+    fn test_slice_write_alloc_api_compatibility() {
+        for v in [
+            &[0_u32; 0][..],
+            &[1],
+            &[1, 1234],
+            &[1, 2, 4],
+            &[1, 5, 3, 2],
+            &[1, 1, 9, 2, 4, 1, 12345, 12],
+        ] {
+            let mut mv = (v.to_vec(), v.to_vec());
+            let mut mv = (mv.0.as_mut_slice(), TiSlice::from_mut(mv.1.as_mut_slice()));
+
+            let re = |mv: &mut (&mut [u32], &mut TiSlice<Id, u32>)| {
+                mv.0.copy_from_slice(v);
+                mv.1.raw.copy_from_slice(v);
+            };
+
+            re(&mut mv);
+            assert_eq_api!(mv, v => v.sort());
+            re(&mut mv);
+            assert_eq_api!(mv, v => v.sort_by(|a, b| b.cmp(a)));
+            re(&mut mv);
+            assert_eq_api!(mv, v => v.sort_by_key(|a| a * (a % 3)));
+            re(&mut mv);
+            assert_eq_api!(mv, v => v.sort_by_cached_key(|a| a * (a % 3)));
+        }
+    }
+
+    #[test]
+    fn test_u8_slice_read_core_api_compatibility() {
+        for v in [&b"abc"[..], b"aBc", b"ABC", b"abd", b"a\x80\x81b"] {
+            let mut cv = (v, TiSlice::from_ref(v));
+            assert_eq_api!(cv, v => v.is_ascii());
+            assert_eq_api!(cv, v => v.trim_ascii_start().into_std());
+            assert_eq_api!(cv, v => v.trim_ascii_end().into_std());
+            assert_eq_api!(cv, v => v.trim_ascii().into_std());
+            assert_eq_api!(cv, v => v.eq_ignore_ascii_case(b"aBc".into_tic()));
+            assert_eq_api!(cv, v => v.escape_ascii().collect_to_vec());
+            assert_eq_api!(cv, v => v.utf8_chunks().collect_to_vec());
+        }
+    }
+
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn test_str_slice_read_alloc_api_compatibility() {
+        let v = &["abc", "aBc", "ABC", "abd"][..];
+        let mut cv = (v, TiSlice::<Id, _>::from_ref(v));
+        assert_eq_api!(cv, v => v.concat());
+        assert_eq_api!(cv, v => v.join("foo"));
+    }
+
+    #[test]
+    fn test_u8_slice_write_core_api_compatibility() {
+        for v in [&b"abc"[..], b"aBc", b"ABC", b"abd", b"\x80\x81"] {
+            let mut mv = (v.to_vec(), v.to_vec());
+            let mut mv = (mv.0.as_mut_slice(), TiSlice::from_mut(mv.1.as_mut_slice()));
+            assert_eq_api!(mv, v => v.make_ascii_uppercase());
+            assert_eq_api!(mv, v => (*v).into_std());
+            assert_eq_api!(mv, v => v.make_ascii_lowercase());
+            assert_eq_api!(mv, v => (*v).into_std());
+        }
+    }
+
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn test_u8_slice_read_alloc_api_compatibility() {
+        for v in [&b"abc"[..], b"aBc", b"ABC", b"abd", b"\x80\x81"] {
+            let mut cv = (v, TiSlice::from_ref(v));
+            assert_eq_api!(cv, v => v.to_ascii_uppercase().into_std());
+            assert_eq_api!(cv, v => v.to_ascii_lowercase().into_std());
+        }
+    }
+
+    #[test]
+    fn test_slice_non_zero_indexes() {
         use core::mem::size_of;
         use core::num::NonZeroUsize;
 
         #[derive(Clone, Copy, Debug, Eq, PartialEq)]
         struct Id(NonZeroUsize);
 
-        #[expect(
-            clippy::unwrap_used,
-            clippy::fallible_impl_from,
-            reason = "okay in tests"
-        )]
         impl From<usize> for Id {
             fn from(value: usize) -> Self {
                 Self(NonZeroUsize::new(value + 1).unwrap())
-            }
-        }
-
-        impl From<Id> for usize {
-            fn from(value: Id) -> Self {
-                value.0.get() - 1
             }
         }
 
@@ -2645,5 +2759,217 @@ mod test {
             slice.first_key_value(),
             Some((Id(NonZeroUsize::new(1).unwrap()), &1))
         );
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_slice_read() {
+        let arr = core::array::from_fn::<_, 128, _>(|i| {
+            let i = u8::try_from(i).unwrap();
+            i % 2 + i % 3 + i % 5 + i % 7 + i % 11 + i % 13 + i % 17 + i % 19
+        });
+        for v in [
+            &[0_u8; 0][..],
+            &[1],
+            &[1, 123],
+            &[1, 2, 4, 3, 9, 27, 4, 16, 255],
+            &[123; 31],
+            b"abc",
+            &arr,
+        ] {
+            let ov = (v, TiSlice::<Id, _>::from_ref(v));
+
+            for n in [0, 1, 2, 3, 4, 16, 256] {
+                let mut cv = ov;
+                assert_eq_api!(cv, v => {
+                    let mut buf = [0; 256];
+                    let slice = &mut buf[0..n];
+                    (v.read(slice).unwrap(), slice.len(), buf)
+                });
+            }
+
+            for n in [0, 1, 2, 3, 4, 16, 256] {
+                for m in [0, 1, 2, 3, 4, 16, 256] {
+                    let mut cv = ov;
+                    assert_eq_api!(cv, v => {
+                        let mut buf1 = [0; 256];
+                        let mut buf2 = [0; 256];
+                        let ios1 = IoSliceMut::new(&mut buf1[0..n]);
+                        let ios2 = IoSliceMut::new(&mut buf2[0..m]);
+                        let ios3 = &mut [ios1, ios2];
+                        (
+                            v.read_vectored(ios3).unwrap(),
+                            ios3.len(),
+                            ios3[0].len(),
+                            ios3[1].len(),
+                            buf1,
+                            buf2,
+                        )
+                    });
+                }
+            }
+
+            for n in [0, 1, 2, 3, 4, 16, 256] {
+                let mut cv = ov;
+                assert_eq_api!(cv, v => {
+                    let mut buf = [0; 256];
+                    let slice = &mut buf[0..n];
+                    match v.read_exact(slice) {
+                        Ok(len) => Ok((len, slice.len(), buf)),
+                        Err(err) => Err(err.to_string()),
+                    }
+                });
+            }
+
+            let mut cv = ov;
+            assert_eq_api!(cv, v => {
+                let mut buf = Vec::new();
+                (v.read_to_end(&mut buf).unwrap(), buf)
+            });
+
+            let mut cv = ov;
+            assert_eq_api!(cv, v => {
+                let mut buf = String::new();
+                match v.read_to_string(&mut buf) {
+                    Ok(len) => Ok((len, buf)),
+                    Err(err) => Err(err.to_string()),
+                }
+            });
+        }
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_slice_buf_read() {
+        let arr = core::array::from_fn::<_, 128, _>(|i| {
+            let i = u8::try_from(i).unwrap();
+            i % 2 + i % 3 + i % 5 + i % 7 + i % 11 + i % 13 + i % 17 + i % 19
+        });
+        for v in [
+            &[0_u8; 0][..],
+            &[1],
+            &[1, 123],
+            &[1, 2, 4, 3, 9, 27, 4, 16, 255],
+            &[123; 31],
+            &arr,
+        ] {
+            let ov = (v, TiSlice::<Id, _>::from_ref(v));
+
+            let mut cv = ov;
+            assert_eq_api!(cv, v => v.fill_buf().unwrap());
+
+            for n in [0, 1, 2, 3, 4, 16, 256] {
+                if n <= v.len() {
+                    let mut cv = ov;
+                    assert_eq_api!(cv, v => {
+                        v.consume(n);
+                        v.fill_buf().unwrap()
+                    });
+                }
+            }
+        }
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_slice_write() {
+        let ov = (&mut [0; 16][..], &mut [0; 16]);
+        let ov = (ov.0, TiSlice::<Id, u8>::from_mut(ov.1));
+        let mut mv = (&mut *ov.0, &mut *ov.1);
+        let mut mv = (&mut mv.0, &mut mv.1);
+
+        assert_eq_api!(mv, v => v.write(&[1, 2, 3]).unwrap());
+        assert_eq_api!(mv, v => v.write(&[]).unwrap());
+        assert_eq_api!(mv, v => v.write(&[2, 3]).unwrap());
+        assert_eq_api!(mv, v => v.write_vectored(
+            &[IoSlice::new(&[3, 4, 5]), IoSlice::new(&[]), IoSlice::new(&[5, 6])]
+        ).unwrap());
+        assert_eq_api!(mv, v => v.write_all(&[7, 8, 9]).unwrap());
+        assert_eq_api!(mv, v => v.flush().unwrap());
+
+        assert_eq!(*mv.0, &[0, 0, 0]);
+        assert_eq!(&mv.1.raw, &[0, 0, 0]);
+        assert_eq!(&ov.0, &[1, 2, 3, 2, 3, 3, 4, 5, 5, 6, 7, 8, 9, 0, 0, 0]);
+        assert_eq!(&ov.1.raw, &[1, 2, 3, 2, 3, 3, 4, 5, 5, 6, 7, 8, 9, 0, 0, 0]);
+
+        let ov = (&mut [0; 4][..], &mut [0; 4]);
+        let ov = (ov.0, TiSlice::<Id, u8>::from_mut(ov.1));
+        let mut mv = (&mut *ov.0, &mut *ov.1);
+        let mut mv = (&mut mv.0, &mut mv.1);
+
+        assert_eq_api!(mv, v => v.write_all(&[2, 3, 4, 5, 6, 7]).map_err(|err| err.to_string()));
+
+        assert_eq!(*mv.0, &[0_u8; 0][..]);
+        assert_eq!(&mv.1.raw, &[0_u8; 0][..]);
+        assert_eq!(&ov.0, &[2, 3, 4, 5]);
+        assert_eq!(&ov.1.raw, &[2, 3, 4, 5]);
+    }
+
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn test_slice_debug() {
+        let s0: &TiSlice<Id, u32> = TiSlice::from_ref(&[]);
+        let s1: &TiSlice<Id, u32> = TiSlice::from_ref(&[12]);
+        let s2: &TiSlice<Id, u32> = TiSlice::from_ref(&[23, 34]);
+        assert_eq!(&alloc::format!("{s0:?}"), "{}");
+        assert_eq!(&alloc::format!("{s1:?}"), "{Id(0): 12}");
+        assert_eq!(&alloc::format!("{s2:?}"), "{Id(0): 23, Id(1): 34}");
+    }
+
+    #[cfg(all(feature = "alloc", feature = "serde"))]
+    #[test]
+    fn test_slice_serialize() {
+        let s0: &TiSlice<Id, u32> = TiSlice::from_ref(&[]);
+        let s1: &TiSlice<Id, u32> = TiSlice::from_ref(&[12]);
+        let s2: &TiSlice<Id, u32> = TiSlice::from_ref(&[23, 34]);
+        assert_eq!(&serde_json::to_string(&s0).unwrap(), "[]");
+        assert_eq!(&serde_json::to_string(&s1).unwrap(), "[12]");
+        assert_eq!(&serde_json::to_string(&s2).unwrap(), "[23,34]");
+    }
+
+    #[should_panic(expected = "where expr: v.bad_return()")]
+    #[test]
+    fn test_api_compatibility_return_check_failure() {
+        pub trait BadReturn {
+            fn bad_return(&self) -> u32;
+        }
+
+        impl<T> BadReturn for [T] {
+            fn bad_return(&self) -> u32 {
+                12
+            }
+        }
+
+        impl<K, V> BadReturn for TiSlice<K, V> {
+            fn bad_return(&self) -> u32 {
+                23
+            }
+        }
+
+        let v = &[1, 2, 3][..];
+        let mut cv = (v, TiSlice::<Id, _>::from_ref(v));
+        assert_eq_api!(cv, v => v.bad_return());
+    }
+
+    #[should_panic(expected = "where expr: v.bad_modify()")]
+    #[test]
+    fn test_api_compatibility_modify_check_failure() {
+        pub trait BadModify {
+            fn bad_modify(&mut self);
+        }
+
+        impl<T> BadModify for [T] {
+            fn bad_modify(&mut self) {}
+        }
+
+        impl<K, V> BadModify for TiSlice<K, V> {
+            fn bad_modify(&mut self) {
+                self.reverse();
+            }
+        }
+
+        let v = (&mut [1, 2, 3][..], &mut [1, 2, 3][..]);
+        let mut mv = (v.0, TiSlice::<Id, _>::from_mut(v.1));
+        assert_eq_api!(mv, v => v.bad_modify());
     }
 }

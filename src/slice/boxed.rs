@@ -84,3 +84,62 @@ impl<'de, K, V: Deserialize<'de>> Deserialize<'de> for Box<TiSlice<K, V>> {
         Box::<[V]>::deserialize(deserializer).map(Into::into)
     }
 }
+
+#[expect(dead_code, unused_imports, unused_mut, reason = "okay in tests")]
+#[cfg(test)]
+mod test {
+    use core::borrow::{Borrow, BorrowMut};
+    use core::hash::{Hash, Hasher};
+    use core::ops::Bound;
+
+    use alloc::borrow::{Cow, ToOwned};
+    use alloc::boxed::Box;
+    use alloc::ffi::CString;
+    use alloc::string::ToString;
+    use alloc::vec::Vec;
+
+    #[cfg(feature = "std")]
+    use std::hash::DefaultHasher;
+    #[cfg(feature = "std")]
+    use std::io::{IoSlice, Write};
+
+    use crate::test_util::{AsSliceAndCapacity, Id};
+    use crate::{TiSlice, TiVec};
+
+    #[test]
+    fn test_boxed_slice_api_compatibility() {
+        for v in [
+            &[0_u32; 0][..],
+            &[1],
+            &[1, 1234],
+            &[1, 2, 4],
+            &[1, 5, 3, 2],
+            &[1, 1, 9, 2, 4, 1, 12345, 12],
+        ] {
+            let mut cv = (v, TiSlice::from_ref(v));
+            assert_eq_api!(
+                cv, v => Box::<TheSlice<u32>>::from(v) == <Box<TheSlice<u32>>>::default()
+            );
+            assert_eq_api!(cv, v => Box::<TheSlice<_>>::from(v).into_std());
+            assert_eq_api!(cv, v => Box::<TheSlice<_>>::from(v).clone().into_std());
+            assert_eq_api!(
+                cv, v => IntoIterator::into_iter(Box::<TheSlice<u32>>::from(v)).collect::<Vec<_>>()
+            );
+            assert_eq_api!(cv, v => TheVec::from(Box::<TheSlice<_>>::from(v)).into_std());
+            assert_eq_api!(cv, v => Box::<TheSlice<_>>::from(TheVec::from(v)).into_std());
+            assert_eq_api!(cv, v => v.iter().copied().collect::<Box<TheSlice<_>>>().into_std());
+        }
+    }
+
+    #[expect(clippy::unwrap_used, reason = "okay in tests")]
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_boxed_slice_deserialize() {
+        let s0: Box<TiSlice<Id, u32>> = serde_json::from_str("[]").unwrap();
+        let s1: Box<TiSlice<Id, u32>> = serde_json::from_str("[12]").unwrap();
+        let s2: Box<TiSlice<Id, u32>> = serde_json::from_str("[23, 34]").unwrap();
+        assert_eq!(s0.as_ref().raw, [0; 0][..]);
+        assert_eq!(s1.as_ref().raw, [12][..]);
+        assert_eq!(s2.as_ref().raw, [23, 34][..]);
+    }
+}

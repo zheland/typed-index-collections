@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.1] - 2024-09-26
+### Added
+- `Cow<'_, TiSlice>` implementation for `TiSlice`.
+- `Read` and `Write` implementations for `TiSlice`.
+- Support for `(Bound<K>, Bound<K>)` index and range.
+
+### Changed
+- Updated and improved tests.
+- Test coverage increased up to 99%.
+
 ## [3.2.0] - 2024-09-23
 ### Added
 - `ti_vec!` macro similar to `vec!` macro.
@@ -127,7 +137,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `TiSlice` API compatibility tests.
 - Crate API documentation with examples.
 
-[Unreleased]: https://github.com/zheland/typed-index-collections/compare/v3.2.0...HEAD
+[Unreleased]: https://github.com/zheland/typed-index-collections/compare/v3.2.1...HEAD
+[3.2.1]: https://github.com/zheland/typed-index-collections/compare/v3.2.0...v3.2.1
 [3.2.0]: https://github.com/zheland/typed-index-collections/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/zheland/typed-index-collections/compare/v3.0.3...v3.1.0
 [3.0.3]: https://github.com/zheland/typed-index-collections/compare/v3.0.2...v3.0.3

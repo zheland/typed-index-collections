@@ -1,6 +1,6 @@
 [package]
 name = "typed-index-collections"
-version = "3.2.0"
+version = "3.2.1"
 authors = ["Andrey Zheleznov <zheland.net@gmail.com>"]
 edition = "2021"
 rust-version = "1.81.0"

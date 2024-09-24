@@ -130,11 +130,13 @@
 //!
 //! # Feature Flags
 //!
-//! - `alloc` (implied by `std`, enabled by default): Enables [`TiVec`] type, [`ti_vec!`] macro,
+//! - `alloc` (implied by `std`, enabled by default): Enables the Rust `alloc` library,
+//!   enables [`TiVec`] type, [`ti_vec!`] macro,
 //!   trait implementations for [`Box`]`<`[`TiSlice`]`>`,
 //!   and some [`TiSlice`] methods that require memory allocation.
-//! - `std` (enabled by default): Enables `alloc` feature
-//!   and implements [`std::io::Write`] for [`TiVec`].
+//! - `std` (enabled by default): Enables `alloc` feature, the Rust `std` library,
+//!   implements [`std::io::Write`] for [`TiVec`]
+//!   and implements [`std::io::Read`] and [`std::io::Write`] for [`TiSlice`],
 //! - `serde`: Implements [`Serialize`] trait for [`TiSlice`] and [`TiVec`] containers.
 //! - `serde-alloc`: Enables `alloc` and `serde/alloc` features and
 //!   implements [`Deserialize`] trait for [`Box`]`<`[`TiSlice`]`>` and [`TiVec`].
@@ -185,6 +187,7 @@
 //! [`Rc`]: https://doc.rust-lang.org/std/rc/struct.Rc.html
 //! [`Weak`]: https://doc.rust-lang.org/std/rc/struct.Weak.html
 //! [`std::vec::Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
+//! [`std::io::Read`]: https://doc.rust-lang.org/std/io/trait.Read.html
 //! [`std::io::Write`]: https://doc.rust-lang.org/std/io/trait.Write.html
 //! [`From`]: https://doc.rust-lang.org/std/convert/trait.From.html
 //! [`Into`]: https://doc.rust-lang.org/std/convert/trait.Into.html

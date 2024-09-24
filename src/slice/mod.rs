@@ -22,6 +22,9 @@ use core::slice::{
 use core::str::Utf8Chunks;
 
 #[cfg(feature = "alloc")]
+use alloc::borrow::Cow;
+
+#[cfg(feature = "alloc")]
 use alloc::{borrow::ToOwned, boxed::Box};
 
 #[cfg(feature = "serde")]
@@ -1878,6 +1881,14 @@ impl<K, V> AsMut<TiSlice<K, V>> for [V] {
     #[inline]
     fn as_mut(&mut self) -> &mut TiSlice<K, V> {
         TiSlice::from_mut(self)
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<'a, K, V: Clone> From<&'a TiSlice<K, V>> for Cow<'a, TiSlice<K, V>> {
+    #[inline]
+    fn from(value: &'a TiSlice<K, V>) -> Self {
+        Cow::Borrowed(value)
     }
 }
 

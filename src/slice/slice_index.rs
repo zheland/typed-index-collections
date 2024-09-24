@@ -13,6 +13,7 @@ mod private {
     impl<K> Sealed<K> for ops::RangeFrom<K> {}
     impl<K> Sealed<K> for ops::RangeInclusive<K> {}
     impl<K> Sealed<K> for ops::RangeToInclusive<K> {}
+    impl<K> Sealed<K> for (ops::Bound<K>, ops::Bound<K>) {}
 }
 
 /// A helper trait used for indexing operations.
@@ -156,3 +157,4 @@ impl_ti_slice_range!(ops::RangeFrom<K>);
 impl_ti_slice_range!(ops::RangeInclusive<K>);
 impl_ti_slice_range!(ops::RangeTo<K>);
 impl_ti_slice_range!(ops::RangeToInclusive<K>);
+impl_ti_slice_range!((ops::Bound<K>, ops::Bound<K>));

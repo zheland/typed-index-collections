@@ -80,3 +80,26 @@ where
         ..=self.end.into()
     }
 }
+
+impl<K> TiRangeBounds<K> for (ops::Bound<K>, ops::Bound<K>)
+where
+    usize: From<K>,
+{
+    type Range = (ops::Bound<usize>, ops::Bound<usize>);
+    #[inline]
+    fn into_range(self) -> Self::Range {
+        (map_bound(self.0), map_bound(self.1))
+    }
+}
+
+#[inline]
+fn map_bound<K>(bound: ops::Bound<K>) -> ops::Bound<usize>
+where
+    usize: From<K>,
+{
+    match bound {
+        ops::Bound::Included(index) => ops::Bound::Included(index.into()),
+        ops::Bound::Excluded(index) => ops::Bound::Excluded(index.into()),
+        ops::Bound::Unbounded => ops::Bound::Unbounded,
+    }
+}

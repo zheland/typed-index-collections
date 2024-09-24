@@ -1,0 +1,28 @@
+name: coverage
+
+on:
+  push:
+    branches:
+      - master
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  coverage:
+    name: Upload coverage to codecov.io
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup toolchain install nightly --profile minimal --component llvm-tools
+      - run: cargo install cargo-llvm-cov
+      - run: cargo +nightly llvm-cov --doctests --all-features --codecov --output-path codecov.json
+      - uses: codecov/codecov-action@v4
+        with:
+          file: codecov.json
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true

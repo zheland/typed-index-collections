@@ -1892,6 +1892,62 @@ impl<'a, K, V: Clone> From<&'a TiSlice<K, V>> for Cow<'a, TiSlice<K, V>> {
     }
 }
 
+impl<K, V> Eq for TiSlice<K, V> where V: Eq {}
+
+impl<K, A, B> PartialEq<TiSlice<K, B>> for TiSlice<K, A>
+where
+    A: PartialEq<B>,
+{
+    #[inline]
+    fn eq(&self, other: &TiSlice<K, B>) -> bool {
+        self.raw == other.raw
+    }
+}
+
+impl<K, V> Ord for TiSlice<K, V>
+where
+    V: Ord,
+{
+    #[inline]
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.raw.cmp(&other.raw)
+    }
+}
+
+impl<K, V> PartialOrd<Self> for TiSlice<K, V>
+where
+    V: PartialOrd<V>,
+{
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.raw.partial_cmp(&other.raw)
+    }
+}
+
+impl<K, V> Hash for TiSlice<K, V>
+where
+    V: Hash,
+{
+    #[inline]
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.raw.hash(state);
+    }
+}
+
+impl<K, V> Default for &TiSlice<K, V> {
+    #[inline]
+    fn default() -> Self {
+        TiSlice::from_ref(&[])
+    }
+}
+
+impl<K, V> Default for &mut TiSlice<K, V> {
+    #[inline]
+    fn default() -> Self {
+        TiSlice::from_mut(&mut [])
+    }
+}
+
 impl<I, K, V> Index<I> for TiSlice<K, V>
 where
     I: TiSliceIndex<K, V>,
@@ -1941,62 +1997,6 @@ impl<K, V: Clone> ToOwned for TiSlice<K, V> {
     #[inline]
     fn to_owned(&self) -> TiVec<K, V> {
         self.raw.to_owned().into()
-    }
-}
-
-impl<K, A, B> PartialEq<TiSlice<K, B>> for TiSlice<K, A>
-where
-    A: PartialEq<B>,
-{
-    #[inline]
-    fn eq(&self, other: &TiSlice<K, B>) -> bool {
-        self.raw == other.raw
-    }
-}
-
-impl<K, V> PartialOrd<Self> for TiSlice<K, V>
-where
-    V: PartialOrd<V>,
-{
-    #[inline]
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.raw.partial_cmp(&other.raw)
-    }
-}
-
-impl<K, V> Default for &TiSlice<K, V> {
-    #[inline]
-    fn default() -> Self {
-        TiSlice::from_ref(&[])
-    }
-}
-
-impl<K, V> Default for &mut TiSlice<K, V> {
-    #[inline]
-    fn default() -> Self {
-        TiSlice::from_mut(&mut [])
-    }
-}
-
-impl<K, V> Eq for TiSlice<K, V> where V: Eq {}
-
-impl<K, V> Hash for TiSlice<K, V>
-where
-    V: Hash,
-{
-    #[inline]
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.raw.hash(state);
-    }
-}
-
-impl<K, V> Ord for TiSlice<K, V>
-where
-    V: Ord,
-{
-    #[inline]
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.raw.cmp(&other.raw)
     }
 }
 

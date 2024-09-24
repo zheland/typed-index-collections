@@ -923,171 +923,6 @@ impl<K, V> DerefMut for TiVec<K, V> {
     }
 }
 
-impl<K, V> Extend<V> for TiVec<K, V> {
-    #[inline]
-    fn extend<I: IntoIterator<Item = V>>(&mut self, iter: I) {
-        self.raw.extend(iter);
-    }
-}
-
-impl<'a, K, V: 'a + Copy> Extend<&'a V> for TiVec<K, V> {
-    #[inline]
-    fn extend<I: IntoIterator<Item = &'a V>>(&mut self, iter: I) {
-        self.raw.extend(iter);
-    }
-}
-
-impl<K, V> FromIterator<V> for TiVec<K, V> {
-    #[inline]
-    fn from_iter<I: IntoIterator<Item = V>>(iter: I) -> Self {
-        Self {
-            raw: Vec::from_iter(iter),
-            _marker: PhantomData,
-        }
-    }
-}
-
-impl<K, A, B> PartialEq<TiVec<K, B>> for TiVec<K, A>
-where
-    A: PartialEq<B>,
-{
-    #[inline]
-    fn eq(&self, other: &TiVec<K, B>) -> bool {
-        self.raw == other.raw
-    }
-}
-
-impl<K, A, B> PartialEq<TiSlice<K, B>> for TiVec<K, A>
-where
-    A: PartialEq<B>,
-{
-    #[inline]
-    fn eq(&self, other: &TiSlice<K, B>) -> bool {
-        *self.raw == other.raw
-    }
-}
-
-impl<K, A, B> PartialEq<TiVec<K, B>> for TiSlice<K, A>
-where
-    A: PartialEq<B>,
-{
-    #[inline]
-    fn eq(&self, other: &TiVec<K, B>) -> bool {
-        self.raw == *other.raw
-    }
-}
-
-impl<'a, K, A, B> PartialEq<&'a TiSlice<K, B>> for TiVec<K, A>
-where
-    A: PartialEq<B>,
-{
-    #[inline]
-    fn eq(&self, other: &&'a TiSlice<K, B>) -> bool {
-        *self.raw == other.raw
-    }
-}
-
-impl<K, A, B> PartialEq<TiVec<K, B>> for &TiSlice<K, A>
-where
-    A: PartialEq<B>,
-{
-    #[inline]
-    fn eq(&self, other: &TiVec<K, B>) -> bool {
-        self.raw == *other.raw
-    }
-}
-
-impl<'a, K, A, B> PartialEq<&'a mut TiSlice<K, B>> for TiVec<K, A>
-where
-    A: PartialEq<B>,
-{
-    #[inline]
-    fn eq(&self, other: &&'a mut TiSlice<K, B>) -> bool {
-        *self.raw == other.raw
-    }
-}
-
-impl<K, A, B> PartialEq<TiVec<K, B>> for &mut TiSlice<K, A>
-where
-    A: PartialEq<B>,
-{
-    #[inline]
-    fn eq(&self, other: &TiVec<K, B>) -> bool {
-        self.raw == *other.raw
-    }
-}
-
-impl<K, V> PartialOrd<Self> for TiVec<K, V>
-where
-    V: PartialOrd<V>,
-{
-    #[inline]
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.raw.partial_cmp(&other.raw)
-    }
-}
-
-impl<K, V> Clone for TiVec<K, V>
-where
-    V: Clone,
-{
-    #[inline]
-    fn clone(&self) -> Self {
-        self.raw.clone().into()
-    }
-}
-
-impl<K, V> Default for TiVec<K, V> {
-    #[inline]
-    fn default() -> Self {
-        Vec::default().into()
-    }
-}
-
-impl<K, V> Eq for TiVec<K, V> where V: Eq {}
-
-impl<K, V> Hash for TiVec<K, V>
-where
-    V: Hash,
-{
-    #[inline]
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.raw.hash(state);
-    }
-}
-
-impl<I, K, V> Index<I> for TiVec<K, V>
-where
-    I: TiSliceIndex<K, V>,
-{
-    type Output = I::Output;
-
-    #[inline]
-    fn index(&self, index: I) -> &Self::Output {
-        index.index(self)
-    }
-}
-
-impl<I, K, V> IndexMut<I> for TiVec<K, V>
-where
-    I: TiSliceIndex<K, V>,
-{
-    #[inline]
-    fn index_mut(&mut self, index: I) -> &mut Self::Output {
-        index.index_mut(self)
-    }
-}
-
-impl<K, V> Ord for TiVec<K, V>
-where
-    V: Ord,
-{
-    #[inline]
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.raw.cmp(&other.raw)
-    }
-}
-
 impl<K, V> From<Vec<V>> for TiVec<K, V> {
     #[inline]
     fn from(vec: Vec<V>) -> Self {
@@ -1159,10 +994,176 @@ impl<K> From<String> for TiVec<K, u8> {
     }
 }
 
+#[cfg(feature = "std")]
 impl<K> From<CString> for TiVec<K, u8> {
     #[inline]
     fn from(s: CString) -> Self {
         s.into_bytes().into()
+    }
+}
+
+impl<K, V> Clone for TiVec<K, V>
+where
+    V: Clone,
+{
+    #[inline]
+    fn clone(&self) -> Self {
+        self.raw.clone().into()
+    }
+}
+
+impl<K, V> Eq for TiVec<K, V> where V: Eq {}
+
+impl<K, A, B> PartialEq<TiVec<K, B>> for TiVec<K, A>
+where
+    A: PartialEq<B>,
+{
+    #[inline]
+    fn eq(&self, other: &TiVec<K, B>) -> bool {
+        self.raw == other.raw
+    }
+}
+
+impl<K, A, B> PartialEq<TiSlice<K, B>> for TiVec<K, A>
+where
+    A: PartialEq<B>,
+{
+    #[inline]
+    fn eq(&self, other: &TiSlice<K, B>) -> bool {
+        *self.raw == other.raw
+    }
+}
+
+impl<K, A, B> PartialEq<TiVec<K, B>> for TiSlice<K, A>
+where
+    A: PartialEq<B>,
+{
+    #[inline]
+    fn eq(&self, other: &TiVec<K, B>) -> bool {
+        self.raw == *other.raw
+    }
+}
+
+impl<'a, K, A, B> PartialEq<&'a TiSlice<K, B>> for TiVec<K, A>
+where
+    A: PartialEq<B>,
+{
+    #[inline]
+    fn eq(&self, other: &&'a TiSlice<K, B>) -> bool {
+        *self.raw == other.raw
+    }
+}
+
+impl<K, A, B> PartialEq<TiVec<K, B>> for &TiSlice<K, A>
+where
+    A: PartialEq<B>,
+{
+    #[inline]
+    fn eq(&self, other: &TiVec<K, B>) -> bool {
+        self.raw == *other.raw
+    }
+}
+
+impl<'a, K, A, B> PartialEq<&'a mut TiSlice<K, B>> for TiVec<K, A>
+where
+    A: PartialEq<B>,
+{
+    #[inline]
+    fn eq(&self, other: &&'a mut TiSlice<K, B>) -> bool {
+        *self.raw == other.raw
+    }
+}
+
+impl<K, A, B> PartialEq<TiVec<K, B>> for &mut TiSlice<K, A>
+where
+    A: PartialEq<B>,
+{
+    #[inline]
+    fn eq(&self, other: &TiVec<K, B>) -> bool {
+        self.raw == *other.raw
+    }
+}
+
+impl<K, V> Ord for TiVec<K, V>
+where
+    V: Ord,
+{
+    #[inline]
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.raw.cmp(&other.raw)
+    }
+}
+
+impl<K, V> PartialOrd<Self> for TiVec<K, V>
+where
+    V: PartialOrd<V>,
+{
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.raw.partial_cmp(&other.raw)
+    }
+}
+
+impl<K, V> Hash for TiVec<K, V>
+where
+    V: Hash,
+{
+    #[inline]
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.raw.hash(state);
+    }
+}
+
+impl<K, V> Default for TiVec<K, V> {
+    #[inline]
+    fn default() -> Self {
+        Vec::default().into()
+    }
+}
+
+impl<I, K, V> Index<I> for TiVec<K, V>
+where
+    I: TiSliceIndex<K, V>,
+{
+    type Output = I::Output;
+
+    #[inline]
+    fn index(&self, index: I) -> &Self::Output {
+        index.index(self)
+    }
+}
+
+impl<I, K, V> IndexMut<I> for TiVec<K, V>
+where
+    I: TiSliceIndex<K, V>,
+{
+    #[inline]
+    fn index_mut(&mut self, index: I) -> &mut Self::Output {
+        index.index_mut(self)
+    }
+}
+
+impl<K, V> Extend<V> for TiVec<K, V> {
+    #[inline]
+    fn extend<I: IntoIterator<Item = V>>(&mut self, iter: I) {
+        self.raw.extend(iter);
+    }
+}
+
+impl<'a, K, V: 'a + Copy> Extend<&'a V> for TiVec<K, V> {
+    #[inline]
+    fn extend<I: IntoIterator<Item = &'a V>>(&mut self, iter: I) {
+        self.raw.extend(iter);
+    }
+}
+
+impl<K, V> FromIterator<V> for TiVec<K, V> {
+    #[inline]
+    fn from_iter<I: IntoIterator<Item = V>>(iter: I) -> Self {
+        Self {
+            raw: Vec::from_iter(iter),
+            _marker: PhantomData,
+        }
     }
 }
 

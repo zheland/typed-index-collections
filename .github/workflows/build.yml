@@ -1,0 +1,99 @@
+name: build
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  cargo-fmt:
+    name: Check formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup toolchain install nightly --profile minimal --component rustfmt
+      - run: cargo +nightly fmt --all -- --check
+
+  cargo-clippy:
+    name: Run linter
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust-toolchain:
+          - stable
+          - beta
+          - nightly
+          - 1.81.0
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup toolchain install ${{ matrix.rust-toolchain }} --profile minimal --component clippy
+      - run: rustup default ${{ matrix.rust-toolchain }}
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --all-targets --no-default-features -- -D warnings
+      - run: cargo clippy --all-targets --no-default-features --features "alloc" -- -D warnings
+      - run: cargo clippy --all-targets --no-default-features --features "std" -- -D warnings
+      - run: cargo clippy --all-targets --no-default-features --features "serde" -- -D warnings
+      - run: cargo clippy --all-targets --no-default-features --features "serde-alloc" -- -D warnings
+      - run: cargo clippy --all-targets --no-default-features --features "std serde-alloc" -- -D warnings
+      - run: cargo clippy --all-targets --no-default-features --features "serde-std" -- -D warnings
+      - run: cargo clippy --all-targets --all-features -- -D warnings
+
+  cargo-test:
+    name: Test sources
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust-toolchain:
+          - stable
+          - beta
+          - nightly
+          - 1.81.0
+        cargo-flags:
+          - ""
+          - "--release"
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup toolchain install ${{ matrix.rust-toolchain }} --profile minimal
+      - run: rustup default ${{ matrix.rust-toolchain }}
+      - run: cargo test --all-targets ${{ matrix.cargo-flags }}
+      - run: cargo test --all-targets ${{ matrix.cargo-flags }} --no-default-features
+      - run: cargo test --all-targets ${{ matrix.cargo-flags }} --no-default-features --features "alloc"
+      - run: cargo test --all-targets ${{ matrix.cargo-flags }} --no-default-features --features "std"
+      - run: cargo test --all-targets ${{ matrix.cargo-flags }} --no-default-features --features "serde"
+      - run: cargo test --all-targets ${{ matrix.cargo-flags }} --no-default-features --features "serde-alloc"
+      - run: cargo test --all-targets ${{ matrix.cargo-flags }} --no-default-features --features "std serde-alloc"
+      - run: cargo test --all-targets ${{ matrix.cargo-flags }} --no-default-features --features "serde-std"
+      - run: cargo test --all-targets ${{ matrix.cargo-flags }} --all-features
+
+  cargo-test-no-alloc-and-no-std:
+    name: Test no-alloc and no-std compatibility
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./tests/no-alloc-and-no-std
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup toolchain install stable --profile minimal
+      - run: cargo build --features panic-handler
+      - run: cargo build --features alloc,panic-handler,global-allocator
+      - run: cargo build --features alloc,std,global-allocator
+      - run: if cargo build; then false; else true; fi
+      - run: if cargo build --features alloc,panic-handler; then false; else true; fi
+      - run: if cargo build --features alloc,std,panic-handler,global-allocator; then false; else true; fi
+
+  cargo-deny:
+    name: Check licenses/bans/advisories/sources
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup toolchain install stable --profile minimal
+      - run: cargo install cargo-deny
+      - run: cargo deny --workspace --all-features check

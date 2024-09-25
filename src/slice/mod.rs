@@ -1990,6 +1990,104 @@ impl<'a, K, V> IntoIterator for &'a mut TiSlice<K, V> {
     }
 }
 
+/// Read is implemented for `&TiSlice<K, u8>` by copying from the slice.
+///
+/// Note that reading updates the slice to point to the yet unread part.
+/// The slice will be empty when EOF is reached.
+#[cfg(feature = "std")]
+impl<K> Read for &TiSlice<K, u8> {
+    #[inline]
+    fn read(&mut self, buf: &mut [u8]) -> IoResult<usize> {
+        as_readable_byte_slice(self).read(buf)
+    }
+
+    #[inline]
+    fn read_vectored(&mut self, bufs: &mut [IoSliceMut<'_>]) -> IoResult<usize> {
+        as_readable_byte_slice(self).read_vectored(bufs)
+    }
+
+    #[inline]
+    fn read_exact(&mut self, buf: &mut [u8]) -> IoResult<()> {
+        as_readable_byte_slice(self).read_exact(buf)
+    }
+
+    #[inline]
+    fn read_to_end(&mut self, buf: &mut Vec<u8>) -> IoResult<usize> {
+        as_readable_byte_slice(self).read_to_end(buf)
+    }
+
+    #[inline]
+    fn read_to_string(&mut self, buf: &mut String) -> IoResult<usize> {
+        as_readable_byte_slice(self).read_to_string(buf)
+    }
+}
+
+#[cfg(feature = "std")]
+impl<K> BufRead for &TiSlice<K, u8> {
+    #[inline]
+    fn fill_buf(&mut self) -> IoResult<&[u8]> {
+        as_readable_byte_slice(self).fill_buf()
+    }
+
+    #[inline]
+    fn consume(&mut self, amt: usize) {
+        as_readable_byte_slice(self).consume(amt);
+    }
+}
+
+/// Write is implemented for `&mut TiSlice<K, u8>` by copying into the slice, overwriting
+/// its data.
+///
+/// Note that writing updates the slice to point to the yet unwritten part.
+/// The slice will be empty when it has been completely overwritten.
+///
+/// If the number of bytes to be written exceeds the size of the slice, write operations will
+/// return short writes: ultimately, `Ok(0)`; in this situation, `write_all` returns an error of
+/// kind `ErrorKind::WriteZero`.
+#[cfg(feature = "std")]
+impl<K> Write for &mut TiSlice<K, u8> {
+    #[inline]
+    fn write(&mut self, buf: &[u8]) -> IoResult<usize> {
+        as_writable_byte_slice(self).write(buf)
+    }
+
+    #[inline]
+    fn write_vectored(&mut self, bufs: &[IoSlice<'_>]) -> IoResult<usize> {
+        as_writable_byte_slice(self).write_vectored(bufs)
+    }
+
+    #[inline]
+    fn write_all(&mut self, buf: &[u8]) -> IoResult<()> {
+        as_writable_byte_slice(self).write_all(buf)
+    }
+
+    #[inline]
+    fn flush(&mut self) -> IoResult<()> {
+        as_writable_byte_slice(self).flush()
+    }
+}
+
+#[cfg(feature = "std")]
+#[inline]
+fn as_readable_byte_slice<'a, 'b, K>(value: &'a mut &'b TiSlice<K, u8>) -> &'a mut &'b [u8] {
+    let ptr: *mut &TiSlice<K, u8> = core::ptr::from_mut::<&TiSlice<K, u8>>(value);
+    let ptr: *mut &[u8] = ptr.cast();
+    // SAFETY: `TiSlice<K, V>` is `repr(transparent)` over a `[V]` type.
+    unsafe { &mut *ptr }
+}
+
+#[expect(clippy::mut_mut, reason = "can not avoid this cast")]
+#[cfg(feature = "std")]
+#[inline]
+fn as_writable_byte_slice<'a, 'b, K>(
+    value: &'a mut &'b mut TiSlice<K, u8>,
+) -> &'a mut &'b mut [u8] {
+    let ptr: *mut &mut TiSlice<K, u8> = core::ptr::from_mut::<&mut TiSlice<K, u8>>(value);
+    let ptr: *mut &mut [u8] = ptr.cast();
+    // SAFETY: `TiSlice<K, V>` is `repr(transparent)` over a `[V]` type.
+    unsafe { &mut *ptr }
+}
+
 #[cfg(feature = "alloc")]
 impl<K, V: Clone> ToOwned for TiSlice<K, V> {
     type Owned = TiVec<K, V>;

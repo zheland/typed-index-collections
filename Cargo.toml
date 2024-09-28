@@ -28,7 +28,7 @@ readme-sync = "0.2.1"
 default = ["alloc", "std"]
 alloc = []
 serde-alloc = ["alloc", "serde/alloc"]
-serde-std = ["std", "serde/std"]
+serde-std = ["std", "serde-alloc", "serde/std"]
 std = ["alloc"]
 
 [package.metadata.docs.rs]

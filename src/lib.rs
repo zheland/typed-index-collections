@@ -200,6 +200,7 @@
 //! [`Serialize`]: https://docs.serde.rs/serde/trait.Serialize.html
 //! [`Deserialize`]: https://docs.serde.rs/serde/trait.Deserialize.html
 
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![no_std]
 
 #[cfg(any(feature = "alloc", test))]
@@ -217,8 +218,10 @@ mod range;
 mod slice;
 
 #[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 mod macros;
 #[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 mod vec;
 
 pub use iter::{TiEnumerated, TiSliceKeys, TiSliceMutMap, TiSliceRefMap};
@@ -226,6 +229,7 @@ pub use range::TiRangeBounds;
 pub use slice::{TiSlice, TiSliceIndex};
 
 #[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub use vec::TiVec;
 
 #[cfg(test)]

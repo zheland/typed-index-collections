@@ -77,7 +77,8 @@ impl<K, V> FromIterator<V> for Box<TiSlice<K, V>> {
     }
 }
 
-#[cfg(any(feature = "serde-alloc", feature = "serde-std"))]
+#[cfg(feature = "serde-alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde-alloc")))]
 impl<'de, K, V: Deserialize<'de>> Deserialize<'de> for Box<TiSlice<K, V>> {
     #[inline]
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {

@@ -1686,6 +1686,7 @@ impl<K> TiSlice<K, u8> {
 }
 
 #[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<K, V> TiSlice<K, V> {
     /// Sorts the slice.
     ///
@@ -1807,6 +1808,7 @@ impl<K, V> TiSlice<K, V> {
 }
 
 #[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<K> TiSlice<K, u8> {
     /// Returns a vector containing a copy of this slice where each byte
     /// is mapped to its ASCII upper case equivalent.
@@ -1891,6 +1893,7 @@ impl<K, V> AsMut<TiSlice<K, V>> for [V] {
 }
 
 #[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a, K, V: Clone> From<&'a TiSlice<K, V>> for Cow<'a, TiSlice<K, V>> {
     #[inline]
     fn from(value: &'a TiSlice<K, V>) -> Self {
@@ -2001,6 +2004,7 @@ impl<'a, K, V> IntoIterator for &'a mut TiSlice<K, V> {
 /// Note that reading updates the slice to point to the yet unread part.
 /// The slice will be empty when EOF is reached.
 #[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl<K> Read for &TiSlice<K, u8> {
     #[inline]
     fn read(&mut self, buf: &mut [u8]) -> IoResult<usize> {
@@ -2029,6 +2033,7 @@ impl<K> Read for &TiSlice<K, u8> {
 }
 
 #[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl<K> BufRead for &TiSlice<K, u8> {
     #[inline]
     fn fill_buf(&mut self) -> IoResult<&[u8]> {
@@ -2051,6 +2056,7 @@ impl<K> BufRead for &TiSlice<K, u8> {
 /// return short writes: ultimately, `Ok(0)`; in this situation, `write_all` returns an error of
 /// kind `ErrorKind::WriteZero`.
 #[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl<K> Write for &mut TiSlice<K, u8> {
     #[inline]
     fn write(&mut self, buf: &[u8]) -> IoResult<usize> {
@@ -2095,6 +2101,7 @@ fn as_writable_byte_slice<'a, 'b, K>(
 }
 
 #[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<K, V: Clone> ToOwned for TiSlice<K, V> {
     type Owned = TiVec<K, V>;
 
@@ -2105,6 +2112,7 @@ impl<K, V: Clone> ToOwned for TiSlice<K, V> {
 }
 
 #[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 impl<K, V: Serialize> Serialize for TiSlice<K, V> {
     #[inline]
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {

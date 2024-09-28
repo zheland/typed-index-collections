@@ -995,6 +995,7 @@ impl<K> From<String> for TiVec<K, u8> {
 }
 
 #[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<K> From<CString> for TiVec<K, u8> {
     #[inline]
     fn from(s: CString) -> Self {
@@ -1200,6 +1201,7 @@ impl<'a, K, V> IntoIterator for &'a mut TiVec<K, V> {
 /// Write is implemented for `Vec<u8>` by appending to the vector.
 /// The vector will grow as needed.
 #[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl<K> Write for TiVec<K, u8> {
     #[inline]
     fn write(&mut self, buf: &[u8]) -> IoResult<usize> {
@@ -1223,6 +1225,7 @@ impl<K> Write for TiVec<K, u8> {
 }
 
 #[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 impl<K, V: Serialize> Serialize for TiVec<K, V> {
     #[inline]
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
@@ -1230,7 +1233,8 @@ impl<K, V: Serialize> Serialize for TiVec<K, V> {
     }
 }
 
-#[cfg(any(feature = "serde-alloc", feature = "serde-std"))]
+#[cfg(feature = "serde-alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde-alloc")))]
 impl<'de, K, V: Deserialize<'de>> Deserialize<'de> for TiVec<K, V> {
     #[inline]
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {

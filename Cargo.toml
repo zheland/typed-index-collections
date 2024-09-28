@@ -36,6 +36,7 @@ status = "passively-maintained"
 
 [package.metadata.docs.rs]
 all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [lints.rust]
 rust_2018_idioms.level = "warn"

@@ -31,6 +31,9 @@ serde-alloc = ["alloc", "serde/alloc"]
 serde-std = ["std", "serde-alloc", "serde/std"]
 std = ["alloc"]
 
+[badges.maintenance]
+status = "passively-maintained"
+
 [package.metadata.docs.rs]
 all-features = true
 

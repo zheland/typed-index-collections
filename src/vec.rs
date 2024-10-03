@@ -15,7 +15,7 @@ use core::{fmt, slice};
 #[cfg(feature = "std")]
 use std::io::{IoSlice, Result as IoResult, Write};
 
-#[cfg(any(feature = "serde-alloc", feature = "serde-std"))]
+#[cfg(all(feature = "alloc", feature = "serde"))]
 use serde::de::{Deserialize, Deserializer};
 #[cfg(feature = "serde")]
 use serde::ser::{Serialize, Serializer};
@@ -1235,8 +1235,8 @@ impl<K, V: Serialize> Serialize for TiVec<K, V> {
     }
 }
 
-#[cfg(feature = "serde-alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "serde-alloc")))]
+#[cfg(all(feature = "alloc", feature = "serde"))]
+#[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "serde"))))]
 impl<'de, K, V: Deserialize<'de>> Deserialize<'de> for TiVec<K, V> {
     #[inline]
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {

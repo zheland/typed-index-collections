@@ -3,7 +3,7 @@ use alloc::{boxed::Box, vec};
 use core::iter::FromIterator;
 use core::mem::transmute;
 
-#[cfg(any(feature = "serde-alloc", feature = "serde-std"))]
+#[cfg(all(feature = "alloc", feature = "serde"))]
 use serde::de::{Deserialize, Deserializer};
 
 use crate::{TiSlice, TiVec};
@@ -76,8 +76,8 @@ impl<K, V> FromIterator<V> for Box<TiSlice<K, V>> {
     }
 }
 
-#[cfg(feature = "serde-alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "serde-alloc")))]
+#[cfg(all(feature = "alloc", feature = "serde"))]
+#[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "serde"))))]
 impl<'de, K, V: Deserialize<'de>> Deserialize<'de> for Box<TiSlice<K, V>> {
     #[inline]
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {

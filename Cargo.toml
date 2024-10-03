@@ -12,6 +12,14 @@ license = "MIT OR Apache-2.0"
 categories = ["data-structures", "no-std"]
 keywords = ["collection", "index", "no_std", "slice", "vec"]
 
+[features]
+default = ["alloc", "std"]
+alloc = ["serde?/alloc"]
+std = ["alloc", "serde?/std"]
+serde = ["dep:serde"]
+serde-alloc = ["alloc", "dep:serde"] # Deprecated.
+serde-std = ["std", "dep:serde"] # Deprecated.
+
 [dependencies.serde]
 version = "1.0.210"
 default-features = false
@@ -23,13 +31,6 @@ derive_more.features = ["from", "into"]
 version-sync = "0.9.5"
 serde_json = "1.0.128"
 readme-sync = "0.2.1"
-
-[features]
-default = ["alloc", "std"]
-alloc = []
-serde-alloc = ["alloc", "serde/alloc"]
-serde-std = ["std", "serde-alloc", "serde/std"]
-std = ["alloc"]
 
 [badges.maintenance]
 status = "passively-maintained"

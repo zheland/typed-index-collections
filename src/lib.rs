@@ -141,11 +141,8 @@
 //!   library, implements [`std::io::Write`] for [`TiVec`] and implements
 //!   [`std::io::Read`] and [`std::io::Write`] for [`TiSlice`],
 //! - `serde`: Implements [`Serialize`] trait for [`TiSlice`] and [`TiVec`]
-//!   containers.
-//! - `serde-alloc`: Enables `alloc` and `serde/alloc` features and implements
-//!   [`Deserialize`] trait for [`Box`]`<`[`TiSlice`]`>` and [`TiVec`].
-//! - `serde-std`: Enables `std` and `serde/std` features and implements
-//!   [`Deserialize`] trait for [`Box`]`<`[`TiSlice`]`>` and [`TiVec`].
+//!   containers and [`Deserialize`] trait for [`Box`]`<`[`TiSlice`]`>` and
+//!   [`TiVec`].
 //!
 //! # Similar crates
 //!

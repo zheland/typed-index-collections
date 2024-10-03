@@ -30,7 +30,7 @@ derive_more.version = "1.0.0"
 derive_more.features = ["from", "into"]
 version-sync = "0.9.5"
 serde_json = "1.0.128"
-readme-sync = "0.2.1"
+readme-sync = "0.3.0"
 
 [badges.maintenance]
 status = "passively-maintained"

@@ -41,9 +41,9 @@ jobs:
       - run: cargo clippy --all-targets --no-default-features --features "alloc" -- -D warnings
       - run: cargo clippy --all-targets --no-default-features --features "std" -- -D warnings
       - run: cargo clippy --all-targets --no-default-features --features "serde" -- -D warnings
-      - run: cargo clippy --all-targets --no-default-features --features "serde-alloc" -- -D warnings
-      - run: cargo clippy --all-targets --no-default-features --features "std serde-alloc" -- -D warnings
-      - run: cargo clippy --all-targets --no-default-features --features "serde-std" -- -D warnings
+      - run: cargo clippy --all-targets --no-default-features --features "alloc serde" -- -D warnings
+      - run: cargo clippy --all-targets --no-default-features --features "alloc std serde" -- -D warnings
+      - run: cargo clippy --all-targets --no-default-features --features "std serde" -- -D warnings
       - run: cargo clippy --all-targets --all-features -- -D warnings
 
   cargo-test:
@@ -68,9 +68,9 @@ jobs:
       - run: cargo test --all-targets ${{ matrix.cargo-flags }} --no-default-features --features "alloc"
       - run: cargo test --all-targets ${{ matrix.cargo-flags }} --no-default-features --features "std"
       - run: cargo test --all-targets ${{ matrix.cargo-flags }} --no-default-features --features "serde"
-      - run: cargo test --all-targets ${{ matrix.cargo-flags }} --no-default-features --features "serde-alloc"
-      - run: cargo test --all-targets ${{ matrix.cargo-flags }} --no-default-features --features "std serde-alloc"
-      - run: cargo test --all-targets ${{ matrix.cargo-flags }} --no-default-features --features "serde-std"
+      - run: cargo test --all-targets ${{ matrix.cargo-flags }} --no-default-features --features "alloc serde"
+      - run: cargo test --all-targets ${{ matrix.cargo-flags }} --no-default-features --features "alloc std serde"
+      - run: cargo test --all-targets ${{ matrix.cargo-flags }} --no-default-features --features "std serde"
       - run: cargo test --all-targets ${{ matrix.cargo-flags }} --all-features
 
   cargo-test-no-alloc-and-no-std:

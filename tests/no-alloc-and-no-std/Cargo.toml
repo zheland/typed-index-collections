@@ -1,5 +1,5 @@
 [package]
-name = "no-std-test"
+name = "no-alloc-and-std-test"
 version = "0.1.0"
 authors = ["Andrey Zheleznov <zheland.net@gmail.com>"]
 edition = "2021"

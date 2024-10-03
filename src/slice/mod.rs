@@ -2570,7 +2570,6 @@ mod test {
             }
 
             restore(&mut mv);
-            // let w: Vec<_> = v.into_iter().map(|v| v ^ 0b1010_1010).collect();
             let mut w = [0; 8];
             w[0..v.len()].copy_from_slice(v);
             for w in &mut w {

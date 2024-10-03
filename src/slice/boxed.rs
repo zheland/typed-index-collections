@@ -1,8 +1,7 @@
-use core::iter::FromIterator;
-use core::mem::transmute;
-
 #[cfg(feature = "alloc")]
 use alloc::{boxed::Box, vec};
+use core::iter::FromIterator;
+use core::mem::transmute;
 
 #[cfg(any(feature = "serde-alloc", feature = "serde-std"))]
 use serde::de::{Deserialize, Deserializer};
@@ -89,16 +88,14 @@ impl<'de, K, V: Deserialize<'de>> Deserialize<'de> for Box<TiSlice<K, V>> {
 #[expect(dead_code, unused_imports, unused_mut, reason = "okay in tests")]
 #[cfg(test)]
 mod test {
-    use core::borrow::{Borrow, BorrowMut};
-    use core::hash::{Hash, Hasher};
-    use core::ops::Bound;
-
     use alloc::borrow::{Cow, ToOwned};
     use alloc::boxed::Box;
     use alloc::ffi::CString;
     use alloc::string::ToString;
     use alloc::vec::Vec;
-
+    use core::borrow::{Borrow, BorrowMut};
+    use core::hash::{Hash, Hasher};
+    use core::ops::Bound;
     #[cfg(feature = "std")]
     use std::hash::DefaultHasher;
     #[cfg(feature = "std")]

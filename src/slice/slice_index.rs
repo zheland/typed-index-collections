@@ -18,11 +18,12 @@ mod private {
 
 /// A helper trait used for indexing operations.
 ///
-/// This trait is implemented for `K`, [`Range<K>`], [`RangeTo<K>`], [`RangeFrom<K>`],
-/// [`RangeInclusive<K>`] and [`RangeToInclusive<K>`].
+/// This trait is implemented for `K`, [`Range<K>`], [`RangeTo<K>`],
+/// [`RangeFrom<K>`], [`RangeInclusive<K>`] and [`RangeToInclusive<K>`].
 /// The [`RangeFull<K>`] trait is not currently supported.
 ///
-/// Trait implementations are only forwards to standard Rust [`slice`] operations.
+/// Trait implementations are only forwards to standard Rust [`slice`]
+/// operations.
 ///
 /// [`slice`]: https://doc.rust-lang.org/std/primitive.slice.html
 /// [`Range<K>`]: https://doc.rust-lang.org/std/ops/struct.Range.html
@@ -48,8 +49,8 @@ pub trait TiSliceIndex<K, V>: private::Sealed<K> {
     ///
     /// # Safety
     ///
-    /// Calling this method with an out-of-bounds index is *[undefined behavior]*
-    /// even if the resulting reference is not used.
+    /// Calling this method with an out-of-bounds index is
+    /// *[undefined behavior]* even if the resulting reference is not used.
     ///
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
     unsafe fn get_unchecked(self, slice: &TiSlice<K, V>) -> &Self::Output;
@@ -59,8 +60,8 @@ pub trait TiSliceIndex<K, V>: private::Sealed<K> {
     ///
     /// # Safety
     ///
-    /// Calling this method with an out-of-bounds index is *[undefined behavior]*
-    /// even if the resulting reference is not used.
+    /// Calling this method with an out-of-bounds index is
+    /// *[undefined behavior]* even if the resulting reference is not used.
     ///
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
     unsafe fn get_unchecked_mut(self, slice: &mut TiSlice<K, V>) -> &mut Self::Output;

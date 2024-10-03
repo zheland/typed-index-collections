@@ -1,7 +1,8 @@
 use core::ops;
 
 /// A helper trait used to convert typed index ranges to `usize` ranges.
-/// The trait is implemented for Rust's built-in range types with `K where usize: `[`From<K>`] used as bound endpoints.
+/// The trait is implemented for Rust's built-in range types with
+/// `K where usize: `[`From<K>`] used as bound endpoints.
 ///
 /// See [`core::ops::RangeBounds`] for more details.
 ///

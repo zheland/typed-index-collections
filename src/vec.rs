@@ -1,28 +1,24 @@
-use core::borrow::{Borrow, BorrowMut};
-use core::cmp::Ordering;
-use core::fmt;
-use core::hash::{Hash, Hasher};
-use core::iter::FromIterator;
-use core::marker::PhantomData;
-use core::mem::MaybeUninit;
-use core::ops::{Deref, DerefMut, Index, IndexMut, RangeBounds};
-use core::slice;
-
-#[cfg(feature = "std")]
-use std::io::{IoSlice, Result as IoResult, Write};
-
 use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::collections::TryReserveError;
 use alloc::ffi::CString;
 use alloc::string::String;
 use alloc::vec::{self, Drain, Splice, Vec};
-
-#[cfg(feature = "serde")]
-use serde::ser::{Serialize, Serializer};
+use core::borrow::{Borrow, BorrowMut};
+use core::cmp::Ordering;
+use core::hash::{Hash, Hasher};
+use core::iter::FromIterator;
+use core::marker::PhantomData;
+use core::mem::MaybeUninit;
+use core::ops::{Deref, DerefMut, Index, IndexMut, RangeBounds};
+use core::{fmt, slice};
+#[cfg(feature = "std")]
+use std::io::{IoSlice, Result as IoResult, Write};
 
 #[cfg(any(feature = "serde-alloc", feature = "serde-std"))]
 use serde::de::{Deserialize, Deserializer};
+#[cfg(feature = "serde")]
+use serde::ser::{Serialize, Serializer};
 
 use crate::{TiEnumerated, TiRangeBounds, TiSlice, TiSliceIndex};
 
@@ -39,36 +35,37 @@ use crate::{TiEnumerated, TiRangeBounds, TiSlice, TiSliceIndex};
 /// Their implementation can be easily done
 /// with [`derive_more`] crate and `#[derive(From, Into)]`.
 ///
-/// `TiVec<K, V>` can be converted to [`std::vec::Vec<V>`][`std::vec::Vec`] and back
-/// using [`From`] and [`Into`].
+/// `TiVec<K, V>` can be converted to [`std::vec::Vec<V>`][`std::vec::Vec`] and
+/// back using [`From`] and [`Into`].
 ///
 /// There are also zero-cost conversions available between references:
 /// - [`&std::vec::Vec<V>`][`std::vec::Vec`] and `&TiVec<K, V>` with [`AsRef`],
-/// - [`&mut std::vec::Vec<V>`][`std::vec::Vec`] and `&mut TiVec<K, V>` with [`AsMut`],
+/// - [`&mut std::vec::Vec<V>`][`std::vec::Vec`] and `&mut TiVec<K, V>` with
+///   [`AsMut`],
 ///
 /// Added methods:
-/// - [`from_ref`] - Converts a [`&std::vec::Vec<V>`][`std::vec::Vec`]
-///   into a `&TiVec<K, V>`.
-/// - [`from_mut`] - Converts a [`&mut std::vec::Vec<V>`][`std::vec::Vec`]
-///   into a `&mut TiVec<K, V>`.
-/// - [`push_and_get_key`] - Appends an element to the back of a collection
-///   and returns its index of type `K`.
+/// - [`from_ref`] - Converts a [`&std::vec::Vec<V>`][`std::vec::Vec`] into a
+///   `&TiVec<K, V>`.
+/// - [`from_mut`] - Converts a [`&mut std::vec::Vec<V>`][`std::vec::Vec`] into
+///   a `&mut TiVec<K, V>`.
+/// - [`push_and_get_key`] - Appends an element to the back of a collection and
+///   returns its index of type `K`.
 /// - [`pop_key_value`] - Removes the last element from a vector and returns it
 ///   with its index of type `K`, or [`None`] if the vector is empty.
-/// - [`drain_enumerated`] - Creates a draining iterator that removes the specified
-///   range in the vector and yields the current count and the removed items.
-///   It acts like `self.drain(range).enumerate()`,
-///   but instead of `usize` it returns index of type `K`.
-/// - [`into_iter_enumerated`] - Converts the vector into iterator over all key-value pairs
-///   with `K` used for iteration indices.
-///   It acts like `self.into_iter().enumerate()`,
-///   but use `K` instead of `usize` for iteration indices.
+/// - [`drain_enumerated`] - Creates a draining iterator that removes the
+///   specified range in the vector and yields the current count and the removed
+///   items. It acts like `self.drain(range).enumerate()`, but instead of
+///   `usize` it returns index of type `K`.
+/// - [`into_iter_enumerated`] - Converts the vector into iterator over all
+///   key-value pairs with `K` used for iteration indices. It acts like
+///   `self.into_iter().enumerate()`, but use `K` instead of `usize` for
+///   iteration indices.
 ///
 /// # Example
 ///
 /// ```
-/// use typed_index_collections::TiVec;
 /// use derive_more::{From, Into};
+/// use typed_index_collections::TiVec;
 ///
 /// #[derive(From, Into)]
 /// struct FooId(usize);
@@ -101,8 +98,9 @@ pub struct TiVec<K, V> {
     /// used to relax auto trait implementations bounds for
     /// [`Send`], [`Sync`], [`Unpin`], [`UnwindSafe`] and [`RefUnwindSafe`].
     ///
-    /// Derive attribute is not used for trait implementations because it also requires
-    /// the same trait implemented for K that is an unnecessary requirement.
+    /// Derive attribute is not used for trait implementations because it also
+    /// requires the same trait implemented for K that is an unnecessary
+    /// requirement.
     ///
     /// [phantomdata patterns]: https://doc.rust-lang.org/nomicon/phantom-data.html#table-of-phantomdata-patterns
     /// [`Send`]: https://doc.rust-lang.org/core/marker/trait.Send.html
@@ -142,7 +140,8 @@ impl<K, V> TiVec<K, V> {
         }
     }
 
-    /// Creates a `TiVec<K, V>` directly from the raw components of another vector.
+    /// Creates a `TiVec<K, V>` directly from the raw components of another
+    /// vector.
     ///
     /// See [`Vec::from_raw_parts`] for more details.
     ///
@@ -212,10 +211,10 @@ impl<K, V> TiVec<K, V> {
     }
 
     /// Reserves capacity for at least `additional` more elements to be inserted
-    /// in the given `TiVec<K, V>`. The collection may reserve more space to avoid
-    /// frequent reallocations. After calling `reserve`, capacity will be
-    /// greater than or equal to `self.len() + additional`. Does nothing if
-    /// capacity is already sufficient.
+    /// in the given `TiVec<K, V>`. The collection may reserve more space to
+    /// avoid frequent reallocations. After calling `reserve`, capacity will
+    /// be greater than or equal to `self.len() + additional`. Does nothing
+    /// if capacity is already sufficient.
     ///
     /// See [`Vec::reserve`] for more details.
     ///
@@ -238,15 +237,15 @@ impl<K, V> TiVec<K, V> {
         self.raw.reserve_exact(additional);
     }
 
-    /// Tries to reserve capacity for at least `additional` more elements to be inserted
-    /// in the given `Vec<T>`.
+    /// Tries to reserve capacity for at least `additional` more elements to be
+    /// inserted in the given `Vec<T>`.
     ///
     /// See [`Vec::try_reserve`] for more details.
     ///
     /// # Errors
     ///
-    /// If the capacity overflows, or the allocator reports a failure, then an error
-    /// is returned.
+    /// If the capacity overflows, or the allocator reports a failure, then an
+    /// error is returned.
     ///
     /// [`Vec::try_reserve`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.try_reserve
     #[inline]
@@ -261,8 +260,8 @@ impl<K, V> TiVec<K, V> {
     ///
     /// # Errors
     ///
-    /// If the capacity overflows, or the allocator reports a failure, then an error
-    /// is returned.
+    /// If the capacity overflows, or the allocator reports a failure, then an
+    /// error is returned.
     ///
     /// [`Vec::try_reserve_exact`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.try_reserve_exact
     #[inline]
@@ -426,7 +425,8 @@ impl<K, V> TiVec<K, V> {
         self.raw.retain(f);
     }
 
-    /// Retains only the elements specified by the predicate, passing a mutable reference to it.
+    /// Retains only the elements specified by the predicate, passing a mutable
+    /// reference to it.
     ///
     /// See [`Vec::retain_mut`] for more details.
     ///
@@ -439,8 +439,8 @@ impl<K, V> TiVec<K, V> {
         self.raw.retain_mut(f);
     }
 
-    /// Removes all but the first of consecutive elements in the vector that resolve to the same
-    /// key.
+    /// Removes all but the first of consecutive elements in the vector that
+    /// resolve to the same key.
     ///
     /// See [`Vec::dedup_by_key`] for more details.
     ///
@@ -454,8 +454,8 @@ impl<K, V> TiVec<K, V> {
         self.raw.dedup_by_key(key);
     }
 
-    /// Removes all but the first of consecutive elements in the vector satisfying a given equality
-    /// relation.
+    /// Removes all but the first of consecutive elements in the vector
+    /// satisfying a given equality relation.
     ///
     /// See [`Vec::dedup_by`] for more details.
     ///
@@ -478,7 +478,8 @@ impl<K, V> TiVec<K, V> {
         self.raw.push(value);
     }
 
-    /// Appends an element to the back of a collection and returns its index of type `K`.
+    /// Appends an element to the back of a collection and returns its index of
+    /// type `K`.
     ///
     /// It acts like `{ vec.push(...); vec.last_key().unwrap() }`,
     /// but is optimized better.
@@ -560,8 +561,8 @@ impl<K, V> TiVec<K, V> {
         self.raw.append(&mut other.raw);
     }
 
-    /// Creates a draining iterator that removes the specified range in the vector
-    /// and yields the removed items.
+    /// Creates a draining iterator that removes the specified range in the
+    /// vector and yields the removed items.
     ///
     /// See [`Vec::drain`] for more details.
     ///
@@ -688,10 +689,10 @@ impl<K, V> TiVec<K, V> {
         self.raw.resize(new_len, value);
     }
 
-    /// Consumes and leaks the `Vec`, returning a mutable reference to the contents,
-    /// `&'a mut [T]`. Note that the type `T` must outlive the chosen lifetime
-    /// `'a`. If the type has only static references, or none at all, then this
-    /// may be chosen to be `'static`.
+    /// Consumes and leaks the `Vec`, returning a mutable reference to the
+    /// contents, `&'a mut [T]`. Note that the type `T` must outlive the
+    /// chosen lifetime `'a`. If the type has only static references, or
+    /// none at all, then this may be chosen to be `'static`.
     ///
     /// See [`Vec::leak`] for more details.
     ///
@@ -760,9 +761,10 @@ impl<K, V> TiVec<K, V> {
         self.raw.dedup();
     }
 
-    /// Creates a splicing iterator that replaces the specified range in the vector
-    /// with the given `replace_with` iterator and yields the removed items.
-    /// `replace_with` does not need to be the same length as `range`.
+    /// Creates a splicing iterator that replaces the specified range in the
+    /// vector with the given `replace_with` iterator and yields the removed
+    /// items. `replace_with` does not need to be the same length as
+    /// `range`.
     ///
     /// See [`Vec::splice`] for more details.
     ///
@@ -1255,16 +1257,14 @@ impl<'de, K, V: Deserialize<'de>> Deserialize<'de> for TiVec<K, V> {
 )]
 #[cfg(test)]
 mod test {
-    use core::borrow::{Borrow, BorrowMut};
-    use core::hash::{Hash, Hasher};
-    use core::ops::Bound;
-
     use alloc::borrow::{Cow, ToOwned};
     use alloc::boxed::Box;
     use alloc::ffi::CString;
     use alloc::string::ToString;
     use alloc::vec::Vec;
-
+    use core::borrow::{Borrow, BorrowMut};
+    use core::hash::{Hash, Hasher};
+    use core::ops::Bound;
     #[cfg(feature = "std")]
     use std::hash::DefaultHasher;
     #[cfg(feature = "std")]

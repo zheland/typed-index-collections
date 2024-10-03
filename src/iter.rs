@@ -19,12 +19,14 @@ pub type TiEnumerated<I, K, V> = iter::Map<iter::Enumerate<I>, fn((usize, V)) ->
 /// [`TiSlice::keys`]: struct.TiSlice.html#method.keys
 pub type TiSliceKeys<K> = iter::Map<ops::Range<usize>, fn(usize) -> K>;
 
-/// An iterator wrapper for iterators that yields [`TiSlice`] subslice references.
+/// An iterator wrapper for iterators that yields [`TiSlice`] subslice
+/// references.
 ///
 /// [`TiSlice`]: struct.TiSlice.html
 pub type TiSliceRefMap<Iter, K, V> = iter::Map<Iter, fn(&[V]) -> &TiSlice<K, V>>;
 
-/// An iterator wrapper for iterators that yields [`TiSlice`] subslice mutable references.
+/// An iterator wrapper for iterators that yields [`TiSlice`] subslice mutable
+/// references.
 ///
 /// [`TiSlice`]: struct.TiSlice.html
 pub type TiSliceMutMap<Iter, K, V> = iter::Map<Iter, fn(&mut [V]) -> &mut TiSlice<K, V>>;

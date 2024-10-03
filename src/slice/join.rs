@@ -1,6 +1,5 @@
-use core::borrow::Borrow;
-
 use alloc::string::String;
+use core::borrow::Borrow;
 
 use crate::{TiSlice, TiVec};
 

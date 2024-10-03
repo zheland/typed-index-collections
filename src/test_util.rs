@@ -204,10 +204,9 @@ macro_rules! impl_into_tic {
 }
 
 mod core_impls {
-    use core::ops::{Bound, Range, RangeFrom, RangeInclusive, RangeTo, RangeToInclusive};
-
     #[cfg(feature = "alloc")]
     use alloc::borrow::Cow;
+    use core::ops::{Bound, Range, RangeFrom, RangeInclusive, RangeTo, RangeToInclusive};
 
     use crate::test_util::{Id, IntoStdType, IntoTicType};
     use crate::TiSlice;
@@ -343,11 +342,11 @@ mod core_impls {
 
 #[cfg(feature = "alloc")]
 mod alloc_impls {
-    use alloc::{boxed::Box, vec::Vec};
-
-    use crate::{TiSlice, TiVec};
+    use alloc::boxed::Box;
+    use alloc::vec::Vec;
 
     use crate::test_util::{Id, IntoStdType, IntoTicType};
+    use crate::{TiSlice, TiVec};
 
     impl_into_tic!(for [T], Box<[T]> => Box<TiSlice<Id, T>>, self => self.into());
     impl_into_std!(for [T], Box<TiSlice<Id, T>> => Box<[T]>, self => self.into());
@@ -360,7 +359,7 @@ mod alloc_impls {
 }
 
 macro_rules! assert_eq_api {
-    ( $in_value:expr, $in_arg:ident => $expr:expr ) => {{
+    ($in_value:expr, $in_arg:ident => $expr:expr) => {{
         let (std_in, tic_in) = (
             $crate::test_util::Reborrow::reborrow(&mut $in_value.0),
             $crate::test_util::Reborrow::reborrow(&mut $in_value.1),

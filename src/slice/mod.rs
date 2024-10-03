@@ -9,6 +9,14 @@ mod join;
 
 mod slice_index;
 
+#[cfg(feature = "alloc")]
+use alloc::borrow::{Cow, ToOwned};
+#[cfg(feature = "alloc")]
+use alloc::boxed::Box;
+#[cfg(feature = "std")]
+use alloc::string::String;
+#[cfg(feature = "std")]
+use alloc::vec::Vec;
 use core::cmp::Ordering;
 use core::fmt;
 use core::hash::{Hash, Hasher};
@@ -20,34 +28,20 @@ use core::slice::{
     RSplitNMut, Split, SplitInclusive, SplitInclusiveMut, SplitMut, SplitN, SplitNMut, Windows,
 };
 use core::str::Utf8Chunks;
-
-#[cfg(feature = "alloc")]
-use alloc::borrow::{Cow, ToOwned};
-#[cfg(feature = "alloc")]
-use alloc::boxed::Box;
-#[cfg(feature = "std")]
-use alloc::string::String;
-#[cfg(feature = "std")]
-use alloc::vec::Vec;
-
 #[cfg(feature = "std")]
 use std::io::{BufRead, IoSlice, IoSliceMut, Read, Result as IoResult, Write};
 
+#[cfg(feature = "alloc")]
+pub use concat::Concat;
+#[cfg(feature = "alloc")]
+pub use join::Join;
 #[cfg(feature = "serde")]
 use serde::ser::{Serialize, Serializer};
-
-use crate::{TiEnumerated, TiRangeBounds, TiSliceKeys, TiSliceMutMap, TiSliceRefMap};
+pub use slice_index::TiSliceIndex;
 
 #[cfg(feature = "alloc")]
 use crate::TiVec;
-
-#[cfg(feature = "alloc")]
-pub use concat::Concat;
-
-#[cfg(feature = "alloc")]
-pub use join::Join;
-
-pub use slice_index::TiSliceIndex;
+use crate::{TiEnumerated, TiRangeBounds, TiSliceKeys, TiSliceMutMap, TiSliceRefMap};
 
 /// A dynamically-sized view into a contiguous sequence of `T`
 /// that only accepts keys of the type `K`.
@@ -58,8 +52,8 @@ pub use slice_index::TiSliceIndex;
 ///
 /// `TiSlice<K, V>` uses `K` instead of `usize` for element indices.
 /// It also uses [`Range`], [`RangeTo`], [`RangeFrom`], [`RangeInclusive`] and
-/// [`RangeToInclusive`] range types with `K` indices for `get`-methods and index expressions.
-/// The [`RangeFull`] trait is not currently supported.
+/// [`RangeToInclusive`] range types with `K` indices for `get`-methods and
+/// index expressions. The [`RangeFull`] trait is not currently supported.
 ///
 /// `TiSlice<K, V>` require the index to implement
 /// [`From<usize>`][`From`] and [`Into<usize>`][`Into`] traits.
@@ -73,42 +67,45 @@ pub use slice_index::TiSliceIndex;
 ///
 /// Added methods:
 /// - [`from_ref`] - Converts a [`&[V]`][`slice`] into a `&TiSlice<K, V>`.
-/// - [`from_mut`] - Converts a [`&mut [V]`][`slice`] into a `&mut TiSlice<K, V>`.
+/// - [`from_mut`] - Converts a [`&mut [V]`][`slice`] into a `&mut TiSlice<K,
+///   V>`.
 /// - [`keys`] - Returns an iterator over all keys.
 /// - [`next_key`] - Returns the index of the next slice element to be appended
 ///   and at the same time number of elements in the slice of type `K`.
-/// - [`first_key`] - Returns the first slice element index of type `K`,
-///   or `None` if the slice is empty.
+/// - [`first_key`] - Returns the first slice element index of type `K`, or
+///   `None` if the slice is empty.
 /// - [`first_key_value`] - Returns the first slice element index of type `K`
 ///   and the element itself, or `None` if the slice is empty.
-/// - [`first_key_value_mut`] - Returns the first slice element index of type `K`
-///   and a mutable reference to the element itself, or `None` if the slice is empty.
-/// - [`last_key`] - Returns the last slice element index of type `K`,
-///   or `None` if the slice is empty.
-/// - [`last_key_value`] - Returns the last slice element index of type `K`
-///   and the element itself, or `None` if the slice is empty.
+/// - [`first_key_value_mut`] - Returns the first slice element index of type
+///   `K` and a mutable reference to the element itself, or `None` if the slice
+///   is empty.
+/// - [`last_key`] - Returns the last slice element index of type `K`, or `None`
+///   if the slice is empty.
+/// - [`last_key_value`] - Returns the last slice element index of type `K` and
+///   the element itself, or `None` if the slice is empty.
 /// - [`last_key_value_mut`] - Returns the last slice element index of type `K`
-///   and a mutable reference to the element itself, or `None` if the slice is empty.
-/// - [`iter_enumerated`] - Returns an iterator over all key-value pairs.
-///   It acts like `self.iter().enumerate()`,
-///   but use `K` instead of `usize` for iteration indices.
+///   and a mutable reference to the element itself, or `None` if the slice is
+///   empty.
+/// - [`iter_enumerated`] - Returns an iterator over all key-value pairs. It
+///   acts like `self.iter().enumerate()`, but use `K` instead of `usize` for
+///   iteration indices.
 /// - [`iter_mut_enumerated`] - Returns an iterator over all key-value pairs,
-///   with mutable references to the values.
-///   It acts like `self.iter_mut().enumerate()`,
-///   but use `K` instead of `usize` for iteration indices.
-/// - [`position`] - Searches for an element in an iterator, returning its index of type `K`.
-///   It acts like `self.iter().position(...)`,
-///   but instead of `usize` it returns index of type `K`.
+///   with mutable references to the values. It acts like
+///   `self.iter_mut().enumerate()`, but use `K` instead of `usize` for
+///   iteration indices.
+/// - [`position`] - Searches for an element in an iterator, returning its index
+///   of type `K`. It acts like `self.iter().position(...)`, but instead of
+///   `usize` it returns index of type `K`.
 /// - [`rposition`] - Searches for an element in an iterator from the right,
-///   returning its index of type `K`.
-///   It acts like `self.iter().rposition(...)`,
-///   but instead of `usize` it returns index of type `K`.
+///   returning its index of type `K`. It acts like
+///   `self.iter().rposition(...)`, but instead of `usize` it returns index of
+///   type `K`.
 ///
 /// # Example
 ///
 /// ```
-/// use typed_index_collections::TiSlice;
 /// use derive_more::{From, Into};
+/// use typed_index_collections::TiSlice;
 ///
 /// #[derive(From, Into)]
 /// struct FooId(usize);
@@ -154,8 +151,9 @@ pub struct TiSlice<K, V> {
     /// used to relax auto trait implementations bounds for
     /// [`Send`], [`Sync`], [`Unpin`], [`UnwindSafe`] and [`RefUnwindSafe`].
     ///
-    /// Derive attribute is not used for trait implementations because it also requires
-    /// the same trait implemented for K that is an unnecessary requirement.
+    /// Derive attribute is not used for trait implementations because it also
+    /// requires the same trait implemented for K that is an unnecessary
+    /// requirement.
     ///
     /// [phantomdata patterns]: https://doc.rust-lang.org/nomicon/phantom-data.html#table-of-phantomdata-patterns
     /// [`Send`]: https://doc.rust-lang.org/core/marker/trait.Send.html
@@ -277,7 +275,8 @@ impl<K, V> TiSlice<K, V> {
         self.raw.first()
     }
 
-    /// Returns a mutable reference to the first element of the slice, or `None` if it is empty.
+    /// Returns a mutable reference to the first element of the slice, or `None`
+    /// if it is empty.
     ///
     /// See [`slice::first_mut`] for more details.
     ///
@@ -287,7 +286,8 @@ impl<K, V> TiSlice<K, V> {
         self.raw.first_mut()
     }
 
-    /// Returns the first slice element index of type `K`, or `None` if the slice is empty.
+    /// Returns the first slice element index of type `K`, or `None` if the
+    /// slice is empty.
     ///
     /// # Example
     ///
@@ -313,8 +313,8 @@ impl<K, V> TiSlice<K, V> {
         }
     }
 
-    /// Returns the first slice element index of type `K` and the element itself,
-    /// or `None` if the slice is empty.
+    /// Returns the first slice element index of type `K` and the element
+    /// itself, or `None` if the slice is empty.
     ///
     /// See [`slice::first`] for more details.
     ///
@@ -340,8 +340,8 @@ impl<K, V> TiSlice<K, V> {
         self.raw.first().map(|first| (0.into(), first))
     }
 
-    /// Returns the first slice element index of type `K` and a mutable reference
-    /// to the element itself, or `None` if the slice is empty.
+    /// Returns the first slice element index of type `K` and a mutable
+    /// reference to the element itself, or `None` if the slice is empty.
     ///
     /// See [`slice::first_mut`] for more details.
     ///
@@ -370,7 +370,8 @@ impl<K, V> TiSlice<K, V> {
         self.raw.first_mut().map(|first| (0.into(), first))
     }
 
-    /// Returns the first and all the rest of the elements of the slice, or `None` if it is empty.
+    /// Returns the first and all the rest of the elements of the slice, or
+    /// `None` if it is empty.
     ///
     /// See [`slice::split_first`] for more details.
     ///
@@ -382,7 +383,8 @@ impl<K, V> TiSlice<K, V> {
             .map(|(first, rest)| (first, rest.as_ref()))
     }
 
-    /// Returns the first and all the rest of the elements of the slice, or `None` if it is empty.
+    /// Returns the first and all the rest of the elements of the slice, or
+    /// `None` if it is empty.
     ///
     /// See [`slice::split_first_mut`] for more details.
     ///
@@ -394,7 +396,8 @@ impl<K, V> TiSlice<K, V> {
             .map(|(first, rest)| (first, rest.as_mut()))
     }
 
-    /// Returns the last and all the rest of the elements of the slice, or `None` if it is empty.
+    /// Returns the last and all the rest of the elements of the slice, or
+    /// `None` if it is empty.
     ///
     /// See [`slice::split_last`] for more details.
     ///
@@ -406,7 +409,8 @@ impl<K, V> TiSlice<K, V> {
             .map(|(last, rest)| (last, rest.as_ref()))
     }
 
-    /// Returns the last and all the rest of the elements of the slice, or `None` if it is empty.
+    /// Returns the last and all the rest of the elements of the slice, or
+    /// `None` if it is empty.
     ///
     /// See [`slice::split_last_mut`] for more details.
     ///
@@ -418,7 +422,8 @@ impl<K, V> TiSlice<K, V> {
             .map(|(last, rest)| (last, rest.as_mut()))
     }
 
-    /// Returns the last element of the slice of type `K`, or `None` if it is empty.
+    /// Returns the last element of the slice of type `K`, or `None` if it is
+    /// empty.
     ///
     /// See [`slice::last`] for more details.
     ///
@@ -438,7 +443,8 @@ impl<K, V> TiSlice<K, V> {
         self.raw.last_mut()
     }
 
-    /// Returns the last slice element index of type `K`, or `None` if the slice is empty.
+    /// Returns the last slice element index of type `K`, or `None` if the slice
+    /// is empty.
     ///
     /// # Example
     ///
@@ -566,8 +572,8 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// # Safety
     ///
-    /// Calling this method with an out-of-bounds index is *[undefined behavior]*
-    /// even if the resulting reference is not used.
+    /// Calling this method with an out-of-bounds index is
+    /// *[undefined behavior]* even if the resulting reference is not used.
     /// For a safe alternative see [`get`].
     ///
     /// [`get`]: #method.get
@@ -588,8 +594,8 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// # Safety
     ///
-    /// Calling this method with an out-of-bounds index is *[undefined behavior]*
-    /// even if the resulting reference is not used.
+    /// Calling this method with an out-of-bounds index is
+    /// *[undefined behavior]* even if the resulting reference is not used.
     /// For a safe alternative see [`get_mut`].
     ///
     /// [`get_mut`]: #method.get_mut
@@ -722,7 +728,8 @@ impl<K, V> TiSlice<K, V> {
         self.raw.iter_mut()
     }
 
-    /// Returns an iterator over all key-value pairs, with mutable references to the values.
+    /// Returns an iterator over all key-value pairs, with mutable references to
+    /// the values.
     ///
     /// It acts like `self.iter_mut().enumerate()`,
     /// but use `K` instead of `usize` for iteration indices.
@@ -786,7 +793,8 @@ impl<K, V> TiSlice<K, V> {
         self.raw.iter().position(predicate).map(Into::into)
     }
 
-    /// Searches for an element in an iterator from the right, returning its index of type `K`.
+    /// Searches for an element in an iterator from the right, returning its
+    /// index of type `K`.
     ///
     /// It acts like `self.iter().rposition(...)`,
     /// but instead of `usize` it returns index of type `K`.
@@ -830,8 +838,8 @@ impl<K, V> TiSlice<K, V> {
         self.raw.windows(size).map(Self::from_ref)
     }
 
-    /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the
-    /// beginning of the slice.
+    /// Returns an iterator over `chunk_size` elements of the slice at a time,
+    /// starting at the beginning of the slice.
     ///
     /// See [`slice::chunks`] for more details.
     ///
@@ -841,8 +849,8 @@ impl<K, V> TiSlice<K, V> {
         self.raw.chunks(chunk_size).map(Self::from_ref)
     }
 
-    /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the
-    /// beginning of the slice.
+    /// Returns an iterator over `chunk_size` elements of the slice at a time,
+    /// starting at the beginning of the slice.
     ///
     /// See [`slice::chunks_mut`] for more details.
     ///
@@ -852,8 +860,8 @@ impl<K, V> TiSlice<K, V> {
         self.raw.chunks_mut(chunk_size).map(Self::from_mut)
     }
 
-    /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the
-    /// beginning of the slice.
+    /// Returns an iterator over `chunk_size` elements of the slice at a time,
+    /// starting at the beginning of the slice.
     ///
     /// See [`slice::chunks_exact`] for more details.
     ///
@@ -863,8 +871,8 @@ impl<K, V> TiSlice<K, V> {
         self.raw.chunks_exact(chunk_size).map(Self::from_ref)
     }
 
-    /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the
-    /// beginning of the slice.
+    /// Returns an iterator over `chunk_size` elements of the slice at a time,
+    /// starting at the beginning of the slice.
     ///
     /// See [`slice::chunks_exact_mut`] for more details.
     ///
@@ -877,8 +885,8 @@ impl<K, V> TiSlice<K, V> {
         self.raw.chunks_exact_mut(chunk_size).map(Self::from_mut)
     }
 
-    /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the end
-    /// of the slice.
+    /// Returns an iterator over `chunk_size` elements of the slice at a time,
+    /// starting at the end of the slice.
     ///
     /// See [`slice::rchunks`] for more details.
     ///
@@ -888,8 +896,8 @@ impl<K, V> TiSlice<K, V> {
         self.raw.rchunks(chunk_size).map(Self::from_ref)
     }
 
-    /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the end
-    /// of the slice.
+    /// Returns an iterator over `chunk_size` elements of the slice at a time,
+    /// starting at the end of the slice.
     ///
     /// See [`slice::rchunks_mut`] for more details.
     ///
@@ -899,8 +907,8 @@ impl<K, V> TiSlice<K, V> {
         self.raw.rchunks_mut(chunk_size).map(Self::from_mut)
     }
 
-    /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the
-    /// end of the slice.
+    /// Returns an iterator over `chunk_size` elements of the slice at a time,
+    /// starting at the end of the slice.
     ///
     /// See [`slice::rchunks_exact`] for more details.
     ///
@@ -910,8 +918,8 @@ impl<K, V> TiSlice<K, V> {
         self.raw.rchunks_exact(chunk_size).map(Self::from_ref)
     }
 
-    /// Returns an iterator over `chunk_size` elements of the slice at a time, starting at the end
-    /// of the slice.
+    /// Returns an iterator over `chunk_size` elements of the slice at a time,
+    /// starting at the end of the slice.
     ///
     /// See [`slice::rchunks_exact_mut`] for more details.
     ///
@@ -986,13 +994,12 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// # Safety
     ///
-    /// Calling this method with an out-of-bounds index is *[undefined behavior]*
-    /// even if the resulting reference is not used. The caller has to ensure that
-    /// `0 <= mid <= self.len()`.
+    /// Calling this method with an out-of-bounds index is
+    /// *[undefined behavior]* even if the resulting reference is not used. The
+    /// caller has to ensure that `0 <= mid <= self.len()`.
     ///
     /// [`slice::split_at_unchecked`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_at_unchecked
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
-    ///
     #[inline]
     #[must_use]
     pub unsafe fn split_at_unchecked(&self, mid: K) -> (&Self, &Self)
@@ -1003,15 +1010,16 @@ impl<K, V> TiSlice<K, V> {
         (left.as_ref(), right.as_ref())
     }
 
-    /// Divides one mutable slice into two at an index, without doing bounds checking.
+    /// Divides one mutable slice into two at an index, without doing bounds
+    /// checking.
     ///
     /// See [`slice::split_at_mut_unchecked`] for more details.
     ///
     /// # Safety
     ///
-    /// Calling this method with an out-of-bounds index is *[undefined behavior]*
-    /// even if the resulting reference is not used. The caller has to ensure that
-    /// `0 <= mid <= self.len()`.
+    /// Calling this method with an out-of-bounds index is
+    /// *[undefined behavior]* even if the resulting reference is not used. The
+    /// caller has to ensure that `0 <= mid <= self.len()`.
     ///
     /// [`slice::split_at_mut_unchecked`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_at_mut_unchecked
     /// [undefined behavior]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
@@ -1317,8 +1325,8 @@ impl<K, V> TiSlice<K, V> {
         self.raw.sort_unstable();
     }
 
-    /// Sorts the slice with a comparator function, but may not preserve the order of equal
-    /// elements.
+    /// Sorts the slice with a comparator function, but may not preserve the
+    /// order of equal elements.
     ///
     /// See [`slice::sort_unstable_by`] for more details.
     ///
@@ -1331,8 +1339,8 @@ impl<K, V> TiSlice<K, V> {
         self.raw.sort_unstable_by(compare);
     }
 
-    /// Sorts the slice with a key extraction function, but may not preserve the order of equal
-    /// elements.
+    /// Sorts the slice with a key extraction function, but may not preserve the
+    /// order of equal elements.
     ///
     /// See [`slice::sort_unstable_by_key`] for more details.
     ///
@@ -1346,8 +1354,8 @@ impl<K, V> TiSlice<K, V> {
         self.raw.sort_unstable_by_key(f);
     }
 
-    /// Reorder the slice such that the element at `index` after the reordering is at its final
-    /// sorted position.
+    /// Reorder the slice such that the element at `index` after the reordering
+    /// is at its final sorted position.
     ///
     /// See [`slice::select_nth_unstable`] for more details.
     ///
@@ -1355,7 +1363,8 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// Panics when `index >= len()`, meaning it always panics on empty slices.
     ///
-    /// May panic if the implementation of [`Ord`] for `T` does not implement a [total order].
+    /// May panic if the implementation of [`Ord`] for `T` does not implement a
+    /// [total order].
     ///
     /// [`slice::select_nth_unstable`]: https://doc.rust-lang.org/std/primitive.slice.html#method.select_nth_unstable
     #[inline]
@@ -1368,8 +1377,8 @@ impl<K, V> TiSlice<K, V> {
         (Self::from_mut(left), nth, Self::from_mut(right))
     }
 
-    /// Reorder the slice with a comparator function such that the element at `index` after the
-    /// reordering is at its final sorted position.
+    /// Reorder the slice with a comparator function such that the element at
+    /// `index` after the reordering is at its final sorted position.
     ///
     /// See [`slice::select_nth_unstable_by`] for more details.
     ///
@@ -1394,8 +1403,8 @@ impl<K, V> TiSlice<K, V> {
         (Self::from_mut(left), nth, Self::from_mut(right))
     }
 
-    /// Reorder the slice with a key extraction function such that the element at `index` after the
-    /// reordering is at its final sorted position.
+    /// Reorder the slice with a key extraction function such that the element
+    /// at `index` after the reordering is at its final sorted position.
     ///
     /// See [`slice::select_nth_unstable_by_key`] for more details.
     ///
@@ -1422,9 +1431,10 @@ impl<K, V> TiSlice<K, V> {
     }
 
     /// Rotates the slice in-place such that the first `mid` elements of the
-    /// slice move to the end while the last `self.next_key() - mid` elements move to
-    /// the front. After calling `rotate_left`, the element previously at index
-    /// `mid` will become the first element in the slice.
+    /// slice move to the end while the last `self.next_key() - mid` elements
+    /// move to the front. After calling `rotate_left`, the element
+    /// previously at index `mid` will become the first element in the
+    /// slice.
     ///
     /// See [`slice::rotate_left`] for more details.
     ///
@@ -1532,15 +1542,16 @@ impl<K, V> TiSlice<K, V> {
         self.raw.swap_with_slice(other.as_mut());
     }
 
-    /// Transmute the slice to a slice of another type, ensuring alignment of the types is
-    /// maintained.
+    /// Transmute the slice to a slice of another type, ensuring alignment of
+    /// the types is maintained.
     ///
     /// See [`slice::align_to`] for more details.
     ///
     /// # Safety
     ///
-    /// This method is essentially a `transmute` with respect to the elements in the returned
-    /// middle slice, so all the usual caveats pertaining to `transmute::<T, U>` also apply here.
+    /// This method is essentially a `transmute` with respect to the elements in
+    /// the returned middle slice, so all the usual caveats pertaining to
+    /// `transmute::<T, U>` also apply here.
     ///
     /// [`slice::align_to`]: https://doc.rust-lang.org/std/primitive.slice.html#method.align_to
     #[inline]
@@ -1549,15 +1560,16 @@ impl<K, V> TiSlice<K, V> {
         (first.as_ref(), mid.as_ref(), last.as_ref())
     }
 
-    /// Transmute the slice to a slice of another type, ensuring alignment of the types is
-    /// maintained.
+    /// Transmute the slice to a slice of another type, ensuring alignment of
+    /// the types is maintained.
     ///
     /// See [`slice::align_to_mut`] for more details.
     ///
     /// # Safety
     ///
-    /// This method is essentially a `transmute` with respect to the elements in the returned
-    /// middle slice, so all the usual caveats pertaining to `transmute::<T, U>` also apply here.
+    /// This method is essentially a `transmute` with respect to the elements in
+    /// the returned middle slice, so all the usual caveats pertaining to
+    /// `transmute::<T, U>` also apply here.
     ///
     /// [`slice::align_to_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.align_to_mut
     #[inline]
@@ -1566,8 +1578,8 @@ impl<K, V> TiSlice<K, V> {
         (first.as_mut(), mid.as_mut(), last.as_mut())
     }
 
-    /// Returns the index of the partition point according to the given predicate
-    /// (the index of the first element of the second partition).
+    /// Returns the index of the partition point according to the given
+    /// predicate (the index of the first element of the second partition).
     ///
     /// See [`slice::partition_point`] for more details.
     ///
@@ -1632,8 +1644,7 @@ impl<K> TiSlice<K, u8> {
     /// See [`slice::escape_ascii`] for more details.
     ///
     /// [`slice::escape_ascii`]: https://doc.rust-lang.org/std/primitive.slice.html#method.escape_ascii
-    #[must_use = "this returns the escaped bytes as an iterator, \
-                  without modifying the original"]
+    #[must_use = "this returns the escaped bytes as an iterator, without modifying the original"]
     #[inline]
     pub fn escape_ascii(&self) -> EscapeAscii<'_> {
         self.raw.escape_ascii()
@@ -2046,15 +2057,15 @@ impl<K> BufRead for &TiSlice<K, u8> {
     }
 }
 
-/// Write is implemented for `&mut TiSlice<K, u8>` by copying into the slice, overwriting
-/// its data.
+/// Write is implemented for `&mut TiSlice<K, u8>` by copying into the slice,
+/// overwriting its data.
 ///
 /// Note that writing updates the slice to point to the yet unwritten part.
 /// The slice will be empty when it has been completely overwritten.
 ///
-/// If the number of bytes to be written exceeds the size of the slice, write operations will
-/// return short writes: ultimately, `Ok(0)`; in this situation, `write_all` returns an error of
-/// kind `ErrorKind::WriteZero`.
+/// If the number of bytes to be written exceeds the size of the slice, write
+/// operations will return short writes: ultimately, `Ok(0)`; in this situation,
+/// `write_all` returns an error of kind `ErrorKind::WriteZero`.
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl<K> Write for &mut TiSlice<K, u8> {
@@ -2134,10 +2145,6 @@ impl<K, V: Serialize> Serialize for TiSlice<K, V> {
 )]
 #[cfg(test)]
 mod test {
-    use core::borrow::{Borrow, BorrowMut};
-    use core::hash::{Hash, Hasher};
-    use core::ops::Bound;
-
     #[cfg(feature = "alloc")]
     use alloc::borrow::{Cow, ToOwned};
     #[cfg(feature = "alloc")]
@@ -2146,14 +2153,16 @@ mod test {
     use alloc::string::{String, ToString};
     #[cfg(feature = "alloc")]
     use alloc::vec::Vec;
-
+    use core::borrow::{Borrow, BorrowMut};
+    use core::hash::{Hash, Hasher};
+    use core::ops::Bound;
     #[cfg(feature = "std")]
     use std::hash::DefaultHasher;
     #[cfg(feature = "std")]
     use std::io::{BufRead, IoSlice, IoSliceMut, Read, Write};
 
-    use crate::test_util::CollectToVec;
-    use crate::{test_util::Id, TiSlice};
+    use crate::test_util::{CollectToVec, Id};
+    use crate::TiSlice;
 
     #[derive(Clone, Debug, Eq, PartialEq)]
     struct NonCopy<T>(pub T);
@@ -2561,7 +2570,7 @@ mod test {
             }
 
             restore(&mut mv);
-            //let w: Vec<_> = v.into_iter().map(|v| v ^ 0b1010_1010).collect();
+            // let w: Vec<_> = v.into_iter().map(|v| v ^ 0b1010_1010).collect();
             let mut w = [0; 8];
             w[0..v.len()].copy_from_slice(v);
             for w in &mut w {

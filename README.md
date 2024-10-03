@@ -9,8 +9,9 @@
 [![License](https://img.shields.io/crates/l/typed-index-collections)](https://github.com/zheland/typed-index-collections/#license)
 [![MSRV 1.81+](https://img.shields.io/badge/rustc-1.81+-blue.svg)](https://blog.rust-lang.org/2024/09/05/Rust-1.81.0.html)
 
-The `typed-index-collections` crate provides [`TiSlice`] and [`TiVec`] structs
-that are typed index versions of the Rust [`slice`] and [`std::vec::Vec`] types.
+The `typed-index-collections` crate provides [`TiSlice`] and [`TiVec`]
+structs that are typed index versions of the Rust [`slice`] and
+[`std::vec::Vec`] types.
 
 ## Introduction
 
@@ -23,19 +24,20 @@ which is a common source of bugs.
 
 ## About
 
-This crate provides [`TiSlice<K, V>`][`TiSlice`] and [`TiVec<K, V>`][`TiVec`] containers
-that can be indexed only by the specified index type `K`.
-These containers are only wrappers around
-the slice primitive [`[V]`][`slice`] and the container [`std::vec::Vec<V>`][`std::vec::Vec`].
-Crate containers mirror the stable API of the matched Rust containers
-and forward to them as much as possible.
+This crate provides [`TiSlice<K, V>`][`TiSlice`] and
+[`TiVec<K, V>`][`TiVec`] containers that can be indexed only by the
+specified index type `K`. These containers are only wrappers around
+the slice primitive [`[V]`][`slice`] and the container
+[`std::vec::Vec<V>`][`std::vec::Vec`]. Crate containers mirror the stable
+API of the matched Rust containers and forward to them as much as possible.
 
-[`TiSlice`] and [`TiVec`] can be easily converted to matched Rust containers and back using
-[`From`], [`Into`], [`AsRef`] and [`AsMut`] traits.
+[`TiSlice`] and [`TiVec`] can be easily converted to matched Rust containers
+and back using [`From`], [`Into`], [`AsRef`] and [`AsMut`] traits.
 Also, they expose `raw` property with the original data type.
 Containers only require the index to implement
 [`From<usize>`][`From`] and [`Into<usize>`][`Into`] traits
-that can be easily done with [`derive_more`] crate and `#[derive(From, Into)]`.
+that can be easily done with [`derive_more`] crate and
+`#[derive(From, Into)]`.
 
 ## Usage
 
@@ -124,7 +126,8 @@ let boxed_slice = std::vec![first, second].into_boxed_slice();
 
 let ti_slice_ref: &TiSlice<FooId, Foo> = slice_ref.as_ref();
 let ti_vec: TiVec<FooId, Foo> = vec.into();
-let ti_boxed_slice: std::boxed::Box<TiSlice<FooId, Foo>> = boxed_slice.into();
+let ti_boxed_slice: std::boxed::Box<TiSlice<FooId, Foo>> =
+    boxed_slice.into();
 
 assert_eq!(ti_vec[FooId(1)], second);
 assert_eq!(ti_vec.raw[1], second);
@@ -143,53 +146,52 @@ let _boxed_slice: std::boxed::Box<[Foo]> = ti_boxed_slice.into();
 
 ## Feature Flags
 
-- `alloc` (implied by `std`, enabled by default): Enables the Rust `alloc` library,
-  enables [`TiVec`] type, [`ti_vec!`] macro,
-  trait implementations for [`Box`]`<`[`TiSlice`]`>`,
-  and some [`TiSlice`] methods that require memory allocation.
-- `std` (enabled by default): Enables `alloc` feature, the Rust `std` library,
-  implements [`std::io::Write`] for [`TiVec`]
-  and implements [`std::io::Read`] and [`std::io::Write`] for [`TiSlice`],
-- `serde`: Implements [`Serialize`] trait for [`TiSlice`] and [`TiVec`] containers.
-- `serde-alloc`: Enables `alloc` and `serde/alloc` features and
-  implements [`Deserialize`] trait for [`Box`]`<`[`TiSlice`]`>` and [`TiVec`].
-- `serde-std`: Enables `std` and `serde/std` features and
-  implements [`Deserialize`] trait for [`Box`]`<`[`TiSlice`]`>` and [`TiVec`].
+- `alloc` (implied by `std`, enabled by default): Enables the Rust `alloc`
+  library, enables [`TiVec`] type, [`ti_vec!`] macro, trait implementations
+  for [`Box`]`<`[`TiSlice`]`>`, and some [`TiSlice`] methods that require
+  memory allocation.
+- `std` (enabled by default): Enables `alloc` feature, the Rust `std`
+  library, implements [`std::io::Write`] for [`TiVec`] and implements
+  [`std::io::Read`] and [`std::io::Write`] for [`TiSlice`],
+- `serde`: Implements [`Serialize`] trait for [`TiSlice`] and [`TiVec`]
+  containers.
+- `serde-alloc`: Enables `alloc` and `serde/alloc` features and implements
+  [`Deserialize`] trait for [`Box`]`<`[`TiSlice`]`>` and [`TiVec`].
+- `serde-std`: Enables `std` and `serde/std` features and implements
+  [`Deserialize`] trait for [`Box`]`<`[`TiSlice`]`>` and [`TiVec`].
 
 ## Similar crates
 
-- [`typed_index_collection`] provides a `Vec` wrapper with a very limited API.
-  Indices are u32 wrappers,
-  they are not customizable and can only index a specific type of container.
-- [`indexed_vec`] is the closest copy of the `IndexVec` struct from `librustc_index`,
-  but API is also different from standard Rust [`std::vec::Vec`]
-  and it has no typed index [`slice`] alternative.
-- [`index_vec`] have both [`slice`] and [`std::vec::Vec`] wrapper
-  and API closer to standard API.
-  But it implicitly allows you to use `usize` for get methods and index expressions
-  that reduce type-safety,
-  and the macro `define_index_type!` which is used to generate a newtyped index struct,
-  implicitly implements a lot of traits that in my opinion would be better implemented
-  only when necessary using crates intended for this, such as [`derive_more`].
+- [`typed_index_collection`] provides a `Vec` wrapper with a very limited
+  API. Indices are u32 wrappers, they are not customizable and can only
+  index a specific type of container.
+- [`indexed_vec`] is the closest copy of the `IndexVec` struct from
+  `librustc_index`, but API is also different from standard Rust
+  [`std::vec::Vec`] and it has no typed index [`slice`] alternative.
+- [`index_vec`] have both [`slice`] and [`std::vec::Vec`] wrapper and API
+  closer to standard API. But it implicitly allows you to use `usize` for
+  get methods and index expressions that reduce type-safety, and the macro
+  `define_index_type!` which is used to generate a newtyped index struct,
+  implicitly implements a lot of traits that in my opinion would be better
+  implemented only when necessary using crates intended for this, such as
+  [`derive_more`].
 
 ## License
 
 Licensed under either of
 
-- Apache License, Version 2.0
-  ([LICENSE-APACHE](LICENSE-APACHE) or
-  <https://www.apache.org/licenses/LICENSE-2.0>)
-- MIT license
-  ([LICENSE-MIT](LICENSE-MIT) or
-  <https://opensource.org/licenses/MIT>)
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE)
+  or <https://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](LICENSE-MIT)
+  or <https://opensource.org/licenses/MIT>)
 
 at your option.
 
 ### Contribution
 
-Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in the work by you, as defined in the Apache-2.0 license,
-shall be dual licensed as above, without any
+Unless you explicitly state otherwise, any contribution intentionally
+submitted for inclusion in the work by you, as defined in the Apache-2.0
+license, shall be dual licensed as above, without any
 additional terms or conditions.
 
 [`TiSlice`]: https://docs.rs/typed-index-collections/*/typed_index_collections/struct.TiSlice.html

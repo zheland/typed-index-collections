@@ -15,12 +15,11 @@ use core::{fmt, slice};
 #[cfg(feature = "std")]
 use std::io::{IoSlice, Result as IoResult, Write};
 
+use crate::{TiEnumerated, TiRangeBounds, TiSlice, TiSliceIndex};
 #[cfg(all(feature = "alloc", feature = "serde"))]
 use serde::de::{Deserialize, Deserializer};
 #[cfg(feature = "serde")]
 use serde::ser::{Serialize, Serializer};
-
-use crate::{TiEnumerated, TiRangeBounds, TiSlice, TiSliceIndex};
 
 /// A contiguous growable array type
 /// that only accepts keys of the type `K`.
@@ -1241,6 +1240,31 @@ impl<'de, K, V: Deserialize<'de>> Deserialize<'de> for TiVec<K, V> {
     #[inline]
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         Vec::deserialize(deserializer).map(Into::into)
+    }
+}
+
+#[cfg(feature = "bincode")]
+#[cfg_attr(docsrs, doc(cfg(feature = "bincode")))]
+impl<K, V: bincode::enc::Encode> bincode::enc::Encode for TiVec<K, V> {
+    #[inline]
+    fn encode<E: bincode::enc::Encoder>(
+        &self,
+        encoder: &mut E,
+    ) -> Result<(), bincode::error::EncodeError> {
+        bincode::enc::Encode::encode(&self.raw, encoder)?;
+        Ok(())
+    }
+}
+
+#[cfg(feature = "bincode")]
+#[cfg_attr(docsrs, doc(cfg(feature = "bincode")))]
+impl<C, K, V: bincode::de::Decode<C>> bincode::de::Decode<C> for TiVec<K, V> {
+    #[inline]
+    fn decode<D: bincode::de::Decoder<Context = C>>(
+        decoder: &mut D,
+    ) -> Result<Self, bincode::error::DecodeError> {
+        let raw: Vec<V> = bincode::Decode::<C>::decode(decoder)?;
+        Ok(raw.into())
     }
 }
 

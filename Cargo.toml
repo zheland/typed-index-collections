@@ -14,15 +14,20 @@ keywords = ["collection", "index", "no_std", "slice", "vec"]
 
 [features]
 default = ["alloc", "std"]
-alloc = ["serde?/alloc"]
-std = ["alloc", "serde?/std"]
+alloc = ["serde?/alloc", "bincode?/alloc"]
+std = ["alloc", "serde?/std", "bincode?/std"]
 serde = ["dep:serde"]
+bincode = ["dep:bincode"]
 serde-alloc = ["alloc", "serde"] # Deprecated.
 serde-std = ["std", "serde"] # Deprecated.
 
 [dependencies.serde]
 version = "1.0.210"
 default-features = false
+optional = true
+
+[dependencies.bincode]
+version = "2.0.1"
 optional = true
 
 [dev-dependencies]

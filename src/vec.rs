@@ -1256,8 +1256,8 @@ impl<K, V: bincode::enc::Encode> bincode::enc::Encode for TiVec<K, V> {
     }
 }
 
-#[cfg(feature = "bincode")]
-#[cfg_attr(docsrs, doc(cfg(feature = "bincode")))]
+#[cfg(all(feature = "alloc", feature = "bincode"))]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc", feature = "bincode")))]
 impl<C, K, V: bincode::de::Decode<C>> bincode::de::Decode<C> for TiVec<K, V> {
     #[inline]
     fn decode<D: bincode::de::Decoder<Context = C>>(
@@ -1603,5 +1603,17 @@ mod test {
         assert_eq!(s0.as_slice().raw, [0; 0][..]);
         assert_eq!(s1.as_slice().raw, [12][..]);
         assert_eq!(s2.as_slice().raw, [23, 34][..]);
+    }
+
+    #[cfg(feature = "bincode")]
+    #[test]
+    fn test_encode_decode() {
+        let s0: TiVec<Id, u32> = TiVec::from(alloc::vec![0, 1, 2]);
+        let encode = bincode::encode_to_vec(&s0, bincode::config::standard()).unwrap();
+        let decode: TiVec<Id, u32> =
+            bincode::decode_from_slice(&encode, bincode::config::standard())
+                .unwrap()
+                .0;
+        assert_eq!(s0.as_slice().raw, decode.as_slice().raw);
     }
 }

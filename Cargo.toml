@@ -14,8 +14,8 @@ keywords = ["collection", "index", "no_std", "slice", "vec"]
 
 [features]
 default = ["alloc", "std"]
-alloc = ["serde?/alloc"]
-std = ["alloc", "serde?/std"]
+alloc = ["serde?/alloc", "bincode?/alloc"]
+std = ["alloc", "serde?/std", "bincode?/std"]
 serde = ["dep:serde"]
 bincode = ["dep:bincode"]
 serde-alloc = ["alloc", "serde"] # Deprecated.

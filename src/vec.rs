@@ -15,11 +15,12 @@ use core::{fmt, slice};
 #[cfg(feature = "std")]
 use std::io::{IoSlice, Result as IoResult, Write};
 
-use crate::{TiEnumerated, TiRangeBounds, TiSlice, TiSliceIndex};
 #[cfg(all(feature = "alloc", feature = "serde"))]
 use serde::de::{Deserialize, Deserializer};
 #[cfg(feature = "serde")]
 use serde::ser::{Serialize, Serializer};
+
+use crate::{TiEnumerated, TiRangeBounds, TiSlice, TiSliceIndex};
 
 /// A contiguous growable array type
 /// that only accepts keys of the type `K`.
@@ -1251,8 +1252,7 @@ impl<K, V: bincode::enc::Encode> bincode::enc::Encode for TiVec<K, V> {
         &self,
         encoder: &mut E,
     ) -> Result<(), bincode::error::EncodeError> {
-        bincode::enc::Encode::encode(&self.raw, encoder)?;
-        Ok(())
+        bincode::enc::Encode::encode(&self.raw, encoder)
     }
 }
 
@@ -1263,8 +1263,7 @@ impl<C, K, V: bincode::de::Decode<C>> bincode::de::Decode<C> for TiVec<K, V> {
     fn decode<D: bincode::de::Decoder<Context = C>>(
         decoder: &mut D,
     ) -> Result<Self, bincode::error::DecodeError> {
-        let raw: Vec<V> = bincode::Decode::<C>::decode(decoder)?;
-        Ok(raw.into())
+        Vec::decode(decoder).map(Into::into)
     }
 }
 

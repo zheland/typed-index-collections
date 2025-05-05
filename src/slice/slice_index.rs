@@ -93,12 +93,14 @@ where
 
     #[inline]
     unsafe fn get_unchecked(self, slice: &TiSlice<K, V>) -> &Self::Output {
-        slice.raw.get_unchecked(usize::from(self))
+        // SAFETY: Guaranteed by the caller.
+        unsafe { slice.raw.get_unchecked(usize::from(self)) }
     }
 
     #[inline]
     unsafe fn get_unchecked_mut(self, slice: &mut TiSlice<K, V>) -> &mut Self::Output {
-        slice.raw.get_unchecked_mut(usize::from(self))
+        // SAFETY: Guaranteed by the caller.
+        unsafe { slice.raw.get_unchecked_mut(usize::from(self)) }
     }
 
     #[inline]
@@ -132,12 +134,14 @@ macro_rules! impl_ti_slice_range {
 
             #[inline]
             unsafe fn get_unchecked(self, slice: &TiSlice<K, V>) -> &Self::Output {
-                TiSlice::from_ref(slice.raw.get_unchecked(self.into_range()))
+                // SAFETY: Guaranteed by the caller.
+                TiSlice::from_ref(unsafe { slice.raw.get_unchecked(self.into_range()) })
             }
 
             #[inline]
             unsafe fn get_unchecked_mut(self, slice: &mut TiSlice<K, V>) -> &mut Self::Output {
-                TiSlice::from_mut(slice.raw.get_unchecked_mut(self.into_range()))
+                // SAFETY: Guaranteed by the caller.
+                TiSlice::from_mut(unsafe { slice.raw.get_unchecked_mut(self.into_range()) })
             }
 
             #[inline]

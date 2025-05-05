@@ -590,7 +590,8 @@ impl<K, V> TiSlice<K, V> {
     where
         I: TiSliceIndex<K, V>,
     {
-        index.get_unchecked(self)
+        // SAFETY: Guaranteed by the caller.
+        unsafe { index.get_unchecked(self) }
     }
 
     /// Returns a mutable reference to an element or subslice
@@ -612,7 +613,8 @@ impl<K, V> TiSlice<K, V> {
     where
         I: TiSliceIndex<K, V>,
     {
-        index.get_unchecked_mut(self)
+        // SAFETY: Guaranteed by the caller.
+        unsafe { index.get_unchecked_mut(self) }
     }
 
     /// Returns a raw pointer to the slice's buffer.
@@ -1012,7 +1014,8 @@ impl<K, V> TiSlice<K, V> {
     where
         usize: From<K>,
     {
-        let (left, right) = self.raw.split_at_unchecked(mid.into());
+        // SAFETY: Guaranteed by the caller.
+        let (left, right) = unsafe { self.raw.split_at_unchecked(mid.into()) };
         (left.as_ref(), right.as_ref())
     }
 
@@ -1035,7 +1038,8 @@ impl<K, V> TiSlice<K, V> {
     where
         usize: From<K>,
     {
-        let (left, right) = self.raw.split_at_mut_unchecked(mid.into());
+        // SAFETY: Guaranteed by the caller.
+        let (left, right) = unsafe { self.raw.split_at_mut_unchecked(mid.into()) };
         (left.as_mut(), right.as_mut())
     }
 
@@ -1562,7 +1566,8 @@ impl<K, V> TiSlice<K, V> {
     /// [`slice::align_to`]: https://doc.rust-lang.org/std/primitive.slice.html#method.align_to
     #[inline]
     pub unsafe fn align_to<U>(&self) -> (&Self, &TiSlice<K, U>, &Self) {
-        let (first, mid, last) = self.raw.align_to();
+        // SAFETY: Guaranteed by the caller.
+        let (first, mid, last) = unsafe { self.raw.align_to() };
         (first.as_ref(), mid.as_ref(), last.as_ref())
     }
 
@@ -1580,7 +1585,8 @@ impl<K, V> TiSlice<K, V> {
     /// [`slice::align_to_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.align_to_mut
     #[inline]
     pub unsafe fn align_to_mut<U>(&mut self) -> (&mut Self, &mut TiSlice<K, U>, &mut Self) {
-        let (first, mid, last) = self.raw.align_to_mut();
+        // SAFETY: Guaranteed by the caller.
+        let (first, mid, last) = unsafe { self.raw.align_to_mut() };
         (first.as_mut(), mid.as_mut(), last.as_mut())
     }
 

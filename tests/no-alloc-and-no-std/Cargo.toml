@@ -2,7 +2,7 @@
 name = "no-alloc-and-std-test"
 version = "0.1.0"
 authors = ["Andrey Zheleznov <zheland.net@gmail.com>"]
-edition = "2021"
+edition = "2024"
 publish = false
 
 [features]

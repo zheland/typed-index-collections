@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - The minimum supported Rust version has been increased to 1.85.0.
+- Migrated to Rust 2024 edition.
 
 ## [3.2.3] - 2024-10-03
 ### Changed

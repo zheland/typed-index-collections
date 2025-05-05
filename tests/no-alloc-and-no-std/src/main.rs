@@ -32,7 +32,7 @@ const fn panic(_: &PanicInfo<'_>) -> ! {
     loop {}
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub const extern "C" fn _start() -> ! {
     loop {}
 }
@@ -48,7 +48,7 @@ unsafe impl GlobalAlloc for DummyAllocator {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub const extern "C" fn test_core() {
     use typed_index_collections::TiSlice;
     struct K(usize);
@@ -58,7 +58,7 @@ pub const extern "C" fn test_core() {
 }
 
 #[cfg(feature = "alloc")]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn test_alloc() {
     use typed_index_collections::TiVec;
 
@@ -69,7 +69,7 @@ pub extern "C" fn test_alloc() {
 }
 
 #[cfg(feature = "std")]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn test_std() {
     use std::io::Write;
     use typed_index_collections::TiVec;

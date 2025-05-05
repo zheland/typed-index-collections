@@ -161,7 +161,8 @@ impl<K, V> TiVec<K, V> {
     #[inline]
     pub unsafe fn from_raw_parts(ptr: *mut V, length: usize, capacity: usize) -> Self {
         Self {
-            raw: Vec::from_raw_parts(ptr, length, capacity),
+            // SAFETY: Guaranteed by the caller.
+            raw: unsafe { Vec::from_raw_parts(ptr, length, capacity) },
             _marker: PhantomData,
         }
     }
@@ -372,7 +373,8 @@ impl<K, V> TiVec<K, V> {
     /// [`capacity()`]: #method.capacity
     #[inline]
     pub unsafe fn set_len(&mut self, new_len: usize) {
-        self.raw.set_len(new_len);
+        // SAFETY: Guaranteed by the caller.
+        unsafe { self.raw.set_len(new_len) };
     }
 
     /// Removes an element from the vector and returns it.

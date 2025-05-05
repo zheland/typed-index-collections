@@ -22,7 +22,7 @@ serde-alloc = ["alloc", "serde"] # Deprecated.
 serde-std = ["std", "serde"] # Deprecated.
 
 [dependencies.serde]
-version = "1.0.210"
+version = "1.0.219"
 default-features = false
 optional = true
 
@@ -31,10 +31,10 @@ version = "2.0.1"
 optional = true
 
 [dev-dependencies]
-derive_more.version = "1.0.0"
+derive_more.version = "2.0.1"
 derive_more.features = ["from", "into"]
 version-sync = "0.9.5"
-serde_json = "1.0.128"
+serde_json = "1.0.140"
 readme-sync = "0.3.0"
 
 [badges.maintenance]

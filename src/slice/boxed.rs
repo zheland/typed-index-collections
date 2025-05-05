@@ -3,6 +3,10 @@ use alloc::{boxed::Box, vec};
 use core::iter::FromIterator;
 use core::mem::transmute;
 
+#[cfg(feature = "bincode")]
+use bincode::de::{BorrowDecode, BorrowDecoder, Decode, Decoder};
+#[cfg(feature = "bincode")]
+use bincode::error::DecodeError;
 #[cfg(all(feature = "alloc", feature = "serde"))]
 use serde::de::{Deserialize, Deserializer};
 
@@ -85,6 +89,26 @@ impl<'de, K, V: Deserialize<'de>> Deserialize<'de> for Box<TiSlice<K, V>> {
     }
 }
 
+#[cfg(feature = "bincode")]
+#[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "bincode"))))]
+impl<C, K, V: 'static + Decode<C>> Decode<C> for Box<TiSlice<K, V>> {
+    #[inline]
+    fn decode<D: Decoder<Context = C>>(decoder: &mut D) -> Result<Self, DecodeError> {
+        Box::<[V]>::decode(decoder).map(Into::into)
+    }
+}
+
+#[cfg(feature = "bincode")]
+#[cfg_attr(docsrs, doc(cfg(feature = "bincode")))]
+impl<'de, C, K, V: 'de + BorrowDecode<'de, C>> BorrowDecode<'de, C> for Box<TiSlice<K, V>> {
+    #[inline]
+    fn borrow_decode<D: BorrowDecoder<'de, Context = C>>(
+        decoder: &mut D,
+    ) -> Result<Self, DecodeError> {
+        Box::<[V]>::borrow_decode(decoder).map(Into::into)
+    }
+}
+
 #[expect(dead_code, unused_imports, unused_mut, reason = "okay in tests")]
 #[cfg(test)]
 mod test {
@@ -139,5 +163,46 @@ mod test {
         assert_eq!(s0.as_ref().raw, [0; 0][..]);
         assert_eq!(s1.as_ref().raw, [12][..]);
         assert_eq!(s2.as_ref().raw, [23, 34][..]);
+    }
+
+    #[expect(clippy::unwrap_used, reason = "okay in tests")]
+    #[cfg(feature = "bincode")]
+    #[test]
+    fn test_boxed_slice_decode() {
+        fn decode_whole(bytes: &[u8]) -> Box<TiSlice<Id, u32>> {
+            let config = bincode::config::standard();
+            let (decoded, len) = bincode::decode_from_slice(bytes, config).unwrap();
+            assert_eq!(len, bytes.len());
+            decoded
+        }
+
+        let s0: Box<TiSlice<Id, u32>> = decode_whole(&[0]);
+        let s1: Box<TiSlice<Id, u32>> = decode_whole(&[1, 12]);
+        let s2: Box<TiSlice<Id, u32>> = decode_whole(&[2, 23, 34]);
+        let s3: Box<TiSlice<Id, u32>> =
+            decode_whole(&[2, 252, 0x78, 0x56, 0x34, 0x12, 252, 0x89, 0x67, 0x45, 0x23]);
+        assert_eq!(s0.as_ref().raw, [0; 0][..]);
+        assert_eq!(s1.as_ref().raw, [12][..]);
+        assert_eq!(s2.as_ref().raw, [23, 34][..]);
+        assert_eq!(s3.as_ref().raw, [0x1234_5678, 0x2345_6789][..]);
+    }
+
+    #[expect(clippy::unwrap_used, reason = "okay in tests")]
+    #[cfg(feature = "bincode")]
+    #[test]
+    fn test_boxed_slice_borrow_decode() {
+        fn decode_whole(bytes: &[u8]) -> Box<TiSlice<Id, &str>> {
+            let config = bincode::config::standard();
+            let (decoded, len) = bincode::borrow_decode_from_slice(bytes, config).unwrap();
+            assert_eq!(len, bytes.len());
+            decoded
+        }
+
+        let s0: Box<TiSlice<Id, &str>> = decode_whole(&[0]);
+        let s1: Box<TiSlice<Id, &str>> = decode_whole(&[1, 1, b'a']);
+        let s2: Box<TiSlice<Id, &str>> = decode_whole(&[2, 2, b'b', b'c', 3, b'd', b'e', b'f']);
+        assert_eq!(s0.as_ref().raw, [""; 0][..]);
+        assert_eq!(s1.as_ref().raw, ["a"][..]);
+        assert_eq!(s2.as_ref().raw, ["bc", "def"][..]);
     }
 }

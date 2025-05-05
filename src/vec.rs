@@ -15,6 +15,12 @@ use core::{fmt, slice};
 #[cfg(feature = "std")]
 use std::io::{IoSlice, Result as IoResult, Write};
 
+#[cfg(feature = "bincode")]
+use bincode::de::{BorrowDecode, BorrowDecoder, Decode, Decoder};
+#[cfg(feature = "bincode")]
+use bincode::enc::{Encode, Encoder};
+#[cfg(feature = "bincode")]
+use bincode::error::{DecodeError, EncodeError};
 #[cfg(all(feature = "alloc", feature = "serde"))]
 use serde::de::{Deserialize, Deserializer};
 #[cfg(feature = "serde")]
@@ -1246,24 +1252,30 @@ impl<'de, K, V: Deserialize<'de>> Deserialize<'de> for TiVec<K, V> {
 
 #[cfg(feature = "bincode")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bincode")))]
-impl<K, V: bincode::enc::Encode> bincode::enc::Encode for TiVec<K, V> {
+impl<K, V: Encode> Encode for TiVec<K, V> {
     #[inline]
-    fn encode<E: bincode::enc::Encoder>(
-        &self,
-        encoder: &mut E,
-    ) -> Result<(), bincode::error::EncodeError> {
-        bincode::enc::Encode::encode(&self.raw, encoder)
+    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+        self.raw.encode(encoder)
     }
 }
 
-#[cfg(all(feature = "alloc", feature = "bincode"))]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc", feature = "bincode")))]
-impl<C, K, V: bincode::de::Decode<C>> bincode::de::Decode<C> for TiVec<K, V> {
+#[cfg(feature = "bincode")]
+#[cfg_attr(docsrs, doc(cfg(feature = "bincode")))]
+impl<C, K, V: Decode<C>> Decode<C> for TiVec<K, V> {
     #[inline]
-    fn decode<D: bincode::de::Decoder<Context = C>>(
-        decoder: &mut D,
-    ) -> Result<Self, bincode::error::DecodeError> {
+    fn decode<D: Decoder<Context = C>>(decoder: &mut D) -> Result<Self, DecodeError> {
         Vec::decode(decoder).map(Into::into)
+    }
+}
+
+#[cfg(feature = "bincode")]
+#[cfg_attr(docsrs, doc(cfg(feature = "bincode")))]
+impl<'de, C, K, V: BorrowDecode<'de, C>> BorrowDecode<'de, C> for TiVec<K, V> {
+    #[inline]
+    fn borrow_decode<D: BorrowDecoder<'de, Context = C>>(
+        decoder: &mut D,
+    ) -> Result<Self, DecodeError> {
+        Vec::borrow_decode(decoder).map(Into::into)
     }
 }
 
@@ -1606,13 +1618,57 @@ mod test {
 
     #[cfg(feature = "bincode")]
     #[test]
-    fn test_encode_decode() {
-        let s0: TiVec<Id, u32> = TiVec::from(alloc::vec![0, 1, 2]);
-        let encode = bincode::encode_to_vec(&s0, bincode::config::standard()).unwrap();
-        let decode: TiVec<Id, u32> =
-            bincode::decode_from_slice(&encode, bincode::config::standard())
-                .unwrap()
-                .0;
-        assert_eq!(s0.as_slice().raw, decode.as_slice().raw);
+    fn test_vec_encode() {
+        let config = bincode::config::standard();
+        let s0: TiVec<Id, u32> = TiVec::from(alloc::vec![]);
+        let s1: TiVec<Id, u32> = TiVec::from(alloc::vec![12]);
+        let s2: TiVec<Id, u32> = TiVec::from(alloc::vec![23, 34]);
+        let s3: TiVec<Id, u32> = TiVec::from(alloc::vec![0x1234_5678, 0x2345_6789]);
+        assert_eq!(&bincode::encode_to_vec(s0, config).unwrap(), &[0]);
+        assert_eq!(&bincode::encode_to_vec(s1, config).unwrap(), &[1, 12]);
+        assert_eq!(&bincode::encode_to_vec(s2, config).unwrap(), &[2, 23, 34]);
+        assert_eq!(
+            &bincode::encode_to_vec(s3, config).unwrap(),
+            &[2, 252, 0x78, 0x56, 0x34, 0x12, 252, 0x89, 0x67, 0x45, 0x23]
+        );
+    }
+
+    #[cfg(feature = "bincode")]
+    #[test]
+    fn test_vec_decode() {
+        fn decode_whole(bytes: &[u8]) -> TiVec<Id, u32> {
+            let config = bincode::config::standard();
+            let (decoded, len) = bincode::decode_from_slice(bytes, config).unwrap();
+            assert_eq!(len, bytes.len());
+            decoded
+        }
+
+        let s0: TiVec<Id, u32> = decode_whole(&[0]);
+        let s1: TiVec<Id, u32> = decode_whole(&[1, 12]);
+        let s2: TiVec<Id, u32> = decode_whole(&[2, 23, 34]);
+        let s3: TiVec<Id, u32> =
+            decode_whole(&[2, 252, 0x78, 0x56, 0x34, 0x12, 252, 0x89, 0x67, 0x45, 0x23]);
+        assert_eq!(s0.as_slice().raw, [0; 0][..]);
+        assert_eq!(s1.as_slice().raw, [12][..]);
+        assert_eq!(s2.as_slice().raw, [23, 34][..]);
+        assert_eq!(s3.as_slice().raw, [0x1234_5678, 0x2345_6789][..]);
+    }
+
+    #[cfg(feature = "bincode")]
+    #[test]
+    fn test_boxed_slice_borrow_decode() {
+        fn decode_whole(bytes: &[u8]) -> TiVec<Id, &str> {
+            let config = bincode::config::standard();
+            let (decoded, len) = bincode::borrow_decode_from_slice(bytes, config).unwrap();
+            assert_eq!(len, bytes.len());
+            decoded
+        }
+
+        let s0: TiVec<Id, &str> = decode_whole(&[0]);
+        let s1: TiVec<Id, &str> = decode_whole(&[1, 1, b'a']);
+        let s2: TiVec<Id, &str> = decode_whole(&[2, 2, b'b', b'c', 3, b'd', b'e', b'f']);
+        assert_eq!(s0.as_slice().raw, [""; 0][..]);
+        assert_eq!(s1.as_slice().raw, ["a"][..]);
+        assert_eq!(s2.as_slice().raw, ["bc", "def"][..]);
     }
 }

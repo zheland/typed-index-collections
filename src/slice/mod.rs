@@ -31,6 +31,10 @@ use core::str::Utf8Chunks;
 #[cfg(feature = "std")]
 use std::io::{BufRead, IoSlice, IoSliceMut, Read, Result as IoResult, Write};
 
+#[cfg(feature = "bincode")]
+use bincode::enc::{Encode, Encoder};
+#[cfg(feature = "bincode")]
+use bincode::error::EncodeError;
 #[cfg(feature = "alloc")]
 pub use concat::Concat;
 #[cfg(feature = "alloc")]
@@ -2131,6 +2135,15 @@ impl<K, V: Serialize> Serialize for TiSlice<K, V> {
     }
 }
 
+#[cfg(feature = "bincode")]
+#[cfg_attr(docsrs, doc(cfg(feature = "bincode")))]
+impl<K, V: Encode> Encode for TiSlice<K, V> {
+    #[inline]
+    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+        self.raw.encode(encoder)
+    }
+}
+
 #[expect(
     dead_code,
     unused_imports,
@@ -2941,6 +2954,23 @@ mod test {
         assert_eq!(&serde_json::to_string(&s0).unwrap(), "[]");
         assert_eq!(&serde_json::to_string(&s1).unwrap(), "[12]");
         assert_eq!(&serde_json::to_string(&s2).unwrap(), "[23,34]");
+    }
+
+    #[cfg(all(feature = "alloc", feature = "bincode"))]
+    #[test]
+    fn test_slice_encode() {
+        let config = bincode::config::standard();
+        let s0: &TiSlice<Id, u32> = TiSlice::from_ref(&[]);
+        let s1: &TiSlice<Id, u32> = TiSlice::from_ref(&[12]);
+        let s2: &TiSlice<Id, u32> = TiSlice::from_ref(&[23, 34]);
+        let s3: &TiSlice<Id, u32> = TiSlice::from_ref(&[0x1234_5678, 0x2345_6789]);
+        assert_eq!(&bincode::encode_to_vec(s0, config).unwrap(), &[0]);
+        assert_eq!(&bincode::encode_to_vec(s1, config).unwrap(), &[1, 12]);
+        assert_eq!(&bincode::encode_to_vec(s2, config).unwrap(), &[2, 23, 34]);
+        assert_eq!(
+            &bincode::encode_to_vec(s3, config).unwrap(),
+            &[2, 252, 0x78, 0x56, 0x34, 0x12, 252, 0x89, 0x67, 0x45, 0x23]
+        );
     }
 
     #[should_panic(expected = "where expr: v.bad_return()")]

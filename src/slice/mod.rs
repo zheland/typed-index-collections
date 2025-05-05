@@ -286,7 +286,7 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// [`slice::first_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.first_mut
     #[inline]
-    pub fn first_mut(&mut self) -> Option<&mut V> {
+    pub const fn first_mut(&mut self) -> Option<&mut V> {
         self.raw.first_mut()
     }
 
@@ -443,7 +443,7 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// [`slice::last_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.last_mut
     #[inline]
-    pub fn last_mut(&mut self) -> Option<&mut V> {
+    pub const fn last_mut(&mut self) -> Option<&mut V> {
         self.raw.last_mut()
     }
 
@@ -629,7 +629,7 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// [`slice::as_mut_ptr`]: https://doc.rust-lang.org/std/primitive.slice.html#method.as_mut_ptr
     #[inline]
-    pub fn as_mut_ptr(&mut self) -> *mut V {
+    pub const fn as_mut_ptr(&mut self) -> *mut V {
         self.raw.as_mut_ptr()
     }
 
@@ -651,7 +651,7 @@ impl<K, V> TiSlice<K, V> {
     /// [`slice::as_mut_ptr_range`]: https://doc.rust-lang.org/std/primitive.slice.html#method.as_mut_ptr_range
     #[inline]
     #[must_use]
-    pub fn as_mut_ptr_range(&mut self) -> Range<*mut V> {
+    pub const fn as_mut_ptr_range(&mut self) -> Range<*mut V> {
         self.raw.as_mut_ptr_range()
     }
 
@@ -1628,7 +1628,7 @@ impl<K> TiSlice<K, u8> {
     ///
     /// [`slice::make_ascii_uppercase`]: https://doc.rust-lang.org/std/primitive.slice.html#method.make_ascii_uppercase
     #[inline]
-    pub fn make_ascii_uppercase(&mut self) {
+    pub const fn make_ascii_uppercase(&mut self) {
         self.raw.make_ascii_uppercase();
     }
 
@@ -1638,7 +1638,7 @@ impl<K> TiSlice<K, u8> {
     ///
     /// [`slice::make_ascii_lowercase`]: https://doc.rust-lang.org/std/primitive.slice.html#method.make_ascii_lowercase
     #[inline]
-    pub fn make_ascii_lowercase(&mut self) {
+    pub const fn make_ascii_lowercase(&mut self) {
         self.raw.make_ascii_lowercase();
     }
 

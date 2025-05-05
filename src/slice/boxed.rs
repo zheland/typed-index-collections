@@ -99,7 +99,7 @@ impl<C, K, V: 'static + Decode<C>> Decode<C> for Box<TiSlice<K, V>> {
 }
 
 #[cfg(feature = "bincode")]
-#[cfg_attr(docsrs, doc(cfg(feature = "bincode")))]
+#[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "bincode"))))]
 impl<'de, C, K, V: 'de + BorrowDecode<'de, C>> BorrowDecode<'de, C> for Box<TiSlice<K, V>> {
     #[inline]
     fn borrow_decode<D: BorrowDecoder<'de, Context = C>>(

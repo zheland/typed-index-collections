@@ -6,8 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Add `bincode` support for `TiSlice`, `Box<TiSlice>` and `TiVec` under the
+- `bincode` support for `TiSlice`, `Box<TiSlice>` and `TiVec` under the
   `bincode` feature.
+- Compatible methods and trait implementations for `TiSlice` to mirror the
+  stable Rust API for `[]` up to Rust 1.85.0.
 
 ### Changed
 - The minimum supported Rust version has been increased to 1.85.0.

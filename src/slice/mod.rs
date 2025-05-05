@@ -199,7 +199,7 @@ impl<K, V> TiSlice<K, V> {
     /// ```
     #[expect(clippy::as_conversions, reason = "transparent over a `[V]` type")]
     #[inline]
-    pub fn from_mut(raw: &mut [V]) -> &mut Self {
+    pub const fn from_mut(raw: &mut [V]) -> &mut Self {
         // SAFETY: `TiSlice<K, V>` is `repr(transparent)` over a `[V]` type.
         unsafe { &mut *(core::ptr::from_mut::<[V]>(raw) as *mut Self) }
     }
@@ -394,10 +394,11 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// [`slice::split_first_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_first_mut
     #[inline]
-    pub fn split_first_mut(&mut self) -> Option<(&mut V, &mut Self)> {
-        self.raw
-            .split_first_mut()
-            .map(|(first, rest)| (first, rest.as_mut()))
+    pub const fn split_first_mut(&mut self) -> Option<(&mut V, &mut Self)> {
+        match self.raw.split_first_mut() {
+            Some((first, rest)) => Some((first, Self::from_mut(rest))),
+            None => None,
+        }
     }
 
     /// Returns the last and all the rest of the elements of the slice, or
@@ -420,10 +421,11 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// [`slice::split_last_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_last_mut
     #[inline]
-    pub fn split_last_mut(&mut self) -> Option<(&mut V, &mut Self)> {
-        self.raw
-            .split_last_mut()
-            .map(|(last, rest)| (last, rest.as_mut()))
+    pub const fn split_last_mut(&mut self) -> Option<(&mut V, &mut Self)> {
+        match self.raw.split_last_mut() {
+            Some((first, rest)) => Some((first, Self::from_mut(rest))),
+            None => None,
+        }
     }
 
     /// Returns the last element of the slice of type `K`, or `None` if it is
@@ -1580,6 +1582,51 @@ impl<K, V> TiSlice<K, V> {
     pub unsafe fn align_to_mut<U>(&mut self) -> (&mut Self, &mut TiSlice<K, U>, &mut Self) {
         let (first, mid, last) = self.raw.align_to_mut();
         (first.as_mut(), mid.as_mut(), last.as_mut())
+    }
+
+    /// Checks if the elements of this slice are sorted.
+    ///
+    /// See [`slice::is_sorted`] for more details.
+    ///
+    /// [`slice::is_sorted`]: https://doc.rust-lang.org/std/primitive.slice.html#method.is_sorted
+    #[inline]
+    #[must_use]
+    pub fn is_sorted(&self) -> bool
+    where
+        V: PartialOrd,
+    {
+        self.raw.is_sorted()
+    }
+
+    /// Checks if the elements of this slice are sorted using the given
+    /// comparator function.
+    ///
+    /// See [`slice::is_sorted_by`] for more details.
+    ///
+    /// [`slice::is_sorted_by`]: https://doc.rust-lang.org/std/primitive.slice.html#method.is_sorted_by
+    #[inline]
+    #[must_use]
+    pub fn is_sorted_by<'a, F>(&'a self, compare: F) -> bool
+    where
+        F: FnMut(&'a V, &'a V) -> bool,
+    {
+        self.raw.is_sorted_by(compare)
+    }
+
+    /// Checks if the elements of this slice are sorted using the given key
+    /// extraction function.
+    ///
+    /// See [`slice::is_sorted_by_key`] for more details.
+    ///
+    /// [`slice::is_sorted_by_key`]: https://doc.rust-lang.org/std/primitive.slice.html#method.is_sorted_by_key
+    #[inline]
+    #[must_use]
+    pub fn is_sorted_by_key<'a, F, T>(&'a self, f: F) -> bool
+    where
+        F: FnMut(&'a V) -> T,
+        T: PartialOrd,
+    {
+        self.raw.is_sorted_by_key(f)
     }
 
     /// Returns the index of the partition point according to the given

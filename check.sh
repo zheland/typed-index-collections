@@ -52,40 +52,44 @@ expect_failure() {
 echo_and_run cargo +nightly fmt --all -- --check
 echo_and_run cargo outdated --exit-code 1
 
+# Each value is a set of `|`-separated values:
+# - comma separated features,
+# - expected status on non-nightly toolchains,
+# - expected status on nightly toolchain,
+# - expected error message regex"
 valid_no_alloc_and_no_std_param_sets=(
-    " fail panic_handler.* function required"
-    "panic-handler ok "
-    "alloc,panic-handler fail no global memory allocator found"
-    "alloc,panic-handler,global-allocator ok-stable-beta-fail-nightly undefined symbol: rust_eh_personality"
-    "alloc,std,panic-handler,global-allocator fail found duplicate lang item .*panic_impl"
-    "alloc,std,global-allocator ok "
+    "|fail|fail|panic_handler.* function required"
+    "panic-handler|ok|ok|"
+    "alloc,panic-handler|fail|fail|no global memory allocator found"
+    "alloc,panic-handler,global-allocator|ok|fail|undefined symbol: rust_eh_personality"
+    "alloc,std,panic-handler,global-allocator|fail|fail|found duplicate lang item .*panic_impl"
+    "alloc,std,global-allocator|ok|ok|"
 )
 for toolchain in "${toolchains[@]}"; do
     (
-        export CARGO_TARGET_DIR="$PWD/target/check-no-alloc-and-no-std"
-        echo_and_run cd tests/no-alloc-and-no-std
+        echo_and_run export CARGO_TARGET_DIR="target/check-no-alloc-and-no-std-$toolchain"
         for param_set in "${valid_no_alloc_and_no_std_param_sets[@]}"; do
-            features=$(echo "$param_set" | cut -sd" " -f1)
-            expected=$(echo "$param_set" | cut -sd" " -f2)
-            expected_error_regex=$(echo "$param_set" | cut -sd" " -f3-)
-            if [ "$expected" = "ok-stable-beta-fail-nightly" ]; then
-                if [ "$toolchain" = "nightly" ]; then
-                    expected="fail"
-                else
-                    expected="ok"
-                fi
+            features=$(echo "$param_set" | cut -sd"|" -f1)
+            expected_default=$(echo "$param_set" | cut -sd"|" -f2)
+            expected_nightly=$(echo "$param_set" | cut -sd"|" -f3)
+            expected_error_regex=$(echo "$param_set" | cut -sd"|" -f4-)
+            if [ "$toolchain" = "nightly" ]; then
+                expected="$expected_nightly"
+            else
+                expected="$expected_default"
             fi
+            args="--config build.rustflags=[\"-C\",\"link-arg=-nostartfiles\"]"
+            args+=" --manifest-path tests/no-alloc-and-no-std/Cargo.toml"
+            args+=" --no-default-features"
+            [ -n "$features" ] && args+=" --features $features"
             if [ "$expected" = "ok" ]; then
-                echo_and_run cargo "+$toolchain" clippy  \
-                    --no-default-features --features "$features" -- -D warnings
-                echo_and_run cargo "+$toolchain" build  \
-                    --no-default-features --features "$features"
+                echo_and_run cargo "+$toolchain" clippy $args -- -D warnings
+                echo_and_run cargo "+$toolchain" build $args
             elif [ "$expected" = "fail" ]; then
-                echo_and_try_run cargo "+$toolchain" build  \
-                    --no-default-features --features "$features"
+                echo_and_try_run cargo "+$toolchain" build $args
                 expect_failure "$expected_error_regex"
             else
-                fail "Internal script error: invalid expected resultю"
+                fail "Internal script error: invalid expected result."
             fi
         done
     )
@@ -95,12 +99,12 @@ num_features=${#all_features[@]}
 num_combinations=$(echo "2^$num_features" | bc)
 feature_sets=()
 
-# iterate over all `2^num_features` features combinations if required
-# `combination_idx` is used as a bitmask of the enabled features
+# Iterate over all `2^num_features` features combinations if required
+# `combination_idx` is used as a bitmask of the enabled features.
 for ((combination_idx = 0; combination_idx < num_combinations; combination_idx++)); do
     features_set=()
     for ((feature_idx = 0; feature_idx < num_features; feature_idx++)); do
-        mask=$(echo "2^$feature_idx" | bc) # the mask of `feature_idx`-th feature
+        mask=$(echo "2^$feature_idx" | bc) # The mask of `feature_idx`-th feature.
 
         if (( combination_idx & mask )); then
             features_set+=(${all_features[$feature_idx]})
@@ -113,7 +117,7 @@ done
 
 for toolchain in "${toolchains[@]}"; do
     (
-        export CARGO_TARGET_DIR="$PWD/target/check-$toolchain"
+        export CARGO_TARGET_DIR="target/check-$toolchain"
         for features in "${feature_sets[@]}"; do
             cargo="cargo +$toolchain"
             if [ -n "$features" ]; then

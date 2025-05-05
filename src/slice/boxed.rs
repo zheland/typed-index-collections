@@ -82,29 +82,45 @@ impl<K, V> FromIterator<V> for Box<TiSlice<K, V>> {
 
 #[cfg(feature = "serde")]
 #[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "serde"))))]
-impl<'de, K, V: Deserialize<'de>> Deserialize<'de> for Box<TiSlice<K, V>> {
+impl<'de, K, V> Deserialize<'de> for Box<TiSlice<K, V>>
+where
+    V: Deserialize<'de>,
+{
     #[inline]
-    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
         Box::<[V]>::deserialize(deserializer).map(Into::into)
     }
 }
 
 #[cfg(feature = "bincode")]
 #[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "bincode"))))]
-impl<C, K, V: 'static + Decode<C>> Decode<C> for Box<TiSlice<K, V>> {
+impl<K, V, Context> Decode<Context> for Box<TiSlice<K, V>>
+where
+    V: 'static + Decode<Context>,
+{
     #[inline]
-    fn decode<D: Decoder<Context = C>>(decoder: &mut D) -> Result<Self, DecodeError> {
+    fn decode<D>(decoder: &mut D) -> Result<Self, DecodeError>
+    where
+        D: Decoder<Context = Context>,
+    {
         Box::<[V]>::decode(decoder).map(Into::into)
     }
 }
 
 #[cfg(feature = "bincode")]
 #[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "bincode"))))]
-impl<'de, C, K, V: 'de + BorrowDecode<'de, C>> BorrowDecode<'de, C> for Box<TiSlice<K, V>> {
+impl<'de, K, V, Context> BorrowDecode<'de, Context> for Box<TiSlice<K, V>>
+where
+    V: 'de + BorrowDecode<'de, Context>,
+{
     #[inline]
-    fn borrow_decode<D: BorrowDecoder<'de, Context = C>>(
-        decoder: &mut D,
-    ) -> Result<Self, DecodeError> {
+    fn borrow_decode<D>(decoder: &mut D) -> Result<Self, DecodeError>
+    where
+        D: BorrowDecoder<'de, Context = Context>,
+    {
         Box::<[V]>::borrow_decode(decoder).map(Into::into)
     }
 }

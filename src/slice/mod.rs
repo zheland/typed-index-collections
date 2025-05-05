@@ -2128,18 +2128,30 @@ impl<K, V: Clone> ToOwned for TiSlice<K, V> {
 
 #[cfg(feature = "serde")]
 #[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
-impl<K, V: Serialize> Serialize for TiSlice<K, V> {
+impl<K, V> Serialize for TiSlice<K, V>
+where
+    V: Serialize,
+{
     #[inline]
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
         self.raw.serialize(serializer)
     }
 }
 
 #[cfg(feature = "bincode")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bincode")))]
-impl<K, V: Encode> Encode for TiSlice<K, V> {
+impl<K, V> Encode for TiSlice<K, V>
+where
+    V: Encode,
+{
     #[inline]
-    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+    fn encode<E>(&self, encoder: &mut E) -> Result<(), EncodeError>
+    where
+        E: Encoder,
+    {
         self.raw.encode(encoder)
     }
 }

@@ -1232,47 +1232,75 @@ impl<K> Write for TiVec<K, u8> {
 
 #[cfg(feature = "serde")]
 #[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
-impl<K, V: Serialize> Serialize for TiVec<K, V> {
+impl<K, V> Serialize for TiVec<K, V>
+where
+    V: Serialize,
+{
     #[inline]
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
         self.raw.as_slice().serialize(serializer)
     }
 }
 
 #[cfg(feature = "serde")]
 #[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
-impl<'de, K, V: Deserialize<'de>> Deserialize<'de> for TiVec<K, V> {
+impl<'de, K, V> Deserialize<'de> for TiVec<K, V>
+where
+    V: Deserialize<'de>,
+{
     #[inline]
-    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
         Vec::deserialize(deserializer).map(Into::into)
     }
 }
 
 #[cfg(feature = "bincode")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bincode")))]
-impl<K, V: Encode> Encode for TiVec<K, V> {
+impl<K, V> Encode for TiVec<K, V>
+where
+    V: Encode,
+{
     #[inline]
-    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+    fn encode<E>(&self, encoder: &mut E) -> Result<(), EncodeError>
+    where
+        E: Encoder,
+    {
         self.raw.encode(encoder)
     }
 }
 
 #[cfg(feature = "bincode")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bincode")))]
-impl<C, K, V: Decode<C>> Decode<C> for TiVec<K, V> {
+impl<K, V, Context> Decode<Context> for TiVec<K, V>
+where
+    V: Decode<Context>,
+{
     #[inline]
-    fn decode<D: Decoder<Context = C>>(decoder: &mut D) -> Result<Self, DecodeError> {
+    fn decode<D>(decoder: &mut D) -> Result<Self, DecodeError>
+    where
+        D: Decoder<Context = Context>,
+    {
         Vec::decode(decoder).map(Into::into)
     }
 }
 
 #[cfg(feature = "bincode")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bincode")))]
-impl<'de, C, K, V: BorrowDecode<'de, C>> BorrowDecode<'de, C> for TiVec<K, V> {
+impl<'de, K, V, Context> BorrowDecode<'de, Context> for TiVec<K, V>
+where
+    V: BorrowDecode<'de, Context>,
+{
     #[inline]
-    fn borrow_decode<D: BorrowDecoder<'de, Context = C>>(
-        decoder: &mut D,
-    ) -> Result<Self, DecodeError> {
+    fn borrow_decode<D>(decoder: &mut D) -> Result<Self, DecodeError>
+    where
+        D: BorrowDecoder<'de, Context = Context>,
+    {
         Vec::borrow_decode(decoder).map(Into::into)
     }
 }

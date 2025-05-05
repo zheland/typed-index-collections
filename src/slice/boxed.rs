@@ -1,5 +1,5 @@
-#[cfg(feature = "alloc")]
-use alloc::{boxed::Box, vec};
+use alloc::boxed::Box;
+use alloc::vec;
 use core::iter::FromIterator;
 use core::mem::transmute;
 
@@ -80,7 +80,7 @@ impl<K, V> FromIterator<V> for Box<TiSlice<K, V>> {
     }
 }
 
-#[cfg(all(feature = "alloc", feature = "serde"))]
+#[cfg(feature = "serde")]
 #[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "serde"))))]
 impl<'de, K, V: Deserialize<'de>> Deserialize<'de> for Box<TiSlice<K, V>> {
     #[inline]

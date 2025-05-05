@@ -1002,8 +1002,6 @@ impl<K> From<String> for TiVec<K, u8> {
     }
 }
 
-#[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<K> From<CString> for TiVec<K, u8> {
     #[inline]
     fn from(s: CString) -> Self {
@@ -1241,8 +1239,8 @@ impl<K, V: Serialize> Serialize for TiVec<K, V> {
     }
 }
 
-#[cfg(all(feature = "alloc", feature = "serde"))]
-#[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "serde"))))]
+#[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 impl<'de, K, V: Deserialize<'de>> Deserialize<'de> for TiVec<K, V> {
     #[inline]
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {

@@ -140,6 +140,13 @@ for toolchain in "${toolchains[@]}"; do
     )
 done
 
+echo_and_run cargo deny --workspace --all-features check
+
+echo_and_run cargo +nightly llvm-cov --doctests --all-features --html \
+    --fail-uncovered-functions $max_uncovered_functions \
+    --fail-uncovered-lines $max_uncovered_lines \
+    --fail-uncovered-regions $max_uncovered_regions
+
 for features in "${feature_sets[@]}"; do
     args=()
     features=$( echo "$features" | tr "," " " )
@@ -149,12 +156,5 @@ for features in "${feature_sets[@]}"; do
     done
     echo_and_run cargo semver-checks --only-explicit-features "${args[@]}"
 done
-
-echo_and_run cargo deny --workspace --all-features check
-
-echo_and_run cargo +nightly llvm-cov --doctests --all-features --html \
-    --fail-uncovered-functions $max_uncovered_functions \
-    --fail-uncovered-lines $max_uncovered_lines \
-    --fail-uncovered-regions $max_uncovered_regions
 
 ok "All checks succeeded." 1>&2

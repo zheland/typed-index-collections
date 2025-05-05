@@ -156,6 +156,9 @@ let _boxed_slice: std::boxed::Box<[Foo]> = ti_boxed_slice.into();
 - `serde`: Implements [`Serialize`] trait for [`TiSlice`] and [`TiVec`]
   containers and [`Deserialize`] trait for [`Box`]`<`[`TiSlice`]`>` and
   [`TiVec`].
+- `bincode`: Implements [`Encode`] trait for [`TiSlice`] and [`TiVec`]
+  containers and [`Decode`] and [`BorrowDecode`] traits for
+  [`Box`]`<`[`TiSlice`]`>` and [`TiVec`].
 
 ## Similar crates
 
@@ -212,3 +215,6 @@ additional terms or conditions.
 [`index_vec`]: https://crates.io/crates/index_vec
 [`Serialize`]: https://docs.serde.rs/serde/trait.Serialize.html
 [`Deserialize`]: https://docs.serde.rs/serde/trait.Deserialize.html
+[`Encode`]: https://docs.serde.rs/serde/trait.Serialize.html
+[`Decode`]: https://docs.rs/bincode/latest/bincode/de/trait.Decode.html
+[`BorrowDecode`]: https://docs.rs/bincode/latest/bincode/de/trait.BorrowDecode.html

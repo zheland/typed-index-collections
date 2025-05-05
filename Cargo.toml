@@ -28,6 +28,7 @@ optional = true
 
 [dependencies.bincode]
 version = "2.0.1"
+default-features = false
 optional = true
 
 [dev-dependencies]

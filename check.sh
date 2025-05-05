@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Crate-specific settings
-toolchains=( stable beta nightly "1.81.0" )
+toolchains=( stable beta nightly "1.85.0" )
 all_features=( "" "alloc" "std" "serde" )
 max_uncovered_functions=0
 max_uncovered_lines=10
@@ -50,6 +50,7 @@ expect_failure() {
 }
 
 echo_and_run cargo +nightly fmt --all -- --check
+echo_and_run cargo msrv verify
 echo_and_run cargo outdated --exit-code 1
 
 # Each value is a set of `|`-separated values:

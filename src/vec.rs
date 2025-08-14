@@ -200,7 +200,7 @@ impl<K, V> TiVec<K, V> {
     ///
     /// [`&mut std::vec::Vec<V>`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
     #[inline]
-    pub fn from_mut(raw: &mut Vec<V>) -> &mut Self {
+    pub const fn from_mut(raw: &mut Vec<V>) -> &mut Self {
         // SAFETY: `TiVec<K, V>` is `repr(transparent)` over a `Vec<V>` type.
         unsafe { &mut *core::ptr::from_mut::<Vec<V>>(raw).cast::<Self>() }
     }
@@ -213,7 +213,7 @@ impl<K, V> TiVec<K, V> {
     /// [`Vec::capacity`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.capacity
     #[inline]
     #[must_use]
-    pub fn capacity(&self) -> usize {
+    pub const fn capacity(&self) -> usize {
         self.raw.capacity()
     }
 
@@ -325,8 +325,8 @@ impl<K, V> TiVec<K, V> {
     /// [`Vec::as_slice`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.as_slice
     #[inline]
     #[must_use]
-    pub fn as_slice(&self) -> &TiSlice<K, V> {
-        self.raw.as_slice().as_ref()
+    pub const fn as_slice(&self) -> &TiSlice<K, V> {
+        TiSlice::from_ref(self.raw.as_slice())
     }
 
     /// Extracts a mutable slice of the entire vector.
@@ -335,8 +335,8 @@ impl<K, V> TiVec<K, V> {
     ///
     /// [`Vec::as_mut_slice`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.as_mut_slice
     #[inline]
-    pub fn as_mut_slice(&mut self) -> &mut TiSlice<K, V> {
-        self.raw.as_mut_slice().as_mut()
+    pub const fn as_mut_slice(&mut self) -> &mut TiSlice<K, V> {
+        TiSlice::from_mut(self.raw.as_mut_slice())
     }
 
     /// Returns a raw pointer to the vector's buffer.
@@ -346,7 +346,7 @@ impl<K, V> TiVec<K, V> {
     /// [`Vec::as_ptr`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.as_ptr
     #[inline]
     #[must_use]
-    pub fn as_ptr(&self) -> *const V {
+    pub const fn as_ptr(&self) -> *const V {
         self.raw.as_ptr()
     }
 
@@ -356,7 +356,7 @@ impl<K, V> TiVec<K, V> {
     ///
     /// [`Vec::as_mut_ptr`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.as_mut_ptr
     #[inline]
-    pub fn as_mut_ptr(&mut self) -> *mut V {
+    pub const fn as_mut_ptr(&mut self) -> *mut V {
         self.raw.as_mut_ptr()
     }
 
@@ -642,7 +642,7 @@ impl<K, V> TiVec<K, V> {
     /// [`Vec::len`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.len
     #[inline]
     #[must_use]
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.raw.len()
     }
 
@@ -653,7 +653,7 @@ impl<K, V> TiVec<K, V> {
     /// [`Vec::is_empty`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.is_empty
     #[inline]
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.raw.is_empty()
     }
 

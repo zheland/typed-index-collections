@@ -381,10 +381,11 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// [`slice::split_first`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_first
     #[inline]
-    pub fn split_first(&self) -> Option<(&V, &Self)> {
-        self.raw
-            .split_first()
-            .map(|(first, rest)| (first, rest.as_ref()))
+    pub const fn split_first(&self) -> Option<(&V, &Self)> {
+        match self.raw.split_first() {
+            Some((first, rest)) => Some((first, Self::from_ref(rest))),
+            None => None,
+        }
     }
 
     /// Returns the first and all the rest of the elements of the slice, or
@@ -408,10 +409,11 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// [`slice::split_last`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_last
     #[inline]
-    pub fn split_last(&self) -> Option<(&V, &Self)> {
-        self.raw
-            .split_last()
-            .map(|(last, rest)| (last, rest.as_ref()))
+    pub const fn split_last(&self) -> Option<(&V, &Self)> {
+        match self.raw.split_last() {
+            Some((last, rest)) => Some((last, Self::from_ref(rest))),
+            None => None,
+        }
     }
 
     /// Returns the last and all the rest of the elements of the slice, or
@@ -1518,7 +1520,7 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// [`slice::copy_from_slice`]: https://doc.rust-lang.org/std/primitive.slice.html#method.copy_from_slice
     #[inline]
-    pub fn copy_from_slice(&mut self, src: &Self)
+    pub const fn copy_from_slice(&mut self, src: &Self)
     where
         V: Copy,
     {
@@ -1671,8 +1673,8 @@ impl<K> TiSlice<K, u8> {
     /// [`slice::eq_ignore_ascii_case`]: https://doc.rust-lang.org/std/primitive.slice.html#method.eq_ignore_ascii_case
     #[inline]
     #[must_use]
-    pub fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
-        self.raw.eq_ignore_ascii_case(other.as_ref())
+    pub const fn eq_ignore_ascii_case(&self, other: &Self) -> bool {
+        self.raw.eq_ignore_ascii_case(&other.raw)
     }
 
     /// Converts this slice to its ASCII upper case equivalent in-place.

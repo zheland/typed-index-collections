@@ -10,6 +10,7 @@ alloc = ["typed-index-collections/alloc"]
 std = ["typed-index-collections/std"]
 panic-handler = []
 global-allocator = []
+rust-eh-personality = []
 
 [dependencies.typed-index-collections]
 path = "../.."

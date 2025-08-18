@@ -55,42 +55,35 @@ echo_and_run cargo outdated --exit-code 1
 
 # Each value is a set of `|`-separated values:
 # - comma separated features,
-# - expected status on non-nightly toolchains,
-# - expected status on nightly toolchain,
 # - expected error message regex"
 valid_no_alloc_and_no_std_param_sets=(
-    "|fail|fail|panic_handler.* function required"
-    "panic-handler|ok|ok|"
-    "alloc,panic-handler|fail|fail|no global memory allocator found"
-    "alloc,panic-handler,global-allocator|ok|fail|undefined symbol: rust_eh_personality"
-    "alloc,std,panic-handler,global-allocator|fail|fail|found duplicate lang item .*panic_impl"
-    "alloc,std,global-allocator|ok|ok|"
+    # `no-std || no-alloc` require `panic_handler` defined.
+    "|panic_handler.* function required"
+    "panic-handler|"
+    # `no-std && alloc` require `global-allocator` defined.
+    "alloc,panic-handler|no global memory allocator found"
+    "alloc,panic-handler,global-allocator,rust-eh-personality|"
+    # `std && alloc` require `panic_handler` not defined.
+    "alloc,std,panic-handler,global-allocator,rust-eh-personality|found duplicate lang item .*panic_impl"
+    "alloc,std,global-allocator|"
+    "alloc,std|"
 )
 for toolchain in "${toolchains[@]}"; do
     (
         echo_and_run export CARGO_TARGET_DIR="target/check-no-alloc-and-no-std-$toolchain"
         for param_set in "${valid_no_alloc_and_no_std_param_sets[@]}"; do
             features=$(echo "$param_set" | cut -sd"|" -f1)
-            expected_default=$(echo "$param_set" | cut -sd"|" -f2)
-            expected_nightly=$(echo "$param_set" | cut -sd"|" -f3)
-            expected_error_regex=$(echo "$param_set" | cut -sd"|" -f4-)
-            if [ "$toolchain" = "nightly" ]; then
-                expected="$expected_nightly"
-            else
-                expected="$expected_default"
-            fi
+            expected_error_regex=$(echo "$param_set" | cut -sd"|" -f2-)
             args="--config build.rustflags=[\"-C\",\"link-arg=-nostartfiles\"]"
             args+=" --manifest-path tests/no-alloc-and-no-std/Cargo.toml"
             args+=" --no-default-features"
             [ -n "$features" ] && args+=" --features $features"
-            if [ "$expected" = "ok" ]; then
+            if [ "$expected_error_regex" = "" ]; then
                 echo_and_run cargo "+$toolchain" clippy $args -- -D warnings
                 echo_and_run cargo "+$toolchain" build $args
-            elif [ "$expected" = "fail" ]; then
+            else
                 echo_and_try_run cargo "+$toolchain" build $args
                 expect_failure "$expected_error_regex"
-            else
-                fail "Internal script error: invalid expected result."
             fi
         done
     )

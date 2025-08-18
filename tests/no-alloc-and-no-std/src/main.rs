@@ -37,6 +37,12 @@ pub const extern "C" fn _start() -> ! {
     loop {}
 }
 
+#[cfg(feature = "rust-eh-personality")]
+#[unsafe(no_mangle)]
+pub const extern "C" fn rust_eh_personality() -> ! {
+    loop {}
+}
+
 #[cfg(feature = "global-allocator")]
 unsafe impl GlobalAlloc for DummyAllocator {
     unsafe fn alloc(&self, _layout: Layout) -> *mut u8 {

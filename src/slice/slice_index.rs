@@ -77,40 +77,40 @@ pub trait TiSliceIndex<K, V>: private::Sealed<K> {
 
 impl<K, V> TiSliceIndex<K, V> for K
 where
-    usize: From<K>,
+    K: Into<usize>,
 {
     type Output = V;
 
     #[inline]
     fn get(self, slice: &TiSlice<K, V>) -> Option<&Self::Output> {
-        slice.raw.get(usize::from(self))
+        slice.raw.get(Into::<usize>::into(self))
     }
 
     #[inline]
     fn get_mut(self, slice: &mut TiSlice<K, V>) -> Option<&mut Self::Output> {
-        slice.raw.get_mut(usize::from(self))
+        slice.raw.get_mut(Into::<usize>::into(self))
     }
 
     #[inline]
     unsafe fn get_unchecked(self, slice: &TiSlice<K, V>) -> &Self::Output {
         // SAFETY: Guaranteed by the caller.
-        unsafe { slice.raw.get_unchecked(usize::from(self)) }
+        unsafe { slice.raw.get_unchecked(Into::<usize>::into(self)) }
     }
 
     #[inline]
     unsafe fn get_unchecked_mut(self, slice: &mut TiSlice<K, V>) -> &mut Self::Output {
         // SAFETY: Guaranteed by the caller.
-        unsafe { slice.raw.get_unchecked_mut(usize::from(self)) }
+        unsafe { slice.raw.get_unchecked_mut(Into::<usize>::into(self)) }
     }
 
     #[inline]
     fn index(self, slice: &TiSlice<K, V>) -> &Self::Output {
-        &slice.raw[usize::from(self)]
+        &slice.raw[Into::<usize>::into(self)]
     }
 
     #[inline]
     fn index_mut(self, slice: &mut TiSlice<K, V>) -> &mut Self::Output {
-        &mut slice.raw[usize::from(self)]
+        &mut slice.raw[Into::<usize>::into(self)]
     }
 }
 

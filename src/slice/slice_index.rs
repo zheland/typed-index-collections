@@ -20,7 +20,7 @@ mod private {
 ///
 /// This trait is implemented for `K`, [`Range<K>`], [`RangeTo<K>`],
 /// [`RangeFrom<K>`], [`RangeInclusive<K>`] and [`RangeToInclusive<K>`].
-/// The [`RangeFull<K>`] trait is not currently supported.
+/// The [`RangeFull`] trait is not currently supported.
 ///
 /// Trait implementations are only forwards to standard Rust [`slice`]
 /// operations.
@@ -31,7 +31,7 @@ mod private {
 /// [`RangeFrom<K>`]: https://doc.rust-lang.org/std/ops/struct.RangeFrom.html
 /// [`RangeInclusive<K>`]: https://doc.rust-lang.org/std/ops/struct.RangeInclusive.html
 /// [`RangeToInclusive<K>`]: https://doc.rust-lang.org/std/ops/struct.RangeToInclusive.html
-/// [`RangeFull<K>`]: https://doc.rust-lang.org/std/ops/struct.RangeFull.html
+/// [`RangeFull`]: https://doc.rust-lang.org/std/ops/struct.RangeFull.html
 pub trait TiSliceIndex<K, V>: private::Sealed<K> {
     /// The output type returned by methods.
     type Output: ?Sized;

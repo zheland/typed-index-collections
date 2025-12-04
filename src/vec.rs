@@ -538,8 +538,6 @@ impl<K, V> TiVec<K, V> {
     ///
     /// See [`Vec::pop`] for more details.
     ///
-    /// [`Vec::pop`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.pop
-    ///
     /// # Example
     ///
     /// ```
@@ -554,7 +552,7 @@ impl<K, V> TiVec<K, V> {
     /// assert_eq!(vec.pop_key_value(), None);
     /// ```
     ///
-    /// [`Vec::push`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.push
+    /// [`Vec::pop`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.pop
     #[inline]
     pub fn pop_key_value(&mut self) -> Option<(K, V)>
     where

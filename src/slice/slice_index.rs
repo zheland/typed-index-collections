@@ -83,34 +83,34 @@ where
 
     #[inline]
     fn get(self, slice: &TiSlice<K, V>) -> Option<&Self::Output> {
-        slice.raw.get(Into::<usize>::into(self))
+        slice.raw.get(self.into())
     }
 
     #[inline]
     fn get_mut(self, slice: &mut TiSlice<K, V>) -> Option<&mut Self::Output> {
-        slice.raw.get_mut(Into::<usize>::into(self))
+        slice.raw.get_mut(self.into())
     }
 
     #[inline]
     unsafe fn get_unchecked(self, slice: &TiSlice<K, V>) -> &Self::Output {
         // SAFETY: Guaranteed by the caller.
-        unsafe { slice.raw.get_unchecked(Into::<usize>::into(self)) }
+        unsafe { slice.raw.get_unchecked(self.into()) }
     }
 
     #[inline]
     unsafe fn get_unchecked_mut(self, slice: &mut TiSlice<K, V>) -> &mut Self::Output {
         // SAFETY: Guaranteed by the caller.
-        unsafe { slice.raw.get_unchecked_mut(Into::<usize>::into(self)) }
+        unsafe { slice.raw.get_unchecked_mut(self.into()) }
     }
 
     #[inline]
     fn index(self, slice: &TiSlice<K, V>) -> &Self::Output {
-        &slice.raw[Into::<usize>::into(self)]
+        &slice.raw[self.into()]
     }
 
     #[inline]
     fn index_mut(self, slice: &mut TiSlice<K, V>) -> &mut Self::Output {
-        &mut slice.raw[Into::<usize>::into(self)]
+        &mut slice.raw[self.into()]
     }
 }
 
@@ -118,7 +118,7 @@ macro_rules! impl_ti_slice_range {
     ($ty:ty) => {
         impl<K, V> TiSliceIndex<K, V> for $ty
         where
-            usize: From<K>,
+            K: Into<usize>,
         {
             type Output = TiSlice<K, V>;
 

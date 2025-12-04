@@ -387,7 +387,7 @@ impl<K, V> TiVec<K, V> {
     #[inline]
     pub fn swap_remove(&mut self, index: K) -> V
     where
-        usize: From<K>,
+        K: Into<usize>,
     {
         self.raw.swap_remove(index.into())
     }
@@ -401,7 +401,7 @@ impl<K, V> TiVec<K, V> {
     #[inline]
     pub fn insert(&mut self, index: K, element: V)
     where
-        usize: From<K>,
+        K: Into<usize>,
     {
         self.raw.insert(index.into(), element);
     }
@@ -415,7 +415,7 @@ impl<K, V> TiVec<K, V> {
     #[inline]
     pub fn remove(&mut self, index: K) -> V
     where
-        usize: From<K>,
+        K: Into<usize>,
     {
         self.raw.remove(index.into())
     }
@@ -666,7 +666,7 @@ impl<K, V> TiVec<K, V> {
     #[must_use = "use `.truncate()` if you don't need the other half"]
     pub fn split_off(&mut self, at: K) -> Self
     where
-        usize: From<K>,
+        K: Into<usize>,
     {
         self.raw.split_off(at.into()).into()
     }
@@ -820,8 +820,9 @@ impl<K, V> TiVec<K, V> {
 
 impl<K, V> fmt::Debug for TiVec<K, V>
 where
-    K: fmt::Debug + From<usize>,
+    K: fmt::Debug,
     V: fmt::Debug,
+    usize: Into<K>,
 {
     #[allow(clippy::allow_attributes, reason = "rust-lang/rust#130021")]
     #[allow(

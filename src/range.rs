@@ -2,11 +2,11 @@ use core::ops;
 
 /// A helper trait used to convert typed index ranges to `usize` ranges.
 /// The trait is implemented for Rust's built-in range types with
-/// `K where usize: `[`From<K>`] used as bound endpoints.
+/// `K: `[`Into<usize>`] used as bound endpoints.
 ///
 /// See [`core::ops::RangeBounds`] for more details.
 ///
-/// [`From<K>`]: https://doc.rust-lang.org/std/convert/trait.From.html
+/// [`Into<usize>`]: https://doc.rust-lang.org/std/convert/trait.Into.html
 /// [`core::ops::RangeBounds`]: https://doc.rust-lang.org/core/ops/trait.RangeBounds.html
 pub trait TiRangeBounds<K> {
     /// Appropriate usize range
@@ -17,7 +17,7 @@ pub trait TiRangeBounds<K> {
 
 impl<K> TiRangeBounds<K> for ops::Range<K>
 where
-    usize: From<K>,
+    K: Into<usize>,
 {
     type Range = ops::Range<usize>;
     #[inline]
@@ -28,7 +28,7 @@ where
 
 impl<K> TiRangeBounds<K> for ops::RangeFrom<K>
 where
-    usize: From<K>,
+    K: Into<usize>,
 {
     type Range = ops::RangeFrom<usize>;
     #[inline]
@@ -39,7 +39,7 @@ where
 
 impl<K> TiRangeBounds<K> for ops::RangeFull
 where
-    usize: From<K>,
+    K: Into<usize>,
 {
     type Range = Self;
     #[inline]
@@ -50,7 +50,7 @@ where
 
 impl<K> TiRangeBounds<K> for ops::RangeInclusive<K>
 where
-    usize: From<K>,
+    K: Into<usize>,
 {
     type Range = ops::RangeInclusive<usize>;
     #[inline]
@@ -62,7 +62,7 @@ where
 
 impl<K> TiRangeBounds<K> for ops::RangeTo<K>
 where
-    usize: From<K>,
+    K: Into<usize>,
 {
     type Range = ops::RangeTo<usize>;
     #[inline]
@@ -73,7 +73,7 @@ where
 
 impl<K> TiRangeBounds<K> for ops::RangeToInclusive<K>
 where
-    usize: From<K>,
+    K: Into<usize>,
 {
     type Range = ops::RangeToInclusive<usize>;
     #[inline]
@@ -84,7 +84,7 @@ where
 
 impl<K> TiRangeBounds<K> for (ops::Bound<K>, ops::Bound<K>)
 where
-    usize: From<K>,
+    K: Into<usize>,
 {
     type Range = (ops::Bound<usize>, ops::Bound<usize>);
     #[inline]
@@ -96,7 +96,7 @@ where
 #[inline]
 fn map_bound<K>(bound: ops::Bound<K>) -> ops::Bound<usize>
 where
-    usize: From<K>,
+    K: Into<usize>,
 {
     match bound {
         ops::Bound::Included(index) => ops::Bound::Included(index.into()),

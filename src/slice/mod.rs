@@ -669,7 +669,7 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn swap(&mut self, a: K, b: K)
     where
-        usize: From<K>,
+        K: Into<usize>,
     {
         self.raw.swap(a.into(), b.into());
     }
@@ -978,7 +978,7 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn split_at(&self, mid: K) -> (&Self, &Self)
     where
-        usize: From<K>,
+        K: Into<usize>,
     {
         let (left, right) = self.raw.split_at(mid.into());
         (left.as_ref(), right.as_ref())
@@ -992,7 +992,7 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn split_at_mut(&mut self, mid: K) -> (&mut Self, &mut Self)
     where
-        usize: From<K>,
+        K: Into<usize>,
     {
         let (left, right) = self.raw.split_at_mut(mid.into());
         (left.as_mut(), right.as_mut())
@@ -1014,7 +1014,7 @@ impl<K, V> TiSlice<K, V> {
     #[must_use]
     pub unsafe fn split_at_unchecked(&self, mid: K) -> (&Self, &Self)
     where
-        usize: From<K>,
+        K: Into<usize>,
     {
         // SAFETY: Guaranteed by the caller.
         let (left, right) = unsafe { self.raw.split_at_unchecked(mid.into()) };
@@ -1038,7 +1038,7 @@ impl<K, V> TiSlice<K, V> {
     #[must_use]
     pub unsafe fn split_at_mut_unchecked(&mut self, mid: K) -> (&mut Self, &mut Self)
     where
-        usize: From<K>,
+        K: Into<usize>,
     {
         // SAFETY: Guaranteed by the caller.
         let (left, right) = unsafe { self.raw.split_at_mut_unchecked(mid.into()) };
@@ -1055,7 +1055,7 @@ impl<K, V> TiSlice<K, V> {
     #[must_use]
     pub fn split_at_checked(&self, mid: K) -> Option<(&Self, &Self)>
     where
-        usize: From<K>,
+        K: Into<usize>,
     {
         let (left, right) = self.raw.split_at_checked(mid.into())?;
         Some((left.as_ref(), right.as_ref()))
@@ -1071,7 +1071,7 @@ impl<K, V> TiSlice<K, V> {
     #[must_use]
     pub fn split_at_mut_checked(&mut self, mid: K) -> Option<(&mut Self, &mut Self)>
     where
-        usize: From<K>,
+        K: Into<usize>,
     {
         let (left, right) = self.raw.split_at_mut_checked(mid.into())?;
         Some((left.as_mut(), right.as_mut()))
@@ -1382,7 +1382,7 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn select_nth_unstable(&mut self, index: K) -> (&mut Self, &mut V, &mut Self)
     where
-        usize: From<K>,
+        K: Into<usize>,
         V: Ord,
     {
         let (left, nth, right) = self.raw.select_nth_unstable(index.into());
@@ -1408,7 +1408,7 @@ impl<K, V> TiSlice<K, V> {
         compare: F,
     ) -> (&mut Self, &mut V, &mut Self)
     where
-        usize: From<K>,
+        K: Into<usize>,
         F: FnMut(&V, &V) -> Ordering,
     {
         let (left, nth, right) = self.raw.select_nth_unstable_by(index.into(), compare);
@@ -1434,7 +1434,7 @@ impl<K, V> TiSlice<K, V> {
         f: F,
     ) -> (&mut Self, &mut V, &mut Self)
     where
-        usize: From<K>,
+        K: Into<usize>,
         F: FnMut(&V) -> Key,
         Key: Ord,
     {
@@ -1454,7 +1454,7 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn rotate_left(&mut self, mid: K)
     where
-        usize: From<K>,
+        K: Into<usize>,
     {
         self.raw.rotate_left(mid.into());
     }
@@ -1470,7 +1470,7 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn rotate_right(&mut self, k: K)
     where
-        usize: From<K>,
+        K: Into<usize>,
     {
         self.raw.rotate_right(k.into());
     }
@@ -1538,7 +1538,7 @@ impl<K, V> TiSlice<K, V> {
     where
         R: TiRangeBounds<K>,
         V: Copy,
-        usize: From<K>,
+        K: Into<usize>,
     {
         self.raw.copy_within(src.into_range(), dest.into());
     }
@@ -1907,8 +1907,9 @@ impl<K> TiSlice<K, u8> {
 
 impl<K, V> fmt::Debug for TiSlice<K, V>
 where
-    K: fmt::Debug + From<usize>,
+    K: fmt::Debug,
     V: fmt::Debug,
+    usize: Into<K>,
 {
     #[allow(clippy::allow_attributes, reason = "rust-lang/rust#130021")]
     #[allow(

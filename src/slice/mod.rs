@@ -230,7 +230,7 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn next_key(&self) -> K
     where
-        K: From<usize>,
+        usize: Into<K>,
     {
         self.raw.len().into()
     }
@@ -264,7 +264,7 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn keys(&self) -> TiSliceKeys<K>
     where
-        K: From<usize>,
+        usize: Into<K>,
     {
         (0..self.len()).map(Into::into)
     }
@@ -308,7 +308,7 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn first_key(&self) -> Option<K>
     where
-        K: From<usize>,
+        usize: Into<K>,
     {
         if self.is_empty() {
             None
@@ -339,7 +339,7 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn first_key_value(&self) -> Option<(K, &V)>
     where
-        K: From<usize>,
+        usize: Into<K>,
     {
         self.raw.first().map(|first| (0.into(), first))
     }
@@ -369,7 +369,7 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn first_key_value_mut(&mut self) -> Option<(K, &mut V)>
     where
-        K: From<usize>,
+        usize: Into<K>,
     {
         self.raw.first_mut().map(|first| (0.into(), first))
     }
@@ -469,7 +469,7 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn last_key(&self) -> Option<K>
     where
-        K: From<usize>,
+        usize: Into<K>,
     {
         Some(self.len().checked_sub(1)?.into())
     }
@@ -497,7 +497,7 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn last_key_value(&self) -> Option<(K, &V)>
     where
-        K: From<usize>,
+        usize: Into<K>,
     {
         let len = self.len();
         self.raw.last().map(|last| {
@@ -534,7 +534,7 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn last_key_value_mut(&mut self) -> Option<(K, &mut V)>
     where
-        K: From<usize>,
+        usize: Into<K>,
     {
         let len = self.len();
         self.raw.last_mut().map(|last| {
@@ -720,7 +720,7 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn iter_enumerated(&self) -> TiEnumerated<Iter<'_, V>, K, &V>
     where
-        K: From<usize>,
+        usize: Into<K>,
     {
         self.raw
             .iter()
@@ -763,7 +763,7 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn iter_mut_enumerated(&mut self) -> TiEnumerated<IterMut<'_, V>, K, &mut V>
     where
-        K: From<usize>,
+        usize: Into<K>,
     {
         self.raw
             .iter_mut()
@@ -797,7 +797,7 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn position<P>(&self, predicate: P) -> Option<K>
     where
-        K: From<usize>,
+        usize: Into<K>,
         P: FnMut(&V) -> bool,
     {
         self.raw.iter().position(predicate).map(Into::into)
@@ -830,7 +830,7 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub fn rposition<P>(&self, predicate: P) -> Option<K>
     where
-        K: From<usize>,
+        usize: Into<K>,
         P: FnMut(&V) -> bool,
     {
         self.raw.iter().rposition(predicate).map(Into::into)
@@ -1279,7 +1279,7 @@ impl<K, V> TiSlice<K, V> {
     pub fn binary_search(&self, x: &V) -> Result<K, K>
     where
         V: Ord,
-        K: From<usize>,
+        usize: Into<K>,
     {
         self.raw
             .binary_search(x)
@@ -1297,7 +1297,7 @@ impl<K, V> TiSlice<K, V> {
     pub fn binary_search_by<'a, F>(&'a self, f: F) -> Result<K, K>
     where
         F: FnMut(&'a V) -> Ordering,
-        K: From<usize>,
+        usize: Into<K>,
     {
         self.raw
             .binary_search_by(f)
@@ -1316,7 +1316,7 @@ impl<K, V> TiSlice<K, V> {
     where
         F: FnMut(&'a V) -> B,
         B: Ord,
-        K: From<usize>,
+        usize: Into<K>,
     {
         self.raw
             .binary_search_by_key(b, f)
@@ -1647,7 +1647,7 @@ impl<K, V> TiSlice<K, V> {
     #[must_use]
     pub fn partition_point<P>(&self, pred: P) -> K
     where
-        K: From<usize>,
+        usize: Into<K>,
         P: FnMut(&V) -> bool,
     {
         self.raw.partition_point(pred).into()

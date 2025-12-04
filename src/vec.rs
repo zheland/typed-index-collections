@@ -511,7 +511,7 @@ impl<K, V> TiVec<K, V> {
     #[inline]
     pub fn push_and_get_key(&mut self, value: V) -> K
     where
-        K: From<usize>,
+        usize: Into<K>,
     {
         let key = self.next_key();
         self.raw.push(value);
@@ -554,7 +554,7 @@ impl<K, V> TiVec<K, V> {
     #[inline]
     pub fn pop_key_value(&mut self) -> Option<(K, V)>
     where
-        K: From<usize>,
+        usize: Into<K>,
     {
         self.raw.pop().map(|value| (self.raw.len().into(), value))
     }
@@ -615,7 +615,7 @@ impl<K, V> TiVec<K, V> {
     #[inline]
     pub fn drain_enumerated<R>(&mut self, range: R) -> TiEnumerated<Drain<'_, V>, K, V>
     where
-        K: From<usize>,
+        usize: Into<K>,
         R: TiRangeBounds<K>,
     {
         self.raw
@@ -809,7 +809,7 @@ impl<K, V> TiVec<K, V> {
     #[inline]
     pub fn into_iter_enumerated(self) -> TiEnumerated<vec::IntoIter<V>, K, V>
     where
-        K: From<usize>,
+        usize: Into<K>,
     {
         self.raw
             .into_iter()

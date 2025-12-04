@@ -2221,8 +2221,11 @@ where
     clippy::too_many_lines,
     clippy::undocumented_unsafe_blocks,
     clippy::unwrap_used,
-    clippy::zero_repeat_side_effects,
     reason = "okay in tests"
+)]
+#[rustversion::attr(
+    before(1.92.0),
+    expect(clippy::zero_repeat_side_effects, reason = "okay in tests"),
 )]
 #[cfg(test)]
 mod test {

@@ -58,6 +58,9 @@ use crate::{TiEnumerated, TiRangeBounds, TiSlice, TiSliceIndex};
 ///   returns its index of type `K`.
 /// - [`pop_key_value`] - Removes the last element from a vector and returns it
 ///   with its index of type `K`, or [`None`] if the vector is empty.
+/// - [`pop_key_value_if`] - Removes the last element from a vector and returns
+///   it with its index of type `K`, or [`None`] if the predicate returns false
+///   or the vector is empty.
 /// - [`drain_enumerated`] - Creates a draining iterator that removes the
 ///   specified range in the vector and yields the current count and the removed
 ///   items. It acts like `self.drain(range).enumerate()`, but instead of
@@ -85,6 +88,7 @@ use crate::{TiEnumerated, TiRangeBounds, TiSlice, TiSliceIndex};
 /// [`from_mut`]: #method.from_mut
 /// [`push_and_get_key`]: #method.push_and_get_key
 /// [`pop_key_value`]: #method.pop_key_value
+/// [`pop_key_value_if`]: #method.pop_key_value_if
 /// [`drain_enumerated`]: #method.drain_enumerated
 /// [`into_iter_enumerated`]: #method.into_iter_enumerated
 /// [`std::vec::Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
@@ -557,6 +561,51 @@ impl<K, V> TiVec<K, V> {
         usize: Into<K>,
     {
         self.raw.pop().map(|value| (self.raw.len().into(), value))
+    }
+
+    /// Removes and returns the last element from a vector if the predicate
+    /// returns `true`, or [`None`] if the predicate returns false or the vector
+    /// is empty (the predicate will not be called in that case).
+    ///
+    /// See [`Vec::pop_if`] for more details.
+    ///
+    /// [`Vec::pop_if`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.pop_if
+    #[inline]
+    pub fn pop_if(&mut self, predicate: impl FnOnce(&mut V) -> bool) -> Option<V> {
+        self.raw.pop_if(predicate)
+    }
+
+    /// Removes and returns the last element from a vector if the predicate
+    /// returns `true` with its index of type `K`, or [`None`] if the predicate
+    /// returns false or the vector is empty (the predicate will not be called
+    /// in that case).
+    ///
+    /// See [`Vec::pop_if`] for more details.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use derive_more::{From, Into};
+    /// # use typed_index_collections::TiVec;
+    /// #[derive(Eq, Debug, From, Into, PartialEq)]
+    /// pub struct Id(usize);
+    /// let mut vec: TiVec<Id, i32> = vec![-2, 4].into();
+    /// assert_eq!(vec.pop_key_value_if(|v| *v > 0), Some((Id(1), 4)));
+    /// assert_eq!(vec.pop_key_value_if(|v| *v > 0), None);
+    /// assert_eq!(vec.pop_key_value_if(|v| *v < 0), Some((Id(0), -2)));
+    /// assert_eq!(vec.pop_key_value_if(|v| *v < 0), None);
+    /// assert_eq!(vec.pop_key_value_if(|v| *v > 0), None);
+    /// ```
+    ///
+    /// [`Vec::pop_if`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.pop_if
+    #[inline]
+    pub fn pop_key_value_if(&mut self, predicate: impl FnOnce(&mut V) -> bool) -> Option<(K, V)>
+    where
+        usize: Into<K>,
+    {
+        self.raw
+            .pop_if(predicate)
+            .map(|value| (self.raw.len().into(), value))
     }
 
     /// Moves all the elements of `other` into `Self`, leaving `other` empty.
@@ -1494,6 +1543,12 @@ mod test {
             assert_eq_api!(mv, v => v.pop());
             assert_eq_api!(mv, v => v.push(123));
             assert_eq_api!(mv, v => v.pop());
+
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.pop_if(|v| *v < 10));
+            assert_eq_api!(mv, v => v.push(234));
+
+            restore(&mut mv);
             assert_eq_api!(mv, v => v.append(&mut v.clone()));
             restore(&mut mv);
             assert_eq_api!(mv, v => v.extend(v.clone().as_slice()));

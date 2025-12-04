@@ -680,7 +680,7 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// [`slice::reverse`]: https://doc.rust-lang.org/std/primitive.slice.html#method.reverse
     #[inline]
-    pub fn reverse(&mut self) {
+    pub const fn reverse(&mut self) {
         self.raw.reverse();
     }
 
@@ -1652,6 +1652,77 @@ impl<K, V> TiSlice<K, V> {
     {
         self.raw.partition_point(pred).into()
     }
+
+    /// Removes the first element of the slice and returns a reference
+    /// to it.
+    ///
+    /// Returns `None` if the slice is empty.
+    ///
+    /// See [`slice::split_off_first`] for more details.
+    ///
+    /// [`slice::split_off_first`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_off_first
+    #[inline]
+    pub const fn split_off_first<'a>(self: &mut &'a Self) -> Option<&'a V> {
+        let Some((first, rem)) = self.split_first() else {
+            return None;
+        };
+        *self = rem;
+        Some(first)
+    }
+
+    /// Removes the first element of the slice and returns a mutable
+    ///
+    /// See [`slice::split_off_first_mut`] for more details.
+    ///
+    /// [`slice::split_off_first_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_off_first_mut
+    /// reference to it.
+    #[expect(clippy::mut_mut, reason = "used in original slice API")]
+    #[inline]
+    pub const fn split_off_first_mut<'a>(self: &mut &'a mut Self) -> Option<&'a mut V> {
+        let Some((first, rem)) =
+            core::mem::replace(self, Self::from_mut(&mut [])).split_first_mut()
+        else {
+            return None;
+        };
+        *self = rem;
+        Some(first)
+    }
+
+    /// Removes the last element of the slice and returns a reference
+    /// to it.
+    ///
+    /// Returns `None` if the slice is empty.
+    ///
+    /// See [`slice::split_off_last`] for more details.
+    ///
+    /// [`slice::split_off_last`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_off_last
+    #[inline]
+    pub const fn split_off_last<'a>(self: &mut &'a Self) -> Option<&'a V> {
+        let Some((last, rem)) = self.split_last() else {
+            return None;
+        };
+        *self = rem;
+        Some(last)
+    }
+
+    /// Removes the last element of the slice and returns a mutable
+    /// reference to it.
+    ///
+    /// Returns `None` if the slice is empty.
+    ///
+    /// See [`slice::split_off_last_mut`] for more details.
+    ///
+    /// [`slice::split_off_last_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_off_last_mut
+    #[expect(clippy::mut_mut, reason = "used in original slice API")]
+    #[inline]
+    pub const fn split_off_last_mut<'a>(self: &mut &'a mut Self) -> Option<&'a mut V> {
+        let Some((last, rem)) = core::mem::replace(self, Self::from_mut(&mut [])).split_last_mut()
+        else {
+            return None;
+        };
+        *self = rem;
+        Some(last)
+    }
 }
 
 impl<K> TiSlice<K, u8> {
@@ -2273,6 +2344,9 @@ mod test {
 
             assert_eq_api!(cv, v => v.len());
             assert_eq_api!(cv, v => v.is_empty());
+            assert_eq_api!(cv, v => v.is_sorted());
+            assert_eq_api!(cv, v => v.is_sorted_by(|a, b| a >= b));
+            assert_eq_api!(cv, v => v.is_sorted_by_key(core::cmp::Reverse));
             assert_eq_api!(cv, v => v.first());
             assert_eq_api!(mv, v => v.first_mut());
             assert_eq_api!(cv, v => v.last());
@@ -2281,6 +2355,15 @@ mod test {
             assert_eq_api!(mv, v => v.split_first_mut().into_std());
             assert_eq_api!(cv, v => v.split_last().into_std());
             assert_eq_api!(mv, v => v.split_last_mut().into_std());
+            assert_eq_api!(cv, v => v.split_off_first());
+            assert_eq_api!(mv, v => v.split_off_first_mut());
+            assert_eq_api!(cv, v => v.split_off_last());
+            assert_eq_api!(mv, v => v.split_off_last_mut());
+
+            assert_eq_api!(cv, v => { let _ = v.split_off_first(); v.into_std() });
+            assert_eq_api!(mv, v => { let _ = v.split_off_first_mut(); v.into_std() });
+            assert_eq_api!(cv, v => { let _ = v.split_off_last(); v.into_std() });
+            assert_eq_api!(mv, v => { let _ = v.split_off_last_mut(); v.into_std() });
 
             assert_eq_api!(cv, v => v.as_ptr());
             assert_eq_api!(cv, v => v.as_ptr_range());

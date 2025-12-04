@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Compatible methods for `TiSlice` and `TiVec` to mirror the stable Rust API for
+  slice and `Vec` up to Rust 1.90.0.
+- `TiVec::pop_key_value_if` method.
+
 ### Changed
 - More API methods are now can be evaluated in const context.
 - Replace `From` with `Into` within trait bounds.
@@ -15,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `bincode` support for `TiSlice`, `Box<TiSlice>` and `TiVec` under the
   `bincode` feature.
 - Compatible methods and trait implementations for `TiSlice` to mirror the
-  stable Rust API for `[]` up to Rust 1.85.0.
+  stable Rust API for slice up to Rust 1.85.0.
 
 ### Changed
 - The minimum supported Rust version has been increased to 1.85.0.
@@ -47,7 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ti_vec!` macro similar to `vec!` macro.
 - Some previously missed implementations for `TiSlice` and `TiVec`.
 - Compatible methods and trait implementations for `TiSlice` and `TiVec`
-  to mirror the stable Rust API for `[]` and `Vec` up to Rust 1.81.0.
+  to mirror the stable Rust API for slice and `Vec` up to Rust 1.81.0.
 
 ### Changed
 - The minimum supported Rust version has been increased to 1.81.0.

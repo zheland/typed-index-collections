@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Crate-specific settings
-toolchains=( stable beta nightly "1.89.0" )
+toolchains=( stable beta nightly "1.90.0" )
 all_features=( "" "alloc" "std" "serde" )
 max_uncovered_functions=0
 max_uncovered_lines=10

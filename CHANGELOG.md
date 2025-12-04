@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - More API methods are now can be evaluated in const context.
 - Replace `From` with `Into` within trait bounds.
-- The minimum supported Rust version has been increased to 1.89.0.
+- The minimum supported Rust version has been increased to 1.90.0.
 
 ## [3.3.0] - 2025-05-05
 ### Added

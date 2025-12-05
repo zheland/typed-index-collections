@@ -7,7 +7,7 @@
 [![Dependencies status](https://deps.rs/repo/github/zheland/typed-index-collections/status.svg)](https://deps.rs/repo/github/zheland/typed-index-collections)
 [![Downloads](https://img.shields.io/crates/d/typed-index-collections)](https://crates.io/crates/typed-index-collections)
 [![License](https://img.shields.io/crates/l/typed-index-collections)](https://github.com/zheland/typed-index-collections/#license)
-[![MSRV 1.87+](https://img.shields.io/badge/rustc-1.87+-blue.svg)](https://blog.rust-lang.org/2025/05/15/Rust-1.87.0)
+[![MSRV 1.90+](https://img.shields.io/badge/rustc-1.90+-blue.svg)](https://blog.rust-lang.org/2025/09/18/Rust-1.90.0)
 
 The `typed-index-collections` crate provides [`TiSlice`] and [`TiVec`]
 structs that are typed index versions of the Rust [`slice`] and

@@ -5,15 +5,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [3.4.0] - 2025-12-05
 ### Added
 - Compatible methods for `TiSlice` and `TiVec` to mirror the stable Rust API for
   slice and `Vec` up to Rust 1.90.0.
 - `TiVec::pop_key_value_if` method.
 
 ### Changed
+- The minimum supported Rust version has been increased to 1.90.0.
 - More API methods are now can be evaluated in const context.
 - Replace `From` with `Into` within trait bounds.
-- The minimum supported Rust version has been increased to 1.90.0.
 
 ## [3.3.0] - 2025-05-05
 ### Added
@@ -168,7 +170,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `TiSlice` API compatibility tests.
 - Crate API documentation with examples.
 
-[Unreleased]: https://github.com/zheland/typed-index-collections/compare/v3.3.0...HEAD
+[Unreleased]: https://github.com/zheland/typed-index-collections/compare/v3.4.0...HEAD
+[3.4.0]: https://github.com/zheland/typed-index-collections/compare/v3.3.0...v3.4.0
 [3.3.0]: https://github.com/zheland/typed-index-collections/compare/v3.2.3...v3.3.0
 [3.2.3]: https://github.com/zheland/typed-index-collections/compare/v3.2.2...v3.2.3
 [3.2.2]: https://github.com/zheland/typed-index-collections/compare/v3.2.1...v3.2.2

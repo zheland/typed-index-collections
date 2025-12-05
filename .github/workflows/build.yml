@@ -82,12 +82,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: rustup toolchain install stable --profile minimal
-      - run: cargo build $ARGS --features panic-handler
-      - run: cargo build $ARGS --features alloc,panic-handler,global-allocator
-      - run: cargo build $ARGS --features alloc,std,global-allocator
       - run: if cargo build $ARGS; then false; else true; fi
+      - run: cargo build $ARGS --features panic-handler
       - run: if cargo build $ARGS --features alloc,panic-handler; then false; else true; fi
+      - run: cargo build $ARGS --features alloc,panic-handler,global-allocator,rust-eh-personality
       - run: if cargo build $ARGS --features alloc,std,panic-handler,global-allocator; then false; else true; fi
+      - run: cargo build $ARGS --features alloc,std,global-allocator
+      - run: cargo build $ARGS --features alloc,std
 
   cargo-deny:
     name: Check licenses/bans/advisories/sources

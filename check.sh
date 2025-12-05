@@ -53,37 +53,42 @@ echo_and_run cargo +nightly fmt --all -- --check
 echo_and_run cargo msrv verify
 echo_and_run cargo outdated --exit-code 1
 
-# Each value is a set of `|`-separated values:
+# Each test case are consist of three params:
 # - comma separated features,
-# - expected error message regex"
-valid_no_alloc_and_no_std_param_sets=(
+# - expected status: either OK or FAIL,
+# - expected error message regex.
+valid_no_alloc_and_no_std_params=(
     # `no-std || no-alloc` require `panic_handler` defined.
-    "|panic_handler.* function required"
-    "panic-handler|"
-    # `no-std && alloc` require `global-allocator` defined.
-    "alloc,panic-handler|no global memory allocator found"
-    "alloc,panic-handler,global-allocator,rust-eh-personality|"
+    "" "FAIL" "panic_handler.* function required"
+    "panic-handler" "OK" ""
+    # `no-std && alloc` require `global-allocator` and `rust_eh_personality` defined.
+    "alloc,panic-handler" "FAIL" "no global memory allocator found"
+    "alloc,panic-handler,global-allocator" "FAIL" "undefined symbol: rust_eh_personality"
+    "alloc,panic-handler,global-allocator,rust-eh-personality" "OK" ""
     # `std && alloc` require `panic_handler` not defined.
-    "alloc,std,panic-handler,global-allocator,rust-eh-personality|found duplicate lang item .*panic_impl"
-    "alloc,std,global-allocator|"
-    "alloc,std|"
+    "alloc,std,panic-handler,global-allocator"
+        "FAIL" "found duplicate lang item .*panic_impl"
+    "alloc,std,global-allocator" "OK" ""
+    "alloc,std" "OK" ""
 )
 for toolchain in "${toolchains[@]}"; do
     (
         echo_and_run export CARGO_TARGET_DIR="target/check-no-alloc-and-no-std-$toolchain"
-        for param_set in "${valid_no_alloc_and_no_std_param_sets[@]}"; do
-            features=$(echo "$param_set" | cut -sd"|" -f1)
-            expected_error_regex=$(echo "$param_set" | cut -sd"|" -f2-)
+        for (( i = 0; i < ${#valid_no_alloc_and_no_std_params[@]}; i += 3 )); do
+            features="${valid_no_alloc_and_no_std_params[i]}"
+            expected_status="${valid_no_alloc_and_no_std_params[i + 1]}"
+            expected_error_regex="${valid_no_alloc_and_no_std_params[i + 2]}"
             args="--config build.rustflags=[\"-C\",\"link-arg=-nostartfiles\"]"
             args+=" --manifest-path tests/no-alloc-and-no-std/Cargo.toml"
-            args+=" --no-default-features"
             [ -n "$features" ] && args+=" --features $features"
-            if [ "$expected_error_regex" = "" ]; then
+            if [ "$expected_status" = "OK" ]; then
                 echo_and_run cargo "+$toolchain" clippy $args -- -D warnings
                 echo_and_run cargo "+$toolchain" build $args
-            else
+            elif [ "$expected_status" = "FAIL" ]; then
                 echo_and_try_run cargo "+$toolchain" build $args
                 expect_failure "$expected_error_regex"
+            else
+                fail "Internal error: wrong expected status: ${expected_status@Q}"
             fi
         done
     )

@@ -28,6 +28,13 @@
 //! that can be easily done with [`derive_more`] crate and
 //! `#[derive(From, Into)]`.
 //!
+//! Note that the crate provides type-safe indexing rather than associative
+//! containers.
+//! [`TiSlice<K, V>`][`TiSlice`] and [`TiVec<K, V>`][`TiVec`] do not preserve
+//! the original indices when sliced.
+//! When you create a slice using a range, the resulting
+//! [`TiSlice<K, V>`][`TiSlice`] will have indices starting at `K::from(0)`.
+//!
 //! # Usage
 //!
 //! First, add the following to your `Cargo.toml`:

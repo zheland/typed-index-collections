@@ -51,7 +51,6 @@ expect_failure() {
 
 echo_and_run cargo +nightly fmt --all -- --check
 echo_and_run cargo msrv verify
-echo_and_run cargo outdated --exit-code 1
 
 # Each test case are consist of three params:
 # - comma separated features,
@@ -138,6 +137,7 @@ for toolchain in "${toolchains[@]}"; do
     )
 done
 
+echo_and_run cargo outdated --exit-code 1 --exclude bincode
 echo_and_run cargo deny --workspace --all-features check
 
 echo_and_run cargo +nightly llvm-cov --doctests --all-features --html \

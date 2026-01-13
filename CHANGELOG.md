@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `TiVec::extend_from_within_corrected` method, a corrected variant of
   `TiVec::extend_from_within` method.
 
+### Changed
+- `TiVec::extend_from_within` is marked deprecated.
+
 ## [3.4.0] - 2025-12-05
 ### Added
 - Compatible methods for `TiSlice` and `TiVec` to mirror the stable Rust API for

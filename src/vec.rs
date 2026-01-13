@@ -786,13 +786,26 @@ impl<K, V> TiVec<K, V> {
     ///
     /// See [`Vec::extend_from_within`] for more details.
     ///
+    /// # Deprecation
+    ///
+    /// This method is deprecated due to incorrect `src` bounds.
+    /// Use [`extend_from_within_corrected`] instead, which accepts typed
+    /// index ranges.
+    /// See issue [#8] for more details.
+    ///
     /// # Panics
     ///
     /// Panics if the starting point is greater than the end point or if
     /// the end point is greater than the length of the vector.
     ///
     /// [`Vec::extend_from_within`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.extend_from_within
+    /// [`extend_from_within_corrected`]: #method.extend_from_within_corrected
+    /// [#8]: https://github.com/zheland/typed-index-collections/issues/8
     #[inline]
+    #[deprecated(
+        since = "3.5.0",
+        note = "use `extend_from_within_corrected` instead, will be removed in 4.0.0"
+    )]
     pub fn extend_from_within<R>(&mut self, src: R)
     where
         V: Clone,
@@ -805,8 +818,9 @@ impl<K, V> TiVec<K, V> {
     ///
     /// See [`Vec::extend_from_within`] for more details.
     ///
-    /// This is a corrected version of [`extend_from_within`] that accepts
-    /// typed index bounds.
+    /// This is a corrected version of the deprecated
+    /// [`Self::extend_from_within`] that accepts typed index bounds.
+    /// The deprecated method uses incorrect bounds.
     ///
     /// # Panics
     ///
@@ -1616,7 +1630,10 @@ mod test {
                     restore(&mut mv);
                     assert_eq_api!(mv, v => v.drain((a..b).into_tic()).collect::<Vec<_>>());
                     restore(&mut mv);
-                    assert_eq_api!(mv, v => v.extend_from_within(a..b));
+                    #[expect(deprecated, reason = "okay in tests")]
+                    {
+                        assert_eq_api!(mv, v => v.extend_from_within(a..b));
+                    }
                     restore(&mut mv);
                     {
                         mv.0.extend_from_within(a..b);

@@ -154,6 +154,13 @@
 //!   containers and [`Decode`] and [`BorrowDecode`] traits for
 //!   [`Box`]`<`[`TiSlice`]`>` and [`TiVec`].
 //!
+//!   **Note**: This feature uses `bincode` version `2.0.1`.
+//!   Please be aware that the `bincode` crate is currently marked as
+//!   unmaintained ([RUSTSEC-2025-0141]).
+//!   While the advisory specifically mentions version `1.3.3` as complete,
+//!   version `2.0.1` (released March 2025, long before before the incident)
+//!   remains available and unyanked.
+//!
 //! # Similar crates
 //!
 //! - [`typed_index_collection`] provides a `Vec` wrapper with a very limited
@@ -211,6 +218,7 @@
 //! [`Encode`]: https://docs.serde.rs/serde/trait.Serialize.html
 //! [`Decode`]: https://docs.rs/bincode/latest/bincode/de/trait.Decode.html
 //! [`BorrowDecode`]: https://docs.rs/bincode/latest/bincode/de/trait.BorrowDecode.html
+//! [RUSTSEC-2025-0141]: https://rustsec.org/advisories/RUSTSEC-2025-0141
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![no_std]

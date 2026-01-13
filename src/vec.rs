@@ -801,6 +801,29 @@ impl<K, V> TiVec<K, V> {
         self.raw.extend_from_within(src);
     }
 
+    /// Copies elements from `src` range to the end of the vector.
+    ///
+    /// See [`Vec::extend_from_within`] for more details.
+    ///
+    /// This is a corrected version of [`extend_from_within`] that accepts
+    /// typed index bounds.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the starting point is greater than the end point or if
+    /// the end point is greater than the length of the vector.
+    ///
+    /// [`Vec::extend_from_within`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.extend_from_within
+    /// [`extend_from_within`]: #method.extend_from_within
+    #[inline]
+    pub fn extend_from_within_corrected<R>(&mut self, src: R)
+    where
+        V: Clone,
+        R: TiRangeBounds<K>,
+    {
+        self.raw.extend_from_within(src.into_range());
+    }
+
     /// Removes consecutive repeated elements in the vector according to the
     /// [`PartialEq`] trait implementation.
     ///
@@ -1594,6 +1617,13 @@ mod test {
                     assert_eq_api!(mv, v => v.drain((a..b).into_tic()).collect::<Vec<_>>());
                     restore(&mut mv);
                     assert_eq_api!(mv, v => v.extend_from_within(a..b));
+                    restore(&mut mv);
+                    {
+                        mv.0.extend_from_within(a..b);
+                        mv.1.extend_from_within_corrected(Id(a)..Id(b));
+                        assert_eq!(mv.0.as_slice(), mv.1.raw.as_slice());
+                        assert_eq!(mv.0.capacity(), mv.1.capacity());
+                    }
                     restore(&mut mv);
                     assert_eq_api!(
                         mv, v => v.splice((a..b).into_tic(), [1, 2, 3]).collect::<Vec<_>>()

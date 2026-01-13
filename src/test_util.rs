@@ -7,7 +7,7 @@ use derive_more::{From, Into};
 use crate::TiSlice;
 
 #[derive(From, Into, Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Id(usize);
+pub struct Id(pub usize);
 
 pub trait IntoStdType {
     type Std;

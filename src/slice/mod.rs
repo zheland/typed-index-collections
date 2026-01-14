@@ -2656,6 +2656,10 @@ mod test {
         }
     }
 
+    #[rustversion::attr(
+        since(1.94.0),
+        expect(clippy::needless_for_each, reason = "intentionally tested"),
+    )]
     #[test]
     fn test_slice_write_core_api_compatibility() {
         for v in [

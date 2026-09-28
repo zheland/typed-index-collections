@@ -2212,28 +2212,28 @@ mod test {
         let alloc = TrackingAllocator::default();
         let is_our_alloc = |a: &&TrackingAllocator| core::ptr::eq(*a, &raw const alloc);
 
-        let vec1: Vec<i32, _> = Vec::new_in(&alloc);
+        let vec1: TiVec<Id, i32, _> = TiVec::new_in(&alloc);
         #[expect(clippy::assert_is_empty, reason = "simpler check")]
         (assert!(vec1.is_empty()));
         assert!(is_our_alloc(vec1.allocator()));
         assert_eq!(alloc.allocs(), 0);
         assert_eq!(alloc.deallocs(), 0);
 
-        let mut vec2: Vec<i32, _> = Vec::with_capacity_in(4, &alloc);
+        let mut vec2: TiVec<Id, i32, _> = TiVec::with_capacity_in(4, &alloc);
         assert!(vec2.capacity() >= 4);
         assert!(is_our_alloc(vec2.allocator()));
         assert_eq!(alloc.allocs(), 1);
         assert_eq!(alloc.deallocs(), 0);
 
-        vec2.extend_from_slice(&[1, 2, 3, 4]);
-        assert_eq!(&vec2[..], &[1, 2, 3, 4]);
+        vec2.extend_from_slice(TiSlice::from_ref(&[1, 2, 3, 4]));
+        assert_eq!(&vec2.as_slice().raw, &[1, 2, 3, 4]);
         assert_eq!(alloc.allocs(), 1);
         assert_eq!(alloc.deallocs(), 0);
 
-        let slice: &[i32] = &[5, 6, 7];
+        let slice: &TiSlice<Id, i32> = TiSlice::from_ref(&[5, 6, 7]);
         let vec3 = slice.to_vec_in(&alloc);
         assert!(is_our_alloc(vec3.allocator()));
-        assert_eq!(&vec3[..], &[5, 6, 7]);
+        assert_eq!(&vec3.as_slice().raw, &[5, 6, 7]);
         assert_eq!(alloc.allocs(), 2);
         assert_eq!(alloc.deallocs(), 0);
 
@@ -2244,8 +2244,8 @@ mod test {
         assert_eq!(alloc.allocs(), 2);
         assert_eq!(alloc.deallocs(), 0);
 
-        let vec2: Vec<i32, _> = unsafe { Vec::from_raw_parts_in(ptr, len, cap, alloc_ref) };
-        assert_eq!(&vec2[..], &[1, 2, 3, 4]);
+        let vec2: TiVec<Id, i32, _> = unsafe { TiVec::from_raw_parts_in(ptr, len, cap, alloc_ref) };
+        assert_eq!(&vec2.as_slice().raw, &[1, 2, 3, 4]);
         assert!(is_our_alloc(&alloc_ref));
         assert_eq!(alloc.allocs(), 2);
         assert_eq!(alloc.deallocs(), 0);

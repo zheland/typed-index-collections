@@ -2213,8 +2213,7 @@ mod test {
         let is_our_alloc = |a: &&TrackingAllocator| core::ptr::eq(*a, &raw const alloc);
 
         let vec1: TiVec<Id, i32, _> = TiVec::new_in(&alloc);
-        #[expect(clippy::assert_is_empty, reason = "simpler check")]
-        (assert!(vec1.is_empty()));
+        assert!(vec1.is_empty());
         assert!(is_our_alloc(vec1.allocator()));
         assert_eq!(alloc.allocs(), 0);
         assert_eq!(alloc.deallocs(), 0);

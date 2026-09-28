@@ -19,8 +19,6 @@ std = ["alloc", "serde?/std", "bincode?/std"]
 nightly = []
 serde = ["dep:serde"]
 bincode = ["dep:bincode"]
-serde-alloc = ["alloc", "serde"] # Deprecated.
-serde-std = ["std", "serde"] # Deprecated.
 
 [dependencies.serde]
 version = "1.0.229"

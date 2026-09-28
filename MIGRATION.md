@@ -3,6 +3,8 @@
 ## [4.0.0]
 - Some methods now require specifying a generic parameter for the allocator.
   It is usually determined automatically via type inference.
+- Futures `serde-alloc` and `serde-std` have been removed.
+  Use combination of `serde`, `alloc`, `std` instead.
 
 ## [3.0.0]
 - Default `impl-index-from` feature is now always enabled.

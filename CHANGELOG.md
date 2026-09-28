@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Optimize GitHub CI workflow.
 
+### Removed
+- Remove previously deprecated features `serde-alloc` and `serde-std` features.
+
 ## [3.5.0] - 2026-01-18
 ### Added
 - `TiVec::extend_from_within_corrected` method, a corrected variant of

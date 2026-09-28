@@ -1831,18 +1831,12 @@ mod test {
             assert_eq_api!(mv, v => TheVec::from(v.as_mut_slice()).into_std());
             assert_eq_api!(cv, v => TheVec::from(Cow::Borrowed(v.as_slice())).into_std());
             assert_eq_api!(mv, v => Cow::from(v.clone()).into_std());
-            assert_eq_api!(cv, v => v.clone().into_raw_parts().1);
-            assert_eq_api!(cv, v => v.clone().into_raw_parts().2);
 
             if !v.is_empty() {
                 assert_ne!(cv.0.as_ptr(), cv.1.as_ptr());
                 assert_ne!(cv.0.as_ptr_range(), cv.1.as_ptr_range());
                 assert_ne!(mv.0.as_mut_ptr(), mv.1.as_mut_ptr());
                 assert_ne!(mv.0.as_mut_ptr_range(), mv.1.as_mut_ptr_range());
-                assert_ne!(
-                    cv.0.clone().into_raw_parts().0,
-                    cv.1.clone().into_raw_parts().0
-                );
             }
 
             assert_eq_api!(cv, v => *v == TheVec::<u32>::default());
@@ -1865,6 +1859,32 @@ mod test {
                     let mut v = core::mem::ManuallyDrop::new(v.clone());
                     TheVec::from_raw_parts(v.as_mut_ptr(), v.len(), v.capacity()).into_std()
                 });
+            }
+        }
+    }
+
+    #[rustversion::since(1.93.0)]
+    #[test]
+    fn test_vec_read_api_compatibility_since_1_93() {
+        for v in [
+            &[0_u32; 0][..],
+            &[1],
+            &[1, 1234],
+            &[1, 2, 4],
+            &[1, 5, 3, 2],
+            &[1, 1, 9, 2, 4, 1, 12345, 12],
+        ] {
+            let cv = (v.to_vec(), TiVec::<Id, _>::from(v.to_vec()));
+            let mut cv = (&cv.0, &cv.1);
+
+            assert_eq_api!(cv, v => v.clone().into_raw_parts().1);
+            assert_eq_api!(cv, v => v.clone().into_raw_parts().2);
+
+            if !v.is_empty() {
+                assert_ne!(
+                    cv.0.clone().into_raw_parts().0,
+                    cv.1.clone().into_raw_parts().0
+                );
             }
         }
     }

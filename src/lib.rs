@@ -221,7 +221,7 @@
 //! [RUSTSEC-2025-0141]: https://rustsec.org/advisories/RUSTSEC-2025-0141
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
-#![cfg_attr(all(feature = "alloc", feature = "nightly"), feature(allocator_api))]
+#![cfg_attr(all(feature = "alloc", feature = "nightly"), feature(allocator_ext))]
 #![no_std]
 
 #[cfg(any(feature = "alloc", test))]

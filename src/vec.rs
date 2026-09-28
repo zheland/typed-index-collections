@@ -10,7 +10,7 @@ use core::hash::{Hash, Hasher};
 use core::iter::FromIterator;
 use core::marker::PhantomData;
 use core::mem::{ManuallyDrop, MaybeUninit};
-use core::ops::{Deref, DerefMut, Index, IndexMut, RangeBounds};
+use core::ops::{Deref, DerefMut, Index, IndexMut};
 use core::{fmt, slice};
 #[cfg(feature = "std")]
 use std::io::{IoSlice, Result as IoResult, Write};
@@ -1041,42 +1041,6 @@ impl<K, V, A: Allocator> TiVec<K, V, A> {
     ///
     /// See [`Vec::extend_from_within`] for more details.
     ///
-    /// # Deprecation
-    ///
-    /// This method is deprecated due to incorrect `src` bounds.
-    /// Use [`extend_from_within_corrected`] instead, which accepts typed
-    /// index ranges.
-    /// See issue [#8] for more details.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the starting point is greater than the end point or if
-    /// the end point is greater than the length of the vector.
-    ///
-    /// [`Vec::extend_from_within`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.extend_from_within
-    /// [`extend_from_within_corrected`]: #method.extend_from_within_corrected
-    /// [#8]: https://github.com/zheland/typed-index-collections/issues/8
-    #[inline]
-    #[deprecated(
-        since = "3.5.0",
-        note = "use `extend_from_within_corrected` instead, will be removed in 4.0.0"
-    )]
-    pub fn extend_from_within<R>(&mut self, src: R)
-    where
-        V: Clone,
-        R: RangeBounds<usize>,
-    {
-        self.raw.extend_from_within(src);
-    }
-
-    /// Copies elements from `src` range to the end of the vector.
-    ///
-    /// See [`Vec::extend_from_within`] for more details.
-    ///
-    /// This is a corrected version of the deprecated
-    /// [`Self::extend_from_within`] that accepts typed index bounds.
-    /// The deprecated method uses incorrect bounds.
-    ///
     /// # Panics
     ///
     /// Panics if the starting point is greater than the end point or if
@@ -1085,7 +1049,7 @@ impl<K, V, A: Allocator> TiVec<K, V, A> {
     /// [`Vec::extend_from_within`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.extend_from_within
     /// [`extend_from_within`]: #method.extend_from_within
     #[inline]
-    pub fn extend_from_within_corrected<R>(&mut self, src: R)
+    pub fn extend_from_within<R>(&mut self, src: R)
     where
         V: Clone,
         R: TiRangeBounds<K>,
@@ -2017,17 +1981,7 @@ mod test {
                     restore(&mut mv);
                     assert_eq_api!(mv, v => v.drain((a..b).into_tic()).collect::<Vec<_>>());
                     restore(&mut mv);
-                    #[expect(deprecated, reason = "okay in tests")]
-                    {
-                        assert_eq_api!(mv, v => v.extend_from_within(a..b));
-                    }
-                    restore(&mut mv);
-                    {
-                        mv.0.extend_from_within(a..b);
-                        mv.1.extend_from_within_corrected(Id(a)..Id(b));
-                        assert_eq!(mv.0.as_slice(), mv.1.raw.as_slice());
-                        assert_eq!(mv.0.capacity(), mv.1.capacity());
-                    }
+                    assert_eq_api!(mv, v => v.extend_from_within((a..b).into_tic()));
                     restore(&mut mv);
                     assert_eq_api!(
                         mv, v => v.splice((a..b).into_tic(), [1, 2, 3]).collect::<Vec<_>>()

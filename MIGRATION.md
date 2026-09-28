@@ -5,6 +5,8 @@
   It is usually determined automatically via type inference.
 - Futures `serde-alloc` and `serde-std` have been removed.
   Use combination of `serde`, `alloc`, `std` instead.
+- `TiVec::extend_from_within` method now requires proper `R: TiRangeBounds<K>`
+  bounds.
 
 ## [3.0.0]
 - Default `impl-index-from` feature is now always enabled.

@@ -1866,7 +1866,7 @@ mod test {
     #[rustversion::since(1.93.0)]
     #[test]
     fn test_vec_read_api_compatibility_since_1_93() {
-        for v in [
+        for slice in [
             &[0_u32; 0][..],
             &[1],
             &[1, 1234],
@@ -1874,18 +1874,22 @@ mod test {
             &[1, 5, 3, 2],
             &[1, 1, 9, 2, 4, 1, 12345, 12],
         ] {
-            let cv = (v.to_vec(), TiVec::<Id, _>::from(v.to_vec()));
-            let mut cv = (&cv.0, &cv.1);
+            let vec = slice.to_vec();
+            let ti_vec = TiVec::<Id, _>::from(slice.to_vec());
 
-            assert_eq_api!(cv, v => v.clone().into_raw_parts().1);
-            assert_eq_api!(cv, v => v.clone().into_raw_parts().2);
+            let vec_raw = vec.into_raw_parts();
+            let ti_vec_raw = ti_vec.into_raw_parts();
 
-            if !v.is_empty() {
-                assert_ne!(
-                    cv.0.clone().into_raw_parts().0,
-                    cv.1.clone().into_raw_parts().0
-                );
+            if !slice.is_empty() {
+                assert_ne!(vec_raw.0, ti_vec_raw.0);
             }
+            assert_eq!(vec_raw.1, ti_vec_raw.1);
+            assert_eq!(vec_raw.2, ti_vec_raw.2);
+
+            drop(unsafe { Vec::from_raw_parts(vec_raw.0, vec_raw.1, vec_raw.2) });
+            drop(unsafe {
+                TiVec::<Id, _>::from_raw_parts(ti_vec_raw.0, ti_vec_raw.1, ti_vec_raw.2)
+            });
         }
     }
 

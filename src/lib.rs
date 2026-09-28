@@ -41,7 +41,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! typed-index-collections = "3.5.0"
+//! typed-index-collections = "4.0.0-alpha.1"
 //! ```
 //!
 //! This crate depends on the standard library by default that is useful
@@ -51,7 +51,7 @@
 //!
 //! ```toml
 //! [dependencies.typed-index-collections]
-//! version = "3.5.0"
+//! version = "4.0.0-alpha.1"
 //! default-features = false
 //! features = ["alloc"]
 //! ```
@@ -63,7 +63,7 @@
 //! ```toml
 //! [dependencies]
 //! derive_more = "0.99"
-//! typed-index-collections = "3.5.0"
+//! typed-index-collections = "4.0.0-alpha.1"
 //! ```
 //!
 //! # Examples
@@ -221,6 +221,7 @@
 //! [RUSTSEC-2025-0141]: https://rustsec.org/advisories/RUSTSEC-2025-0141
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(all(feature = "alloc", feature = "nightly"), feature(allocator_api))]
 #![no_std]
 
 #[cfg(any(feature = "alloc", test))]
@@ -233,6 +234,8 @@ extern crate std;
 #[macro_use]
 mod test_util;
 
+#[cfg(feature = "alloc")]
+mod alloc_ext;
 mod iter;
 mod range;
 mod slice;
@@ -253,7 +256,9 @@ pub use vec::TiVec;
 
 #[cfg(test)]
 mod integration_tests_deps {
-    use {readme_sync as _, serde_json as _, version_sync as _};
+    use readme_sync as _;
+    use serde_json as _;
+    use version_sync as _;
 }
 
 #[doc(hidden)]

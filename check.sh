@@ -2,7 +2,7 @@
 
 # Crate-specific settings
 toolchains=( stable beta nightly "1.90.0" )
-all_features=( "" "alloc" "std" "serde" )
+all_features=( "" "alloc" "std" "serde" "nightly" )
 max_uncovered_functions=0
 max_uncovered_lines=10
 max_uncovered_regions=10
@@ -117,6 +117,9 @@ for toolchain in "${toolchains[@]}"; do
     (
         export CARGO_TARGET_DIR="target/check-$toolchain"
         for features in "${feature_sets[@]}"; do
+            if [[ $features =~ (^|,)"nightly"(,|$) ]] && [[ $toolchain != "nightly" ]]; then
+                continue
+            fi
             cargo="cargo +$toolchain"
             if [ -n "$features" ]; then
                 args="--no-default-features --features $features"
@@ -153,7 +156,7 @@ for features in "${feature_sets[@]}"; do
         args+=( --features )
         args+=( $feature )
     done
-    echo_and_run cargo semver-checks --only-explicit-features "${args[@]}"
+    echo_and_run cargo +nightly semver-checks --only-explicit-features "${args[@]}"
 done
 
 ok "All checks succeeded." 1>&2

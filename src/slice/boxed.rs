@@ -7,9 +7,11 @@ use core::mem::transmute;
 use bincode::de::{BorrowDecode, BorrowDecoder, Decode, Decoder};
 #[cfg(feature = "bincode")]
 use bincode::error::DecodeError;
-#[cfg(all(feature = "alloc", feature = "serde"))]
+#[cfg(feature = "serde")]
 use serde::de::{Deserialize, Deserializer};
 
+#[cfg(feature = "nightly")]
+use crate::alloc_ext::Allocator;
 use crate::{TiSlice, TiVec};
 
 impl<K, V> From<Box<TiSlice<K, V>>> for Box<[V]> {
@@ -35,13 +37,25 @@ impl<K, V: Clone> Clone for Box<TiSlice<K, V>> {
     }
 }
 
+#[cfg(feature = "nightly")]
+impl<K, V, A: Allocator> IntoIterator for Box<TiSlice<K, V>, A> {
+    type Item = V;
+    type IntoIter = vec::IntoIter<V, A>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        TiSlice::into_vec(self).into_iter()
+    }
+}
+
+#[cfg(not(feature = "nightly"))]
 impl<K, V> IntoIterator for Box<TiSlice<K, V>> {
     type Item = V;
     type IntoIter = vec::IntoIter<V>;
 
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
-        self.into_vec().into_iter()
+        TiSlice::into_vec(self).into_iter()
     }
 }
 
@@ -61,15 +75,15 @@ impl<K, V: Copy> From<&TiSlice<K, V>> for Box<TiSlice<K, V>> {
 
 impl<K, V> From<Box<TiSlice<K, V>>> for TiVec<K, V> {
     #[inline]
-    fn from(s: Box<TiSlice<K, V>>) -> Self {
-        s.into_vec()
+    fn from(slice: Box<TiSlice<K, V>>) -> Self {
+        TiSlice::into_vec(slice)
     }
 }
 
 impl<K, V> From<TiVec<K, V>> for Box<TiSlice<K, V>> {
     #[inline]
-    fn from(v: TiVec<K, V>) -> Self {
-        v.into_boxed_slice()
+    fn from(vec: TiVec<K, V>) -> Self {
+        vec.into_boxed_slice()
     }
 }
 

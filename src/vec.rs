@@ -9,7 +9,7 @@ use core::cmp::Ordering;
 use core::hash::{Hash, Hasher};
 use core::iter::FromIterator;
 use core::marker::PhantomData;
-use core::mem::MaybeUninit;
+use core::mem::{ManuallyDrop, MaybeUninit};
 use core::ops::{Deref, DerefMut, Index, IndexMut, RangeBounds};
 use core::{fmt, slice};
 #[cfg(feature = "std")]
@@ -26,6 +26,7 @@ use serde::de::{Deserialize, Deserializer};
 #[cfg(feature = "serde")]
 use serde::ser::{Serialize, Serializer};
 
+use crate::alloc_ext::{Allocator, Global};
 use crate::{TiEnumerated, TiRangeBounds, TiSlice, TiSliceIndex};
 
 /// A contiguous growable array type
@@ -98,9 +99,18 @@ use crate::{TiEnumerated, TiRangeBounds, TiSlice, TiSliceIndex};
 /// [`AsMut`]: https://doc.rust-lang.org/std/convert/trait.AsMut.html
 /// [`derive_more`]: https://crates.io/crates/derive_more
 #[repr(transparent)]
-pub struct TiVec<K, V> {
+pub struct TiVec<K, V, A: Allocator = Global> {
     /// Raw slice property
+    #[cfg(feature = "nightly")]
+    pub raw: Vec<V, A>,
+
+    /// Raw slice property
+    #[cfg(not(feature = "nightly"))]
     pub raw: Vec<V>,
+
+    // Dummy allocator
+    #[cfg(not(feature = "nightly"))]
+    _alloc: PhantomData<A>,
 
     /// Tied slice index type
     ///
@@ -121,7 +131,7 @@ pub struct TiVec<K, V> {
     _marker: PhantomData<fn(K) -> K>,
 }
 
-impl<K, V> TiVec<K, V> {
+impl<K, V> TiVec<K, V, Global> {
     /// Constructs a new, empty `TiVec<K, V>`.
     ///
     /// See [`Vec::new`] for more details.
@@ -132,6 +142,8 @@ impl<K, V> TiVec<K, V> {
     pub const fn new() -> Self {
         Self {
             raw: Vec::new(),
+            #[cfg(not(feature = "nightly"))]
+            _alloc: PhantomData,
             _marker: PhantomData,
         }
     }
@@ -146,6 +158,8 @@ impl<K, V> TiVec<K, V> {
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             raw: Vec::with_capacity(capacity),
+            #[cfg(not(feature = "nightly"))]
+            _alloc: PhantomData,
             _marker: PhantomData,
         }
     }
@@ -167,8 +181,118 @@ impl<K, V> TiVec<K, V> {
         Self {
             // SAFETY: Guaranteed by the caller.
             raw: unsafe { Vec::from_raw_parts(ptr, length, capacity) },
+            #[cfg(not(feature = "nightly"))]
+            _alloc: PhantomData,
             _marker: PhantomData,
         }
+    }
+}
+
+impl<K, V, A: Allocator> TiVec<K, V, A> {
+    /// Constructs a new, empty `TiVec<K, V>`.
+    ///
+    /// See [`Vec::new`] for more details.
+    ///
+    /// [`Vec::new`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.new
+    #[inline]
+    #[must_use]
+    pub fn new_in(alloc: A) -> Self {
+        #[cfg(not(feature = "nightly"))]
+        drop(alloc);
+
+        Self {
+            #[cfg(feature = "nightly")]
+            raw: Vec::new_in(alloc),
+            #[cfg(not(feature = "nightly"))]
+            raw: Vec::new(),
+            #[cfg(not(feature = "nightly"))]
+            _alloc: PhantomData,
+            _marker: PhantomData,
+        }
+    }
+
+    /// Constructs a new, empty `TiVec<K, V>` with the specified capacity.
+    ///
+    /// See [`Vec::with_capacity`] for more details.
+    ///
+    /// [`Vec::with_capacity`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.with_capacity
+    #[inline]
+    #[must_use]
+    pub fn with_capacity_in(capacity: usize, alloc: A) -> Self {
+        #[cfg(not(feature = "nightly"))]
+        drop(alloc);
+
+        Self {
+            #[cfg(feature = "nightly")]
+            raw: Vec::with_capacity_in(capacity, alloc),
+            #[cfg(not(feature = "nightly"))]
+            raw: Vec::with_capacity(capacity),
+            #[cfg(not(feature = "nightly"))]
+            _alloc: PhantomData,
+            _marker: PhantomData,
+        }
+    }
+
+    /// Creates a `TiVec<K, V>` directly from the raw components of another
+    /// vector.
+    ///
+    /// See [`Vec::from_raw_parts`] for more details.
+    ///
+    /// # Safety
+    ///
+    /// This is highly unsafe, due to the number of invariants that aren't
+    /// checked.
+    /// See [`Vec::from_raw_parts`] for more details.
+    ///
+    /// [`Vec::from_raw_parts`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.from_raw_parts
+    #[inline]
+    pub unsafe fn from_raw_parts_in(ptr: *mut V, length: usize, capacity: usize, alloc: A) -> Self {
+        #[cfg(not(feature = "nightly"))]
+        drop(alloc);
+
+        Self {
+            #[cfg(feature = "nightly")]
+            // SAFETY: Guaranteed by the caller.
+            raw: unsafe { Vec::from_raw_parts_in(ptr, length, capacity, alloc) },
+
+            #[cfg(not(feature = "nightly"))]
+            // SAFETY: Guaranteed by the caller.
+            raw: unsafe { Vec::from_raw_parts(ptr, length, capacity) },
+
+            #[cfg(not(feature = "nightly"))]
+            _alloc: PhantomData,
+
+            _marker: PhantomData,
+        }
+    }
+
+    /// Decomposes a `TiVec<K, V>` into its raw components.
+    ///
+    /// See [`Vec::into_raw_parts`] for more details.
+    #[inline]
+    #[must_use]
+    pub fn into_raw_parts(self) -> (*mut V, usize, usize) {
+        let mut me = ManuallyDrop::new(self);
+        (me.as_mut_ptr(), me.len(), me.capacity())
+    }
+
+    /// Decomposes a `TiVec<K, V>` into its raw components.
+    ///
+    /// See [`Vec::into_raw_parts_with_allocator`] for more details.
+    #[cfg(feature = "nightly")]
+    #[inline]
+    #[must_use]
+    pub fn into_raw_parts_with_allocator(self) -> (*mut V, usize, usize, A) {
+        let mut me = ManuallyDrop::new(self);
+        let len = me.len();
+        let capacity = me.capacity();
+        let ptr = me.as_mut_ptr();
+        // SAFETY: `me` is a `ManuallyDrop`, so it will not be dropped.
+        // We are moving the allocator out of it and returning it, so the caller
+        // becomes responsible for it.
+        // The original allocator inside `me` is not dropped.
+        let alloc = unsafe { core::ptr::read(me.allocator()) };
+        (ptr, len, capacity, alloc)
     }
 
     /// Converts a [`&std::vec::Vec<V>`] into a `&TiVec<K, V>`.
@@ -185,6 +309,29 @@ impl<K, V> TiVec<K, V> {
     /// ```
     ///
     /// [`&std::vec::Vec<V>`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
+    #[cfg(feature = "nightly")]
+    #[inline]
+    #[must_use]
+    pub const fn from_ref(raw: &Vec<V, A>) -> &Self {
+        // SAFETY: `TiVec<K, V>` is `repr(transparent)` over a `Vec<V>` type.
+        unsafe { &*core::ptr::from_ref::<Vec<V, A>>(raw).cast::<Self>() }
+    }
+
+    /// Converts a [`&std::vec::Vec<V>`] into a `&TiVec<K, V>`.
+    ///
+    /// Vector reference is intentionally used in the argument
+    /// instead of slice reference for conversion with no-op.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use typed_index_collections::TiVec;
+    /// pub struct Id(usize);
+    /// let vec: &TiVec<Id, usize> = TiVec::from_ref(&vec![1, 2, 4]);
+    /// ```
+    ///
+    /// [`&std::vec::Vec<V>`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
+    #[cfg(not(feature = "nightly"))]
     #[inline]
     #[must_use]
     pub const fn from_ref(raw: &Vec<V>) -> &Self {
@@ -203,6 +350,25 @@ impl<K, V> TiVec<K, V> {
     /// ```
     ///
     /// [`&mut std::vec::Vec<V>`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
+    #[cfg(feature = "nightly")]
+    #[inline]
+    pub const fn from_mut(raw: &mut Vec<V, A>) -> &mut Self {
+        // SAFETY: `TiVec<K, V>` is `repr(transparent)` over a `Vec<V>` type.
+        unsafe { &mut *core::ptr::from_mut::<Vec<V, A>>(raw).cast::<Self>() }
+    }
+
+    /// Converts a [`&mut std::vec::Vec<V>`] into a `&mut TiVec<K, V>`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use typed_index_collections::TiVec;
+    /// pub struct Id(usize);
+    /// let vec: &mut TiVec<Id, usize> = TiVec::from_mut(&mut vec![1, 2, 4]);
+    /// ```
+    ///
+    /// [`&mut std::vec::Vec<V>`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
+    #[cfg(not(feature = "nightly"))]
     #[inline]
     pub const fn from_mut(raw: &mut Vec<V>) -> &mut Self {
         // SAFETY: `TiVec<K, V>` is `repr(transparent)` over a `Vec<V>` type.
@@ -299,16 +465,31 @@ impl<K, V> TiVec<K, V> {
     pub fn shrink_to(&mut self, min_capacity: usize) {
         self.raw.shrink_to(min_capacity);
     }
+
     /// Converts the vector into [`Box<TiSlice<K, V>>`][`Box`].
     ///
     /// See [`Vec::into_boxed_slice`] for more details.
     ///
     /// [`Vec::into_boxed_slice`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.into_boxed_slice
     /// [`Box`]: https://doc.rust-lang.org/std/boxed/struct.Box.html
+    #[cfg(feature = "nightly")]
+    #[inline]
+    #[must_use]
+    pub fn into_boxed_slice(self) -> Box<TiSlice<K, V>, A> {
+        TiSlice::boxed_from(self.raw.into_boxed_slice())
+    }
+
+    /// Converts the vector into [`Box<TiSlice<K, V>>`][`Box`].
+    ///
+    /// See [`Vec::into_boxed_slice`] for more details.
+    ///
+    /// [`Vec::into_boxed_slice`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.into_boxed_slice
+    /// [`Box`]: https://doc.rust-lang.org/std/boxed/struct.Box.html
+    #[cfg(not(feature = "nightly"))]
     #[inline]
     #[must_use]
     pub fn into_boxed_slice(self) -> Box<TiSlice<K, V>> {
-        self.raw.into_boxed_slice().into()
+        TiSlice::boxed_from(self.raw.into_boxed_slice())
     }
 
     /// Shortens the vector, keeping the first `len` elements and dropping
@@ -362,6 +543,13 @@ impl<K, V> TiVec<K, V> {
     #[inline]
     pub const fn as_mut_ptr(&mut self) -> *mut V {
         self.raw.as_mut_ptr()
+    }
+
+    /// Returns a reference to the underlying allocator.
+    #[cfg(feature = "nightly")]
+    #[inline]
+    pub fn allocator(&self) -> &A {
+        self.raw.allocator()
     }
 
     /// Forces the length of the vector to `new_len`.
@@ -622,6 +810,22 @@ impl<K, V> TiVec<K, V> {
     /// See [`Vec::drain`] for more details.
     ///
     /// [`Vec::drain`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.drain
+    #[cfg(feature = "nightly")]
+    #[inline]
+    pub fn drain<R>(&mut self, range: R) -> Drain<'_, V, A>
+    where
+        R: TiRangeBounds<K>,
+    {
+        self.raw.drain(range.into_range())
+    }
+
+    /// Creates a draining iterator that removes the specified range in the
+    /// vector and yields the removed items.
+    ///
+    /// See [`Vec::drain`] for more details.
+    ///
+    /// [`Vec::drain`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.drain
+    #[cfg(not(feature = "nightly"))]
     #[inline]
     pub fn drain<R>(&mut self, range: R) -> Drain<'_, V>
     where
@@ -659,6 +863,49 @@ impl<K, V> TiVec<K, V> {
     /// ```
     ///
     /// [`Vec::drain`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.drain
+    #[cfg(feature = "nightly")]
+    #[inline]
+    pub fn drain_enumerated<R>(&mut self, range: R) -> TiEnumerated<Drain<'_, V, A>, K, V>
+    where
+        usize: Into<K>,
+        R: TiRangeBounds<K>,
+    {
+        self.raw
+            .drain(range.into_range())
+            .enumerate()
+            .map(|(key, value)| (key.into(), value))
+    }
+
+    /// Creates a draining iterator that removes the specified
+    /// range in the vector and yields the current count and the removed items.
+    ///
+    /// It acts like `self.drain(range).enumerate()`,
+    /// but instead of `usize` it returns index of type `K`.
+    ///
+    /// Note that the indices started from `K::from_usize(0)`,
+    /// regardless of the range starting point.
+    ///
+    /// See [`Vec::drain`] for more details.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use derive_more::{From, Into};
+    /// # use typed_index_collections::{TiSlice, TiVec};
+    /// #[derive(Eq, Debug, From, Into, PartialEq)]
+    /// pub struct Id(usize);
+    /// let mut vec: TiVec<Id, usize> = vec![1, 2, 4].into();
+    /// {
+    ///     let mut iterator = vec.drain_enumerated(Id(1)..);
+    ///     assert_eq!(iterator.next(), Some((Id(0), 2)));
+    ///     assert_eq!(iterator.next(), Some((Id(1), 4)));
+    ///     assert_eq!(iterator.next(), None);
+    /// }
+    /// assert_eq!(vec.as_slice(), TiSlice::from_ref(&[1]));
+    /// ```
+    ///
+    /// [`Vec::drain`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.drain
+    #[cfg(not(feature = "nightly"))]
     #[inline]
     pub fn drain_enumerated<R>(&mut self, range: R) -> TiEnumerated<Drain<'_, V>, K, V>
     where
@@ -714,6 +961,7 @@ impl<K, V> TiVec<K, V> {
     pub fn split_off(&mut self, at: K) -> Self
     where
         K: Into<usize>,
+        A: Clone,
     {
         self.raw.split_off(at.into()).into()
     }
@@ -752,9 +1000,16 @@ impl<K, V> TiVec<K, V> {
     /// See [`Vec::leak`] for more details.
     ///
     /// [`Vec::leak`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.leak
-    #[expect(clippy::must_use_candidate, reason = "not used in `Vec::leak`")]
+    #[allow(
+        clippy::allow_attributes,
+        clippy::must_use_candidate,
+        reason = "not used in `Vec::leak`"
+    )]
     #[inline]
-    pub fn leak<'a>(self) -> &'a mut TiSlice<K, V> {
+    pub fn leak<'a>(self) -> &'a mut TiSlice<K, V>
+    where
+        A: 'a,
+    {
         self.raw.leak().as_mut()
     }
 
@@ -861,6 +1116,25 @@ impl<K, V> TiVec<K, V> {
     /// See [`Vec::splice`] for more details.
     ///
     /// [`Vec::splice`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.splice
+    #[cfg(feature = "nightly")]
+    #[inline]
+    pub fn splice<R, I>(&mut self, range: R, replace_with: I) -> Splice<'_, I::IntoIter, A>
+    where
+        R: TiRangeBounds<K>,
+        I: IntoIterator<Item = V>,
+    {
+        self.raw.splice(range.into_range(), replace_with)
+    }
+
+    /// Creates a splicing iterator that replaces the specified range in the
+    /// vector with the given `replace_with` iterator and yields the removed
+    /// items. `replace_with` does not need to be the same length as
+    /// `range`.
+    ///
+    /// See [`Vec::splice`] for more details.
+    ///
+    /// [`Vec::splice`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.splice
+    #[cfg(not(feature = "nightly"))]
     #[inline]
     pub fn splice<R, I>(&mut self, range: R, replace_with: I) -> Splice<'_, I::IntoIter>
     where
@@ -890,6 +1164,39 @@ impl<K, V> TiVec<K, V> {
     /// assert_eq!(iterator.next(), Some((Id(2), 4)));
     /// assert_eq!(iterator.next(), None);
     /// ```
+    #[cfg(feature = "nightly")]
+    #[inline]
+    pub fn into_iter_enumerated(self) -> TiEnumerated<vec::IntoIter<V, A>, K, V>
+    where
+        usize: Into<K>,
+    {
+        self.raw
+            .into_iter()
+            .enumerate()
+            .map(|(key, value)| (key.into(), value))
+    }
+
+    /// Converts the vector into iterator over all key-value pairs
+    /// with `K` used for iteration indices.
+    ///
+    /// It acts like `self.into_iter().enumerate()`,
+    /// but use `K` instead of `usize` for iteration indices.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use derive_more::{From, Into};
+    /// # use typed_index_collections::TiVec;
+    /// #[derive(Eq, Debug, From, Into, PartialEq)]
+    /// pub struct Id(usize);
+    /// let vec: TiVec<Id, usize> = vec![1, 2, 4].into();
+    /// let mut iterator = vec.into_iter_enumerated();
+    /// assert_eq!(iterator.next(), Some((Id(0), 1)));
+    /// assert_eq!(iterator.next(), Some((Id(1), 2)));
+    /// assert_eq!(iterator.next(), Some((Id(2), 4)));
+    /// assert_eq!(iterator.next(), None);
+    /// ```
+    #[cfg(not(feature = "nightly"))]
     #[inline]
     pub fn into_iter_enumerated(self) -> TiEnumerated<vec::IntoIter<V>, K, V>
     where
@@ -902,7 +1209,7 @@ impl<K, V> TiVec<K, V> {
     }
 }
 
-impl<K, V> fmt::Debug for TiVec<K, V>
+impl<K, V, A: Allocator> fmt::Debug for TiVec<K, V, A>
 where
     K: fmt::Debug,
     V: fmt::Debug,
@@ -918,62 +1225,89 @@ where
     }
 }
 
-impl<K, V> AsRef<Self> for TiVec<K, V> {
+impl<K, V, A: Allocator> AsRef<Self> for TiVec<K, V, A> {
     #[inline]
     fn as_ref(&self) -> &Self {
         self
     }
 }
 
-impl<K, V> AsMut<Self> for TiVec<K, V> {
+impl<K, V, A: Allocator> AsMut<Self> for TiVec<K, V, A> {
     #[inline]
     fn as_mut(&mut self) -> &mut Self {
         self
     }
 }
 
-impl<K, V> AsRef<TiSlice<K, V>> for TiVec<K, V> {
+impl<K, V, A: Allocator> AsRef<TiSlice<K, V>> for TiVec<K, V, A> {
     #[inline]
     fn as_ref(&self) -> &TiSlice<K, V> {
         self
     }
 }
 
-impl<K, V> AsMut<TiSlice<K, V>> for TiVec<K, V> {
+impl<K, V, A: Allocator> AsMut<TiSlice<K, V>> for TiVec<K, V, A> {
     #[inline]
     fn as_mut(&mut self) -> &mut TiSlice<K, V> {
         self
     }
 }
 
-impl<K, V> AsRef<Vec<V>> for TiVec<K, V> {
+#[cfg(feature = "nightly")]
+impl<K, V, A: Allocator> AsRef<Vec<V, A>> for TiVec<K, V, A> {
+    #[inline]
+    fn as_ref(&self) -> &Vec<V, A> {
+        &self.raw
+    }
+}
+
+#[cfg(not(feature = "nightly"))]
+impl<K, V, A: Allocator> AsRef<Vec<V>> for TiVec<K, V, A> {
     #[inline]
     fn as_ref(&self) -> &Vec<V> {
         &self.raw
     }
 }
 
-impl<K, V> AsMut<Vec<V>> for TiVec<K, V> {
+#[cfg(feature = "nightly")]
+impl<K, V, A: Allocator> AsMut<Vec<V, A>> for TiVec<K, V, A> {
+    #[inline]
+    fn as_mut(&mut self) -> &mut Vec<V, A> {
+        &mut self.raw
+    }
+}
+
+#[cfg(not(feature = "nightly"))]
+impl<K, V, A: Allocator> AsMut<Vec<V>> for TiVec<K, V, A> {
     #[inline]
     fn as_mut(&mut self) -> &mut Vec<V> {
         &mut self.raw
     }
 }
 
-impl<K, V> AsRef<[V]> for TiVec<K, V> {
+impl<K, V, A: Allocator> AsRef<[V]> for TiVec<K, V, A> {
     #[inline]
     fn as_ref(&self) -> &[V] {
         &self.raw
     }
 }
 
-impl<K, V> AsMut<[V]> for TiVec<K, V> {
+impl<K, V, A: Allocator> AsMut<[V]> for TiVec<K, V, A> {
     #[inline]
     fn as_mut(&mut self) -> &mut [V] {
         &mut self.raw
     }
 }
 
+#[cfg(feature = "nightly")]
+impl<K, V, A: Allocator> AsRef<TiVec<K, V, A>> for Vec<V, A> {
+    #[inline]
+    fn as_ref(&self) -> &TiVec<K, V, A> {
+        TiVec::from_ref(self)
+    }
+}
+
+#[cfg(not(feature = "nightly"))]
 impl<K, V> AsRef<TiVec<K, V>> for Vec<V> {
     #[inline]
     fn as_ref(&self) -> &TiVec<K, V> {
@@ -981,6 +1315,15 @@ impl<K, V> AsRef<TiVec<K, V>> for Vec<V> {
     }
 }
 
+#[cfg(feature = "nightly")]
+impl<K, V, A: Allocator> AsMut<TiVec<K, V, A>> for Vec<V, A> {
+    #[inline]
+    fn as_mut(&mut self) -> &mut TiVec<K, V, A> {
+        TiVec::from_mut(self)
+    }
+}
+
+#[cfg(not(feature = "nightly"))]
 impl<K, V> AsMut<TiVec<K, V>> for Vec<V> {
     #[inline]
     fn as_mut(&mut self) -> &mut TiVec<K, V> {
@@ -988,21 +1331,21 @@ impl<K, V> AsMut<TiVec<K, V>> for Vec<V> {
     }
 }
 
-impl<K, V> Borrow<TiSlice<K, V>> for TiVec<K, V> {
+impl<K, V, A: Allocator> Borrow<TiSlice<K, V>> for TiVec<K, V, A> {
     #[inline]
     fn borrow(&self) -> &TiSlice<K, V> {
         self.as_slice()
     }
 }
 
-impl<K, V> BorrowMut<TiSlice<K, V>> for TiVec<K, V> {
+impl<K, V, A: Allocator> BorrowMut<TiSlice<K, V>> for TiVec<K, V, A> {
     #[inline]
     fn borrow_mut(&mut self) -> &mut TiSlice<K, V> {
         self.as_mut_slice()
     }
 }
 
-impl<K, V> Deref for TiVec<K, V> {
+impl<K, V, A: Allocator> Deref for TiVec<K, V, A> {
     type Target = TiSlice<K, V>;
 
     #[inline]
@@ -1011,23 +1354,48 @@ impl<K, V> Deref for TiVec<K, V> {
     }
 }
 
-impl<K, V> DerefMut for TiVec<K, V> {
+impl<K, V, A: Allocator> DerefMut for TiVec<K, V, A> {
     #[inline]
     fn deref_mut(&mut self) -> &mut TiSlice<K, V> {
         Self::Target::from_mut(&mut self.raw)
     }
 }
 
-impl<K, V> From<Vec<V>> for TiVec<K, V> {
+#[cfg(feature = "nightly")]
+impl<K, V, A: Allocator> From<Vec<V, A>> for TiVec<K, V, A> {
+    #[inline]
+    fn from(vec: Vec<V, A>) -> Self {
+        Self {
+            raw: vec,
+            _marker: PhantomData,
+            #[cfg(not(feature = "nightly"))]
+            _alloc: PhantomData,
+        }
+    }
+}
+
+#[cfg(not(feature = "nightly"))]
+impl<K, V, A: Allocator> From<Vec<V>> for TiVec<K, V, A> {
     #[inline]
     fn from(vec: Vec<V>) -> Self {
         Self {
             raw: vec,
             _marker: PhantomData,
+            #[cfg(not(feature = "nightly"))]
+            _alloc: PhantomData,
         }
     }
 }
 
+#[cfg(feature = "nightly")]
+impl<K, V, A: Allocator> From<TiVec<K, V, A>> for Vec<V, A> {
+    #[inline]
+    fn from(vec: TiVec<K, V, A>) -> Self {
+        vec.raw
+    }
+}
+
+#[cfg(not(feature = "nightly"))]
 impl<K, V> From<TiVec<K, V>> for Vec<V> {
     #[inline]
     fn from(vec: TiVec<K, V>) -> Self {
@@ -1096,9 +1464,10 @@ impl<K> From<CString> for TiVec<K, u8> {
     }
 }
 
-impl<K, V> Clone for TiVec<K, V>
+impl<K, V, A> Clone for TiVec<K, V, A>
 where
     V: Clone,
+    A: Allocator + Clone,
 {
     #[inline]
     fn clone(&self) -> Self {
@@ -1106,79 +1475,79 @@ where
     }
 }
 
-impl<K, V> Eq for TiVec<K, V> where V: Eq {}
+impl<K, V, A: Allocator> Eq for TiVec<K, V, A> where V: Eq {}
 
-impl<K, A, B> PartialEq<TiVec<K, B>> for TiVec<K, A>
+impl<K, V1, V2, A: Allocator> PartialEq<TiVec<K, V2, A>> for TiVec<K, V1, A>
 where
-    A: PartialEq<B>,
+    V1: PartialEq<V2>,
 {
     #[inline]
-    fn eq(&self, other: &TiVec<K, B>) -> bool {
+    fn eq(&self, other: &TiVec<K, V2, A>) -> bool {
         self.raw == other.raw
     }
 }
 
-impl<K, A, B> PartialEq<TiSlice<K, B>> for TiVec<K, A>
+impl<K, V1, V2, A: Allocator> PartialEq<TiSlice<K, V2>> for TiVec<K, V1, A>
 where
-    A: PartialEq<B>,
+    V1: PartialEq<V2>,
 {
     #[inline]
-    fn eq(&self, other: &TiSlice<K, B>) -> bool {
+    fn eq(&self, other: &TiSlice<K, V2>) -> bool {
         *self.raw == other.raw
     }
 }
 
-impl<K, A, B> PartialEq<TiVec<K, B>> for TiSlice<K, A>
+impl<K, V1, V2, A: Allocator> PartialEq<TiVec<K, V2, A>> for TiSlice<K, V1>
 where
-    A: PartialEq<B>,
+    V1: PartialEq<V2>,
 {
     #[inline]
-    fn eq(&self, other: &TiVec<K, B>) -> bool {
+    fn eq(&self, other: &TiVec<K, V2, A>) -> bool {
         self.raw == *other.raw
     }
 }
 
-impl<'a, K, A, B> PartialEq<&'a TiSlice<K, B>> for TiVec<K, A>
+impl<'a, K, V1, V2, A: Allocator> PartialEq<&'a TiSlice<K, V2>> for TiVec<K, V1, A>
 where
-    A: PartialEq<B>,
+    V1: PartialEq<V2>,
 {
     #[inline]
-    fn eq(&self, other: &&'a TiSlice<K, B>) -> bool {
+    fn eq(&self, other: &&'a TiSlice<K, V2>) -> bool {
         *self.raw == other.raw
     }
 }
 
-impl<K, A, B> PartialEq<TiVec<K, B>> for &TiSlice<K, A>
+impl<K, V1, V2, A: Allocator> PartialEq<TiVec<K, V2, A>> for &TiSlice<K, V1>
 where
-    A: PartialEq<B>,
+    V1: PartialEq<V2>,
 {
     #[inline]
-    fn eq(&self, other: &TiVec<K, B>) -> bool {
+    fn eq(&self, other: &TiVec<K, V2, A>) -> bool {
         self.raw == *other.raw
     }
 }
 
-impl<'a, K, A, B> PartialEq<&'a mut TiSlice<K, B>> for TiVec<K, A>
+impl<'a, K, V1, V2, A: Allocator> PartialEq<&'a mut TiSlice<K, V2>> for TiVec<K, V1, A>
 where
-    A: PartialEq<B>,
+    V1: PartialEq<V2>,
 {
     #[inline]
-    fn eq(&self, other: &&'a mut TiSlice<K, B>) -> bool {
+    fn eq(&self, other: &&'a mut TiSlice<K, V2>) -> bool {
         *self.raw == other.raw
     }
 }
 
-impl<K, A, B> PartialEq<TiVec<K, B>> for &mut TiSlice<K, A>
+impl<K, V1, V2, A: Allocator> PartialEq<TiVec<K, V2, A>> for &mut TiSlice<K, V1>
 where
-    A: PartialEq<B>,
+    V1: PartialEq<V2>,
 {
     #[inline]
-    fn eq(&self, other: &TiVec<K, B>) -> bool {
+    fn eq(&self, other: &TiVec<K, V2, A>) -> bool {
         self.raw == *other.raw
     }
 }
 
-impl<K, V> Ord for TiVec<K, V>
+impl<K, V, A: Allocator> Ord for TiVec<K, V, A>
 where
     V: Ord,
 {
@@ -1188,7 +1557,7 @@ where
     }
 }
 
-impl<K, V> PartialOrd<Self> for TiVec<K, V>
+impl<K, V, A: Allocator> PartialOrd<Self> for TiVec<K, V, A>
 where
     V: PartialOrd<V>,
 {
@@ -1198,7 +1567,7 @@ where
     }
 }
 
-impl<K, V> Hash for TiVec<K, V>
+impl<K, V, A: Allocator> Hash for TiVec<K, V, A>
 where
     V: Hash,
 {
@@ -1215,7 +1584,7 @@ impl<K, V> Default for TiVec<K, V> {
     }
 }
 
-impl<I, K, V> Index<I> for TiVec<K, V>
+impl<I, K, V, A: Allocator> Index<I> for TiVec<K, V, A>
 where
     I: TiSliceIndex<K, V>,
 {
@@ -1227,7 +1596,7 @@ where
     }
 }
 
-impl<I, K, V> IndexMut<I> for TiVec<K, V>
+impl<I, K, V, A: Allocator> IndexMut<I> for TiVec<K, V, A>
 where
     I: TiSliceIndex<K, V>,
 {
@@ -1237,14 +1606,14 @@ where
     }
 }
 
-impl<K, V> Extend<V> for TiVec<K, V> {
+impl<K, V, A: Allocator> Extend<V> for TiVec<K, V, A> {
     #[inline]
     fn extend<I: IntoIterator<Item = V>>(&mut self, iter: I) {
         self.raw.extend(iter);
     }
 }
 
-impl<'a, K, V: 'a + Copy> Extend<&'a V> for TiVec<K, V> {
+impl<'a, K, V: 'a + Copy, A: Allocator> Extend<&'a V> for TiVec<K, V, A> {
     #[inline]
     fn extend<I: IntoIterator<Item = &'a V>>(&mut self, iter: I) {
         self.raw.extend(iter);
@@ -1257,10 +1626,24 @@ impl<K, V> FromIterator<V> for TiVec<K, V> {
         Self {
             raw: Vec::from_iter(iter),
             _marker: PhantomData,
+            #[cfg(not(feature = "nightly"))]
+            _alloc: PhantomData,
         }
     }
 }
 
+#[cfg(feature = "nightly")]
+impl<K, V, A: Allocator> IntoIterator for TiVec<K, V, A> {
+    type Item = V;
+    type IntoIter = vec::IntoIter<V, A>;
+
+    #[inline]
+    fn into_iter(self) -> vec::IntoIter<V, A> {
+        self.raw.into_iter()
+    }
+}
+
+#[cfg(not(feature = "nightly"))]
 impl<K, V> IntoIterator for TiVec<K, V> {
     type Item = V;
     type IntoIter = vec::IntoIter<V>;
@@ -1319,7 +1702,7 @@ impl<K> Write for TiVec<K, u8> {
 
 #[cfg(feature = "serde")]
 #[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
-impl<K, V> Serialize for TiVec<K, V>
+impl<K, V, A: Allocator> Serialize for TiVec<K, V, A>
 where
     V: Serialize,
 {
@@ -1349,7 +1732,7 @@ where
 
 #[cfg(feature = "bincode")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bincode")))]
-impl<K, V> Encode for TiVec<K, V>
+impl<K, V, A: Allocator> Encode for TiVec<K, V, A>
 where
     V: Encode,
 {
@@ -1402,6 +1785,10 @@ where
     clippy::undocumented_unsafe_blocks,
     clippy::unwrap_used,
     reason = "okay in tests"
+)]
+#[rustversion::attr(
+    since(1.99.0),
+    expect(clippy::mut_mut, reason = "macro generated code"),
 )]
 #[cfg(test)]
 mod test {

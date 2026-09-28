@@ -43,6 +43,8 @@ pub use join::Join;
 use serde::ser::{Serialize, Serializer};
 pub use slice_index::TiSliceIndex;
 
+#[cfg(all(feature = "alloc", feature = "nightly"))]
+use crate::alloc_ext::Allocator;
 #[cfg(feature = "alloc")]
 use crate::TiVec;
 use crate::{TiEnumerated, TiRangeBounds, TiSliceKeys, TiSliceMutMap, TiSliceRefMap};
@@ -73,6 +75,10 @@ use crate::{TiEnumerated, TiRangeBounds, TiSliceKeys, TiSliceMutMap, TiSliceRefM
 /// - [`from_ref`] - Converts a [`&[V]`][`slice`] into a `&TiSlice<K, V>`.
 /// - [`from_mut`] - Converts a [`&mut [V]`][`slice`] into a `&mut TiSlice<K,
 ///   V>`.
+/// - [`boxed_from`] - Converts a [`Box<[V]>`][`Box`] into a `Box<TiSlice<K,
+///   V>>`.
+/// - [`boxed_into`] - Converts a `Box<TiSlice<K, V>>` into a
+///   [`Box<[V]>`][`Box`].
 /// - [`keys`] - Returns an iterator over all keys.
 /// - [`next_key`] - Returns the index of the next slice element to be appended
 ///   and at the same time number of elements in the slice of type `K`.
@@ -122,6 +128,8 @@ use crate::{TiEnumerated, TiRangeBounds, TiSliceKeys, TiSliceMutMap, TiSliceRefM
 ///
 /// [`from_ref`]: #method.from_ref
 /// [`from_mut`]: #method.from_mut
+/// [`boxed_from`]: #method.boxed_from
+/// [`boxed_into`]: #method.boxed_into
 /// [`keys`]: #method.keys
 /// [`next_key`]: #method.next_key
 /// [`first_key`]: #method.first_key
@@ -202,6 +210,84 @@ impl<K, V> TiSlice<K, V> {
     pub const fn from_mut(raw: &mut [V]) -> &mut Self {
         // SAFETY: `TiSlice<K, V>` is `repr(transparent)` over a `[V]` type.
         unsafe { &mut *(core::ptr::from_mut::<[V]>(raw) as *mut Self) }
+    }
+
+    /// Converts a [`Box<[V]>`][`Box`] into a `Box<TiSlice<K, V>>`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use typed_index_collections::TiSlice;
+    /// pub struct Id(usize);
+    /// let boxed: Box<TiSlice<Id, usize>> = TiSlice::boxed_from(Box::new([1, 2, 4]));
+    /// ```
+    #[cfg(all(feature = "alloc", feature = "nightly"))]
+    #[expect(clippy::as_conversions, reason = "transparent over a `[V]` type")]
+    #[inline]
+    #[must_use]
+    pub fn boxed_from<A: Allocator>(boxed: Box<[V], A>) -> Box<Self, A> {
+        let (ptr, alloc) = Box::into_raw_with_allocator(boxed);
+        // SAFETY: `TiSlice<K, V>` is `repr(transparent)` over a `[V]` type.
+        unsafe { Box::from_raw_in(ptr as *mut Self, alloc) }
+    }
+
+    /// Converts a [`Box<[V]>`][`Box`] into a `Box<TiSlice<K, V>>`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use typed_index_collections::TiSlice;
+    /// pub struct Id(usize);
+    /// let boxed: Box<TiSlice<Id, usize>> = TiSlice::boxed_from(Box::new([1, 2, 4]));
+    /// ```
+    #[cfg(all(feature = "alloc", not(feature = "nightly")))]
+    #[expect(clippy::as_conversions, reason = "transparent over a `[V]` type")]
+    #[inline]
+    #[must_use]
+    pub fn boxed_from(boxed: Box<[V]>) -> Box<Self> {
+        let ptr = Box::into_raw(boxed);
+        // SAFETY: `TiSlice<K, V>` is `repr(transparent)` over a `[V]` type.
+        unsafe { Box::from_raw(ptr as *mut Self) }
+    }
+
+    /// Converts a `Box<TiSlice<K, V>>` into a [`Box<[V]>`][`Box`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use typed_index_collections::TiSlice;
+    /// pub struct Id(usize);
+    /// let boxed: Box<TiSlice<Id, usize>> = TiSlice::boxed_from(Box::new([1, 2, 4]));
+    /// let boxed: Box<[usize]> = boxed.boxed_into();
+    /// ```
+    #[cfg(all(feature = "alloc", feature = "nightly"))]
+    #[expect(clippy::as_conversions, reason = "transparent over a `[V]` type")]
+    #[inline]
+    #[must_use]
+    pub fn boxed_into<A: Allocator>(self: Box<Self, A>) -> Box<[V], A> {
+        let (ptr, alloc) = Box::into_raw_with_allocator(self);
+        // SAFETY: `TiSlice<K, V>` is `repr(transparent)` over a `[V]` type.
+        unsafe { Box::from_raw_in(ptr as *mut [V], alloc) }
+    }
+
+    /// Converts a `Box<TiSlice<K, V>>` into a [`Box<[V]>`][`Box`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use typed_index_collections::TiSlice;
+    /// pub struct Id(usize);
+    /// let boxed: Box<TiSlice<Id, usize>> = TiSlice::boxed_from(Box::new([1, 2, 4]));
+    /// let boxed: Box<[usize]> = boxed.boxed_into();
+    /// ```
+    #[cfg(all(feature = "alloc", not(feature = "nightly")))]
+    #[expect(clippy::as_conversions, reason = "transparent over a `[V]` type")]
+    #[inline]
+    #[must_use]
+    pub fn boxed_into(self: Box<Self>) -> Box<[V]> {
+        let ptr = Box::into_raw(self);
+        // SAFETY: `TiSlice<K, V>` is `repr(transparent)` over a `[V]` type.
+        unsafe { Box::from_raw(ptr as *mut [V]) }
     }
 
     /// Returns the number of elements in the slice.
@@ -1896,15 +1982,43 @@ impl<K, V> TiSlice<K, V> {
         self.raw.to_vec().into()
     }
 
+    /// Copies `self` into a new `TiVec` with an allocator.
+    ///
+    /// See [`slice::to_vec`] for more details.
+    ///
+    /// [`slice::to_vec`]: https://doc.rust-lang.org/std/primitive.slice.html#method.to_vec
+    #[cfg(feature = "nightly")]
+    #[inline]
+    pub fn to_vec_in<A>(&self, alloc: A) -> TiVec<K, V, A>
+    where
+        V: Clone,
+        A: Allocator,
+    {
+        self.raw.to_vec_in(alloc).into()
+    }
+
     /// Converts `self` into a vector without clones or allocation.
     ///
     /// See [`slice::into_vec`] for more details.
     ///
     /// [`slice::into_vec`]: https://doc.rust-lang.org/std/primitive.slice.html#method.into_vec
+    #[cfg(feature = "nightly")]
+    #[inline]
+    #[must_use]
+    pub fn into_vec<A: Allocator>(self: Box<Self, A>) -> TiVec<K, V, A> {
+        self.boxed_into().into_vec().into()
+    }
+
+    /// Converts `self` into a vector without clones or allocation.
+    ///
+    /// See [`slice::into_vec`] for more details.
+    ///
+    /// [`slice::into_vec`]: https://doc.rust-lang.org/std/primitive.slice.html#method.into_vec
+    #[cfg(not(feature = "nightly"))]
     #[inline]
     #[must_use]
     pub fn into_vec(self: Box<Self>) -> TiVec<K, V> {
-        Box::<[V]>::from(self).into_vec().into()
+        self.boxed_into().into_vec().into()
     }
 
     /// Creates a vector by repeating a slice `n` times.

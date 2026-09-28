@@ -1831,12 +1831,18 @@ mod test {
             assert_eq_api!(mv, v => TheVec::from(v.as_mut_slice()).into_std());
             assert_eq_api!(cv, v => TheVec::from(Cow::Borrowed(v.as_slice())).into_std());
             assert_eq_api!(mv, v => Cow::from(v.clone()).into_std());
+            assert_eq_api!(cv, v => v.clone().into_raw_parts().1);
+            assert_eq_api!(cv, v => v.clone().into_raw_parts().2);
 
             if !v.is_empty() {
                 assert_ne!(cv.0.as_ptr(), cv.1.as_ptr());
                 assert_ne!(cv.0.as_ptr_range(), cv.1.as_ptr_range());
                 assert_ne!(mv.0.as_mut_ptr(), mv.1.as_mut_ptr());
                 assert_ne!(mv.0.as_mut_ptr_range(), mv.1.as_mut_ptr_range());
+                assert_ne!(
+                    cv.0.clone().into_raw_parts().0,
+                    cv.1.clone().into_raw_parts().0
+                );
             }
 
             assert_eq_api!(cv, v => *v == TheVec::<u32>::default());
@@ -2140,5 +2146,96 @@ mod test {
         assert_eq!(s0.as_slice().raw, [""; 0][..]);
         assert_eq!(s1.as_slice().raw, ["a"][..]);
         assert_eq!(s2.as_slice().raw, ["bc", "def"][..]);
+    }
+
+    #[rustversion::since(1.100.0)]
+    #[cfg(feature = "nightly")]
+    #[test]
+    fn test_allocator_api() {
+        use alloc::alloc::Global;
+        use core::alloc::{AllocError, Allocator, Layout};
+        use core::ptr::NonNull;
+        use core::sync::atomic::{AtomicUsize, Ordering};
+
+        #[derive(Default)]
+        struct TrackingAllocator {
+            allocs: AtomicUsize,
+            deallocs: AtomicUsize,
+        }
+
+        impl TrackingAllocator {
+            fn allocs(&self) -> usize {
+                self.allocs.load(Ordering::Relaxed)
+            }
+
+            fn deallocs(&self) -> usize {
+                self.deallocs.load(Ordering::Relaxed)
+            }
+        }
+
+        unsafe impl Allocator for TrackingAllocator {
+            fn allocate(&self, layout: Layout) -> Result<NonNull<[u8]>, AllocError> {
+                let _ = self.allocs.fetch_add(1, Ordering::Relaxed);
+                Global.allocate(layout)
+            }
+
+            unsafe fn deallocate(&self, ptr: NonNull<u8>, layout: Layout) {
+                let _ = self.deallocs.fetch_add(1, Ordering::Relaxed);
+                unsafe { Global.deallocate(ptr, layout) }
+            }
+        }
+
+        let alloc = TrackingAllocator::default();
+        let is_our_alloc = |a: &&TrackingAllocator| core::ptr::eq(*a, &raw const alloc);
+
+        let vec1: Vec<i32, _> = Vec::new_in(&alloc);
+        #[expect(clippy::assert_is_empty, reason = "simpler check")]
+        (assert!(vec1.is_empty()));
+        assert!(is_our_alloc(vec1.allocator()));
+        assert_eq!(alloc.allocs(), 0);
+        assert_eq!(alloc.deallocs(), 0);
+
+        let mut vec2: Vec<i32, _> = Vec::with_capacity_in(4, &alloc);
+        assert!(vec2.capacity() >= 4);
+        assert!(is_our_alloc(vec2.allocator()));
+        assert_eq!(alloc.allocs(), 1);
+        assert_eq!(alloc.deallocs(), 0);
+
+        vec2.extend_from_slice(&[1, 2, 3, 4]);
+        assert_eq!(&vec2[..], &[1, 2, 3, 4]);
+        assert_eq!(alloc.allocs(), 1);
+        assert_eq!(alloc.deallocs(), 0);
+
+        let slice: &[i32] = &[5, 6, 7];
+        let vec3 = slice.to_vec_in(&alloc);
+        assert!(is_our_alloc(vec3.allocator()));
+        assert_eq!(&vec3[..], &[5, 6, 7]);
+        assert_eq!(alloc.allocs(), 2);
+        assert_eq!(alloc.deallocs(), 0);
+
+        let (ptr, len, cap, alloc_ref) = vec2.into_raw_parts_with_allocator();
+        assert_eq!(len, 4);
+        assert!(cap >= 4);
+        assert!(is_our_alloc(&alloc_ref));
+        assert_eq!(alloc.allocs(), 2);
+        assert_eq!(alloc.deallocs(), 0);
+
+        let vec2: Vec<i32, _> = unsafe { Vec::from_raw_parts_in(ptr, len, cap, alloc_ref) };
+        assert_eq!(&vec2[..], &[1, 2, 3, 4]);
+        assert!(is_our_alloc(&alloc_ref));
+        assert_eq!(alloc.allocs(), 2);
+        assert_eq!(alloc.deallocs(), 0);
+
+        drop(vec1);
+        assert_eq!(alloc.allocs(), 2);
+        assert_eq!(alloc.deallocs(), 0);
+
+        drop(vec2);
+        assert_eq!(alloc.allocs(), 2);
+        assert_eq!(alloc.deallocs(), 1);
+
+        drop(vec3);
+        assert_eq!(alloc.allocs(), 2);
+        assert_eq!(alloc.deallocs(), 2);
     }
 }

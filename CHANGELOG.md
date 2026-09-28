@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom allocator support enabled by the **nightly** feature, which requires
   using the **nightly** version of Rust.
 
+### Changed
+- Optimize GitHub CI workflow.
+
 ## [3.5.0] - 2026-01-18
 ### Added
 - `TiVec::extend_from_within_corrected` method, a corrected variant of

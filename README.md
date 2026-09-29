@@ -52,7 +52,7 @@ First, add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-typed-index-collections = "4.0.0-alpha.2"
+typed-index-collections = "4.0.0-alpha.3"
 ```
 
 This crate depends on the standard library by default that is useful
@@ -62,7 +62,7 @@ in your `Cargo.toml` as shown below:
 
 ```toml
 [dependencies.typed-index-collections]
-version = "4.0.0-alpha.2"
+version = "4.0.0-alpha.3"
 default-features = false
 features = ["alloc"]
 ```
@@ -74,7 +74,7 @@ add it to your `Cargo.toml` as shown below:
 ```toml
 [dependencies]
 derive_more = "0.99"
-typed-index-collections = "4.0.0-alpha.2"
+typed-index-collections = "4.0.0-alpha.3"
 ```
 
 ## Examples
@@ -160,6 +160,7 @@ let _boxed_slice: std::boxed::Box<[Foo]> = ti_boxed_slice.into();
 - `std` (enabled by default): Enables `alloc` feature, the Rust `std`
   library, implements [`std::io::Write`] for [`TiVec`] and implements
   [`std::io::Read`] and [`std::io::Write`] for [`TiSlice`],
+- `nightly`: Enable Allocator API support. Requires nightly Rust toolchain.
 - `serde`: Implements [`Serialize`] trait for [`TiSlice`] and [`TiVec`]
   containers and [`Deserialize`] trait for [`Box`]`<`[`TiSlice`]`>` and
   [`TiVec`].

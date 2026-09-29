@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.0-alpha.3] - 2026-09-29
+
 ## [4.0.0-alpha.2] - 2026-09-28
 ### Added
 - Custom allocator support enabled by the **nightly** feature, which requires
@@ -194,7 +196,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `TiSlice` API compatibility tests.
 - Crate API documentation with examples.
 
-[Unreleased]: https://github.com/zheland/typed-index-collections/compare/v4.0.0-alpha.2...HEAD
+[Unreleased]: https://github.com/zheland/typed-index-collections/compare/v4.0.0-alpha.3...HEAD
+[4.0.0-alpha.3]: https://github.com/zheland/typed-index-collections/compare/v4.0.0-alpha.2...v4.0.0-alpha.3
 [4.0.0-alpha.2]: https://github.com/zheland/typed-index-collections/compare/v3.5.0...v4.0.0-alpha.2
 [3.5.0]: https://github.com/zheland/typed-index-collections/compare/v3.4.0...v3.5.0
 [3.4.0]: https://github.com/zheland/typed-index-collections/compare/v3.3.0...v3.4.0

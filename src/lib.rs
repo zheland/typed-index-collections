@@ -41,7 +41,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! typed-index-collections = "4.0.0-alpha.2"
+//! typed-index-collections = "4.0.0-alpha.3"
 //! ```
 //!
 //! This crate depends on the standard library by default that is useful
@@ -51,7 +51,7 @@
 //!
 //! ```toml
 //! [dependencies.typed-index-collections]
-//! version = "4.0.0-alpha.2"
+//! version = "4.0.0-alpha.3"
 //! default-features = false
 //! features = ["alloc"]
 //! ```
@@ -63,7 +63,7 @@
 //! ```toml
 //! [dependencies]
 //! derive_more = "0.99"
-//! typed-index-collections = "4.0.0-alpha.2"
+//! typed-index-collections = "4.0.0-alpha.3"
 //! ```
 //!
 //! # Examples
@@ -147,6 +147,7 @@
 //! - `std` (enabled by default): Enables `alloc` feature, the Rust `std`
 //!   library, implements [`std::io::Write`] for [`TiVec`] and implements
 //!   [`std::io::Read`] and [`std::io::Write`] for [`TiSlice`],
+//! - `nightly`: Enable Allocator API support. Requires nightly Rust toolchain.
 //! - `serde`: Implements [`Serialize`] trait for [`TiSlice`] and [`TiVec`]
 //!   containers and [`Deserialize`] trait for [`Box`]`<`[`TiSlice`]`>` and
 //!   [`TiVec`].

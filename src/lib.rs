@@ -147,7 +147,6 @@
 //! - `std` (enabled by default): Enables `alloc` feature, the Rust `std`
 //!   library, implements [`std::io::Write`] for [`TiVec`] and implements
 //!   [`std::io::Read`] and [`std::io::Write`] for [`TiSlice`],
-//! - `nightly`: Enable Allocator API support. Requires nightly Rust toolchain.
 //! - `serde`: Implements [`Serialize`] trait for [`TiSlice`] and [`TiVec`]
 //!   containers and [`Deserialize`] trait for [`Box`]`<`[`TiSlice`]`>` and
 //!   [`TiVec`].
@@ -222,7 +221,6 @@
 //! [RUSTSEC-2025-0141]: https://rustsec.org/advisories/RUSTSEC-2025-0141
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
-#![cfg_attr(all(feature = "alloc", feature = "nightly"), feature(allocator_ext))]
 #![no_std]
 
 #[cfg(any(feature = "alloc", test))]
@@ -235,8 +233,6 @@ extern crate std;
 #[macro_use]
 mod test_util;
 
-#[cfg(feature = "alloc")]
-mod alloc_ext;
 mod iter;
 mod range;
 mod slice;

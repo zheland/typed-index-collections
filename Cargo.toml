@@ -3,7 +3,7 @@ name = "typed-index-collections"
 version = "4.0.0-alpha.3"
 authors = ["Andrey Zheleznov <zheland.net@gmail.com>"]
 edition = "2021"
-rust-version = "1.90.0"
+rust-version = "1.100.0" # `Allocator` API was stabilized in 1.100.0.
 description = "Typed index version of Rust slice and Vec containers"
 readme = "README.md"
 repository = "https://github.com/zheland/typed-index-collections"
@@ -16,7 +16,6 @@ keywords = ["collection", "index", "no_std", "slice", "vec"]
 default = ["alloc", "std"]
 alloc = ["serde?/alloc", "bincode?/alloc"]
 std = ["alloc", "serde?/std", "bincode?/std"]
-nightly = []
 serde = ["dep:serde"]
 bincode = ["dep:bincode"]
 

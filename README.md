@@ -7,7 +7,7 @@
 [![Dependencies status](https://deps.rs/repo/github/zheland/typed-index-collections/status.svg)](https://deps.rs/repo/github/zheland/typed-index-collections)
 [![Downloads](https://img.shields.io/crates/d/typed-index-collections)](https://crates.io/crates/typed-index-collections)
 [![License](https://img.shields.io/crates/l/typed-index-collections)](https://github.com/zheland/typed-index-collections/#license)
-[![MSRV 1.90+](https://img.shields.io/badge/rustc-1.90+-blue.svg)](https://blog.rust-lang.org/2025/09/18/Rust-1.90.0)
+[![MSRV 1.100+](https://img.shields.io/badge/rustc-1.100+-blue.svg)](https://blog.rust-lang.org/2026/11/12/Rust-1.100.0/)
 
 The `typed-index-collections` crate provides [`TiSlice`] and [`TiVec`]
 structs that are typed index versions of the Rust [`slice`] and
@@ -160,7 +160,6 @@ let _boxed_slice: std::boxed::Box<[Foo]> = ti_boxed_slice.into();
 - `std` (enabled by default): Enables `alloc` feature, the Rust `std`
   library, implements [`std::io::Write`] for [`TiVec`] and implements
   [`std::io::Read`] and [`std::io::Write`] for [`TiSlice`],
-- `nightly`: Enable Allocator API support. Requires nightly Rust toolchain.
 - `serde`: Implements [`Serialize`] trait for [`TiSlice`] and [`TiVec`]
   containers and [`Deserialize`] trait for [`Box`]`<`[`TiSlice`]`>` and
   [`TiVec`].

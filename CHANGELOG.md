@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ## [4.0.0-alpha.3] - 2026-09-29
+### Added
+- Support stabilized **Allocator API**.
+
+### Changed
+- The minimum supported Rust version has been increased to 1.100.0.
+
+### Removed
+- Remove **nightly** feature used in pre-release version.
 
 ## [4.0.0-alpha.2] - 2026-09-28
 ### Added

@@ -59,27 +59,13 @@ jobs:
             "alloc,std,serde"
           )
 
-          if [[ "${{ matrix.rust-toolchain }}" == "nightly" ]]; then
-            features+=(
-              "nightly"
-              "nightly,alloc"
-              "nightly,std"
-              "nightly,serde"
-              "nightly,alloc,serde"
-              "nightly,std,serde"
-              "nightly,alloc,std,serde"
-            )
-          fi
-
           cargo clippy --all-targets -- -D warnings
 
           for f in "${features[@]}"; do
             cargo clippy --all-targets --no-default-features --features "$f" -- -D warnings
           done
 
-          if [[ "${{ matrix.rust-toolchain }}" == "nightly" ]]; then
-            cargo clippy --all-targets --all-features -- -D warnings
-          fi
+          cargo clippy --all-targets --all-features -- -D warnings
 
   cargo-test:
     name: "Test (${{ matrix.name }})"
@@ -97,8 +83,8 @@ jobs:
           - name: nightly
             rust-toolchain: nightly
             cargo-flags: ""
-          - name: 1.90.0
-            rust-toolchain: 1.90.0
+          - name: 1.100.0
+            rust-toolchain: 1.100.0
             cargo-flags: ""
           - name: stable release
             rust-toolchain: stable
@@ -126,27 +112,13 @@ jobs:
             "alloc,std,serde"
           )
 
-          if [[ "${{ matrix.rust-toolchain }}" == "nightly" ]]; then
-            features+=(
-              "nightly"
-              "nightly,alloc"
-              "nightly,std"
-              "nightly,serde"
-              "nightly,alloc,serde"
-              "nightly,std,serde"
-              "nightly,alloc,std,serde"
-            )
-          fi
-
           cargo test --all-targets ${{ matrix.cargo-flags }}
 
           for f in "${features[@]}"; do
             cargo test --all-targets ${{ matrix.cargo-flags }} --no-default-features --features "$f"
           done
 
-          if [[ "${{ matrix.rust-toolchain }}" == "nightly" ]]; then
-            cargo test --all-targets ${{ matrix.cargo-flags }} --all-features
-          fi
+          cargo test --all-targets ${{ matrix.cargo-flags }} --all-features
 
   cargo-test-no-alloc-and-no-std:
     name: Test no-alloc and no-std compatibility

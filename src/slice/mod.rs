@@ -17,6 +17,8 @@ use alloc::boxed::Box;
 use alloc::string::String;
 #[cfg(feature = "std")]
 use alloc::vec::Vec;
+#[cfg(feature = "alloc")]
+use core::alloc::Allocator;
 use core::cmp::Ordering;
 use core::fmt;
 use core::hash::{Hash, Hasher};
@@ -43,8 +45,6 @@ pub use join::Join;
 use serde::ser::{Serialize, Serializer};
 pub use slice_index::TiSliceIndex;
 
-#[cfg(all(feature = "alloc", feature = "nightly"))]
-use crate::alloc_ext::Allocator;
 #[cfg(feature = "alloc")]
 use crate::TiVec;
 use crate::{TiEnumerated, TiRangeBounds, TiSliceKeys, TiSliceMutMap, TiSliceRefMap};
@@ -212,7 +212,7 @@ impl<K, V> TiSlice<K, V> {
         unsafe { &mut *(core::ptr::from_mut::<[V]>(raw) as *mut Self) }
     }
 
-    /// Converts a [`Box<[V]>`][`Box`] into a `Box<TiSlice<K, V>>`.
+    /// Converts a [`Box<[V], A>`][`Box`] into a `Box<TiSlice<K, V>, A>`.
     ///
     /// # Example
     ///
@@ -221,7 +221,7 @@ impl<K, V> TiSlice<K, V> {
     /// pub struct Id(usize);
     /// let boxed: Box<TiSlice<Id, usize>> = TiSlice::boxed_from(Box::new([1, 2, 4]));
     /// ```
-    #[cfg(all(feature = "alloc", feature = "nightly"))]
+    #[cfg(feature = "alloc")]
     #[expect(clippy::as_conversions, reason = "transparent over a `[V]` type")]
     #[inline]
     #[must_use]
@@ -231,25 +231,6 @@ impl<K, V> TiSlice<K, V> {
         unsafe { Box::from_raw_in(ptr as *mut Self, alloc) }
     }
 
-    /// Converts a [`Box<[V]>`][`Box`] into a `Box<TiSlice<K, V>>`.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use typed_index_collections::TiSlice;
-    /// pub struct Id(usize);
-    /// let boxed: Box<TiSlice<Id, usize>> = TiSlice::boxed_from(Box::new([1, 2, 4]));
-    /// ```
-    #[cfg(all(feature = "alloc", not(feature = "nightly")))]
-    #[expect(clippy::as_conversions, reason = "transparent over a `[V]` type")]
-    #[inline]
-    #[must_use]
-    pub fn boxed_from(boxed: Box<[V]>) -> Box<Self> {
-        let ptr = Box::into_raw(boxed);
-        // SAFETY: `TiSlice<K, V>` is `repr(transparent)` over a `[V]` type.
-        unsafe { Box::from_raw(ptr as *mut Self) }
-    }
-
     /// Converts a `Box<TiSlice<K, V>>` into a [`Box<[V]>`][`Box`].
     ///
     /// # Example
@@ -260,7 +241,7 @@ impl<K, V> TiSlice<K, V> {
     /// let boxed: Box<TiSlice<Id, usize>> = TiSlice::boxed_from(Box::new([1, 2, 4]));
     /// let boxed: Box<[usize]> = boxed.boxed_into();
     /// ```
-    #[cfg(all(feature = "alloc", feature = "nightly"))]
+    #[cfg(feature = "alloc")]
     #[expect(clippy::as_conversions, reason = "transparent over a `[V]` type")]
     #[inline]
     #[must_use]
@@ -268,26 +249,6 @@ impl<K, V> TiSlice<K, V> {
         let (ptr, alloc) = Box::into_raw_with_allocator(self);
         // SAFETY: `TiSlice<K, V>` is `repr(transparent)` over a `[V]` type.
         unsafe { Box::from_raw_in(ptr as *mut [V], alloc) }
-    }
-
-    /// Converts a `Box<TiSlice<K, V>>` into a [`Box<[V]>`][`Box`].
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use typed_index_collections::TiSlice;
-    /// pub struct Id(usize);
-    /// let boxed: Box<TiSlice<Id, usize>> = TiSlice::boxed_from(Box::new([1, 2, 4]));
-    /// let boxed: Box<[usize]> = boxed.boxed_into();
-    /// ```
-    #[cfg(all(feature = "alloc", not(feature = "nightly")))]
-    #[expect(clippy::as_conversions, reason = "transparent over a `[V]` type")]
-    #[inline]
-    #[must_use]
-    pub fn boxed_into(self: Box<Self>) -> Box<[V]> {
-        let ptr = Box::into_raw(self);
-        // SAFETY: `TiSlice<K, V>` is `repr(transparent)` over a `[V]` type.
-        unsafe { Box::from_raw(ptr as *mut [V]) }
     }
 
     /// Returns the number of elements in the slice.
@@ -1987,14 +1948,16 @@ impl<K, V> TiSlice<K, V> {
     /// See [`slice::to_vec`] for more details.
     ///
     /// [`slice::to_vec`]: https://doc.rust-lang.org/std/primitive.slice.html#method.to_vec
-    #[cfg(feature = "nightly")]
     #[inline]
     pub fn to_vec_in<A>(&self, alloc: A) -> TiVec<K, V, A>
     where
         V: Clone,
         A: Allocator,
     {
-        self.raw.to_vec_in(alloc).into()
+        // Stdlib implementation uses `to_vec_in` which is unstable.
+        let mut vec = TiVec::new_in(alloc);
+        vec.extend_from_slice(self);
+        vec
     }
 
     /// Converts `self` into a vector without clones or allocation.
@@ -2002,22 +1965,9 @@ impl<K, V> TiSlice<K, V> {
     /// See [`slice::into_vec`] for more details.
     ///
     /// [`slice::into_vec`]: https://doc.rust-lang.org/std/primitive.slice.html#method.into_vec
-    #[cfg(feature = "nightly")]
     #[inline]
     #[must_use]
     pub fn into_vec<A: Allocator>(self: Box<Self, A>) -> TiVec<K, V, A> {
-        self.boxed_into().into_vec().into()
-    }
-
-    /// Converts `self` into a vector without clones or allocation.
-    ///
-    /// See [`slice::into_vec`] for more details.
-    ///
-    /// [`slice::into_vec`]: https://doc.rust-lang.org/std/primitive.slice.html#method.into_vec
-    #[cfg(not(feature = "nightly"))]
-    #[inline]
-    #[must_use]
-    pub fn into_vec(self: Box<Self>) -> TiVec<K, V> {
         self.boxed_into().into_vec().into()
     }
 

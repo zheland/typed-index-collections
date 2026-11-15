@@ -1,7 +1,8 @@
 use alloc::boxed::Box;
 use alloc::vec;
+use core::alloc::Allocator;
 use core::iter::FromIterator;
-use core::mem::transmute;
+use core::mem::{transmute_copy, ManuallyDrop};
 
 #[cfg(feature = "bincode")]
 use bincode::de::{BorrowDecode, BorrowDecoder, Decode, Decoder};
@@ -10,45 +11,41 @@ use bincode::error::DecodeError;
 #[cfg(feature = "serde")]
 use serde::de::{Deserialize, Deserializer};
 
-#[cfg(feature = "nightly")]
-use crate::alloc_ext::Allocator;
 use crate::{TiSlice, TiVec};
 
-impl<K, V> From<Box<TiSlice<K, V>>> for Box<[V]> {
+impl<K, V, A: Allocator> From<Box<TiSlice<K, V>, A>> for Box<[V], A> {
     #[inline]
-    fn from(slice: Box<TiSlice<K, V>>) -> Self {
+    fn from(slice: Box<TiSlice<K, V>, A>) -> Self {
+        // `transmute_copy` used instead of `transmute` because Rust can not
+        // prove the size equality because of `A`.
+        let slice = ManuallyDrop::new(slice);
         // SAFETY: `TiSlice<K, V>` is `repr(transparent)` over a `[V]` type.
-        unsafe { transmute::<Box<TiSlice<K, V>>, Self>(slice) }
+        unsafe { transmute_copy::<Box<TiSlice<K, V>, A>, Self>(&slice) }
     }
 }
 
-impl<K, V> From<Box<[V]>> for Box<TiSlice<K, V>> {
+impl<K, V, A: Allocator> From<Box<[V], A>> for Box<TiSlice<K, V>, A> {
     #[inline]
-    fn from(slice: Box<[V]>) -> Self {
+    fn from(slice: Box<[V], A>) -> Self {
+        // `transmute_copy` used instead of `transmute` because Rust can not
+        // prove the size equality because of `A`.
+        let slice = ManuallyDrop::new(slice);
         // SAFETY: `TiSlice<K, V>` is `repr(transparent)` over a `[V]` type.
-        unsafe { transmute::<Box<[V]>, Self>(slice) }
+        unsafe { transmute_copy::<Box<[V], A>, Self>(&slice) }
     }
 }
 
-impl<K, V: Clone> Clone for Box<TiSlice<K, V>> {
+impl<K, V: Clone, A: Allocator + Clone> Clone for Box<TiSlice<K, V>, A> {
     #[inline]
     fn clone(&self) -> Self {
-        self.to_vec().into_boxed_slice()
+        // Stdlib implementation uses `to_vec_in` which is unstable.
+        let alloc = Self::allocator(self).clone();
+        let mut vec = TiVec::new_in(alloc);
+        vec.extend_from_slice(self);
+        vec.into_boxed_slice()
     }
 }
 
-#[cfg(feature = "nightly")]
-impl<K, V, A: Allocator> IntoIterator for Box<TiSlice<K, V>, A> {
-    type Item = V;
-    type IntoIter = vec::IntoIter<V, A>;
-
-    #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        TiSlice::into_vec(self).into_iter()
-    }
-}
-
-#[cfg(not(feature = "nightly"))]
 impl<K, V> IntoIterator for Box<TiSlice<K, V>> {
     type Item = V;
     type IntoIter = vec::IntoIter<V>;
@@ -73,16 +70,16 @@ impl<K, V: Copy> From<&TiSlice<K, V>> for Box<TiSlice<K, V>> {
     }
 }
 
-impl<K, V> From<Box<TiSlice<K, V>>> for TiVec<K, V> {
+impl<K, V, A: Allocator> From<Box<TiSlice<K, V>, A>> for TiVec<K, V, A> {
     #[inline]
-    fn from(slice: Box<TiSlice<K, V>>) -> Self {
+    fn from(slice: Box<TiSlice<K, V>, A>) -> Self {
         TiSlice::into_vec(slice)
     }
 }
 
-impl<K, V> From<TiVec<K, V>> for Box<TiSlice<K, V>> {
+impl<K, V, A: Allocator> From<TiVec<K, V, A>> for Box<TiSlice<K, V>, A> {
     #[inline]
-    fn from(vec: TiVec<K, V>) -> Self {
+    fn from(vec: TiVec<K, V, A>) -> Self {
         vec.into_boxed_slice()
     }
 }

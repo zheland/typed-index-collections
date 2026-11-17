@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [4.0.0-alpha.3] - 2026-09-29
+## [4.0.0-alpha.3] - 2026-11-17
 ### Added
 - Support stabilized **Allocator API**.
 

@@ -1,6 +1,6 @@
 # Migration guide
 
-## [4.0.0-alpha.2]
+## [4.0.0-alpha.3]
 - Some methods now require specifying a generic parameter for the allocator.
   It is usually determined automatically via type inference.
 - Futures `serde-alloc` and `serde-std` have been removed.

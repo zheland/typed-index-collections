@@ -101,10 +101,10 @@ use crate::{TiEnumerated, TiRangeBounds, TiSlice, TiSliceIndex};
 /// [`derive_more`]: https://crates.io/crates/derive_more
 #[repr(transparent)]
 pub struct TiVec<K, V, A: Allocator = Global> {
-    /// Raw slice property
+    /// Raw vec property.
     pub raw: Vec<V, A>,
 
-    /// Tied slice index type
+    /// Tied vec index type.
     ///
     /// `fn(T) -> T` is *[PhantomData pattern][phantomdata patterns]*
     /// used to relax auto trait implementations bounds for

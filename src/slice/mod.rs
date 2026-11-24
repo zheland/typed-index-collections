@@ -2190,7 +2190,7 @@ impl<'a, K, V> IntoIterator for &'a TiSlice<K, V> {
     type IntoIter = Iter<'a, V>;
 
     #[inline]
-    fn into_iter(self) -> Iter<'a, V> {
+    fn into_iter(self) -> Self::IntoIter {
         self.raw.iter()
     }
 }
@@ -2200,7 +2200,7 @@ impl<'a, K, V> IntoIterator for &'a mut TiSlice<K, V> {
     type IntoIter = IterMut<'a, V>;
 
     #[inline]
-    fn into_iter(self) -> IterMut<'a, V> {
+    fn into_iter(self) -> Self::IntoIter {
         self.raw.iter_mut()
     }
 }

@@ -11,7 +11,7 @@ use bincode::error::DecodeError;
 #[cfg(feature = "serde")]
 use serde::de::{Deserialize, Deserializer};
 
-use crate::{TiSlice, TiVec};
+use crate::{TiArray, TiSlice, TiVec};
 
 impl<K, V, A: Allocator> From<Box<TiSlice<K, V>, A>> for Box<[V], A> {
     #[inline]
@@ -43,6 +43,13 @@ impl<K, V: Clone, A: Allocator + Clone> Clone for Box<TiSlice<K, V>, A> {
         let mut vec = TiVec::new_in(alloc);
         vec.extend_from_slice(self);
         vec.into_boxed_slice()
+    }
+}
+
+impl<K, V, const N: usize> From<TiArray<K, V, N>> for Box<TiSlice<K, V>> {
+    #[inline]
+    fn from(array: TiArray<K, V, N>) -> Self {
+        TiSlice::boxed_from(Box::new(array.raw))
     }
 }
 

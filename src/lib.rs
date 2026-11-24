@@ -13,15 +13,17 @@
 //!
 //! # About
 //!
-//! This crate provides [`TiSlice<K, V>`][`TiSlice`] and
-//! [`TiVec<K, V>`][`TiVec`] containers that can be indexed only by the
-//! specified index type `K`. These containers are only wrappers around
-//! the slice primitive [`[V]`][`slice`] and the container
-//! [`std::vec::Vec<V>`][`std::vec::Vec`]. Crate containers mirror the stable
-//! API of the matched Rust containers and forward to them as much as possible.
+//! This crate provides [`TiArray<K, V>`][`TiArray`],
+//! [`TiSlice<K, V>`][`TiSlice`] and [`TiVec<K, V>`][`TiVec`] containers that
+//! can be indexed only by the specified index type `K`.
+//! These containers are only wrappers around the slice primitive
+//! [`[V]`][`slice`] and the container [`std::vec::Vec<V>`][`std::vec::Vec`].
+//! Crate containers mirror the stable API of the matched Rust containers and
+//! forward to them as much as possible.
 //!
-//! [`TiSlice`] and [`TiVec`] can be easily converted to matched Rust containers
-//! and back using [`From`], [`Into`], [`AsRef`] and [`AsMut`] traits.
+//! [`TiArray`], [`TiSlice`] and [`TiVec`] can be easily converted to matched
+//! Rust containers and back using [`From`], [`Into`], [`AsRef`] and [`AsMut`]
+//! traits.
 //! Also, they expose `raw` property with the original data type.
 //! Containers only require the index to implement
 //! [`From<usize>`][`From`] and [`Into<usize>`][`Into`] traits
@@ -30,8 +32,8 @@
 //!
 //! Note that the crate provides type-safe indexing rather than associative
 //! containers.
-//! [`TiSlice<K, V>`][`TiSlice`] and [`TiVec<K, V>`][`TiVec`] do not preserve
-//! the original indices when sliced.
+//! [`TiArray<K, V>`][`TiArray`], [`TiSlice<K, V>`][`TiSlice`] and
+//! [`TiVec<K, V>`][`TiVec`] do not preserve the original indices when sliced.
 //! When you create a slice using a range, the resulting
 //! [`TiSlice<K, V>`][`TiSlice`] will have indices starting at `K::from(0)`.
 //!
@@ -195,6 +197,7 @@
 //! license, shall be dual licensed as above, without any
 //! additional terms or conditions.
 //!
+//! [`TiArray`]: struct.TiArray.html
 //! [`TiSlice`]: struct.TiSlice.html
 //! [`TiVec`]: struct.TiVec.html
 //! [`ti_vec!`]: macro.ti_vec.html
@@ -233,6 +236,7 @@ extern crate std;
 #[macro_use]
 mod test_util;
 
+mod array;
 mod iter;
 mod range;
 mod slice;
@@ -244,6 +248,7 @@ mod macros;
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 mod vec;
 
+pub use array::TiArray;
 pub use iter::{TiEnumerated, TiSliceKeys, TiSliceMutMap, TiSliceRefMap};
 pub use range::TiRangeBounds;
 pub use slice::{TiSlice, TiSliceIndex};

@@ -24,15 +24,17 @@ which is a common source of bugs.
 
 ## About
 
-This crate provides [`TiSlice<K, V>`][`TiSlice`] and
-[`TiVec<K, V>`][`TiVec`] containers that can be indexed only by the
-specified index type `K`. These containers are only wrappers around
-the slice primitive [`[V]`][`slice`] and the container
-[`std::vec::Vec<V>`][`std::vec::Vec`]. Crate containers mirror the stable
-API of the matched Rust containers and forward to them as much as possible.
+This crate provides [`TiArray<K, V>`][`TiArray`],
+[`TiSlice<K, V>`][`TiSlice`] and [`TiVec<K, V>`][`TiVec`] containers that
+can be indexed only by the specified index type `K`.
+These containers are only wrappers around the slice primitive
+[`[V]`][`slice`] and the container [`std::vec::Vec<V>`][`std::vec::Vec`].
+Crate containers mirror the stable API of the matched Rust containers and
+forward to them as much as possible.
 
-[`TiSlice`] and [`TiVec`] can be easily converted to matched Rust containers
-and back using [`From`], [`Into`], [`AsRef`] and [`AsMut`] traits.
+[`TiArray`], [`TiSlice`] and [`TiVec`] can be easily converted to matched
+Rust containers and back using [`From`], [`Into`], [`AsRef`] and [`AsMut`]
+traits.
 Also, they expose `raw` property with the original data type.
 Containers only require the index to implement
 [`From<usize>`][`From`] and [`Into<usize>`][`Into`] traits
@@ -41,8 +43,8 @@ that can be easily done with [`derive_more`] crate and
 
 Note that the crate provides type-safe indexing rather than associative
 containers.
-[`TiSlice<K, V>`][`TiSlice`] and [`TiVec<K, V>`][`TiVec`] do not preserve
-the original indices when sliced.
+[`TiArray<K, V>`][`TiArray`], [`TiSlice<K, V>`][`TiSlice`] and
+[`TiVec<K, V>`][`TiVec`] do not preserve the original indices when sliced.
 When you create a slice using a range, the resulting
 [`TiSlice<K, V>`][`TiSlice`] will have indices starting at `K::from(0)`.
 
@@ -208,6 +210,7 @@ submitted for inclusion in the work by you, as defined in the Apache-2.0
 license, shall be dual licensed as above, without any
 additional terms or conditions.
 
+[`TiArray`]: https://docs.rs/typed-index-collections/*/typed_index_collections/struct.TiArray.html
 [`TiSlice`]: https://docs.rs/typed-index-collections/*/typed_index_collections/struct.TiSlice.html
 [`TiVec`]: https://docs.rs/typed-index-collections/*/typed_index_collections/struct.TiVec.html
 [`ti_vec!`]: https://docs.rs/typed-index-collections/*/typed_index_collections/macro.ti_vec.html

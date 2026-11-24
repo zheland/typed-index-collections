@@ -1,4 +1,7 @@
 #[cfg(feature = "alloc")]
+mod boxed;
+
+#[cfg(feature = "alloc")]
 use core::alloc::Allocator;
 use core::borrow::{Borrow, BorrowMut};
 use core::cell::Cell;
@@ -528,7 +531,8 @@ impl<K, V, const N: usize> From<MaybeUninit<TiArray<K, V, N>>> for TiArray<K, Ma
         // `transmute_copy` used instead of `transmute` because Rust can not
         // prove the size equality because of `N`.
         let array = ManuallyDrop::new(array);
-        // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]` type.
+        // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]`
+        // type.
         unsafe { transmute_copy::<MaybeUninit<TiArray<K, V, N>>, Self>(&array) }
     }
 }
@@ -539,7 +543,8 @@ impl<K, V, const N: usize> From<TiArray<K, MaybeUninit<V>, N>> for MaybeUninit<T
         // `transmute_copy` used instead of `transmute` because Rust can not
         // prove the size equality because of `N`.
         let array = ManuallyDrop::new(array);
-        // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]` type.
+        // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]`
+        // type.
         unsafe { transmute_copy::<TiArray<K, MaybeUninit<V>, N>, Self>(&array) }
     }
 }

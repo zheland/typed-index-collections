@@ -60,18 +60,19 @@
 | `[T; N]` | `TryFrom<&mut [T]>` | ✅ | |
 | `&[T; N]` | `TryFrom<&[T]>` | ✅ | |
 | `&mut [T; N]` | `TryFrom<&mut [T]>` | ✅ | |
+| `[T; N]` | `TryFrom<Vec<T>>` | ✅ | |
+| `Box<[T; N]>` | `TryFrom<Vec<T>>` | ✅ | |
 | `[T; N]` | `Index<I>` | ✅ | |
 | `[T; N]` | `IndexMut<I>` | ✅ | |
 | `[T; N]` | `IntoIterator` | ✅ | |
 | `&[T; N]` | `IntoIterator` | ✅ | |
 | `&mut [T; N]` | `IntoIterator` | ✅ | |
+| `Box<[T; N]>` | `IntoIterator` | ✅ | |
+| `&Box<[T; N]>` | `IntoIterator` | ✅ | |
+| `&mut Box<[T; N]>` | `IntoIterator` | ✅ | |
 | `[char; N]` | `Pattern` | ⛔️ | Nightly-only |
 | `&[char; N]` | `Pattern` | ⛔️ | Nightly-only |
 
-## API parity with `Box<[T; N]>`
-
 ## API parity with `[T]`
-
-## API parity with `Box<[T]>`
 
 ## API parity with `Vec<T>`

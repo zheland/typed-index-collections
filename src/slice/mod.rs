@@ -2190,7 +2190,7 @@ impl<'a, K, V> IntoIterator for &'a TiSlice<K, V> {
     type IntoIter = Iter<'a, V>;
 
     #[inline]
-    fn into_iter(self) -> Iter<'a, V> {
+    fn into_iter(self) -> Self::IntoIter {
         self.raw.iter()
     }
 }
@@ -2200,7 +2200,7 @@ impl<'a, K, V> IntoIterator for &'a mut TiSlice<K, V> {
     type IntoIter = IterMut<'a, V>;
 
     #[inline]
-    fn into_iter(self) -> IterMut<'a, V> {
+    fn into_iter(self) -> Self::IntoIter {
         self.raw.iter_mut()
     }
 }
@@ -2357,10 +2357,6 @@ where
     clippy::undocumented_unsafe_blocks,
     clippy::unwrap_used,
     reason = "okay in tests"
-)]
-#[rustversion::attr(
-    before(1.92.0),
-    expect(clippy::zero_repeat_side_effects, reason = "okay in tests"),
 )]
 #[cfg(test)]
 mod test {
@@ -2720,10 +2716,7 @@ mod test {
         }
     }
 
-    #[rustversion::attr(
-        since(1.94.0),
-        expect(clippy::needless_for_each, reason = "intentionally tested"),
-    )]
+    #[expect(clippy::needless_for_each, reason = "intentionally tested")]
     #[test]
     fn test_slice_write_core_api_compatibility() {
         for v in [
@@ -2952,7 +2945,7 @@ mod test {
             assert_eq_api!(cv, v => v.trim_ascii_start().into_std());
             assert_eq_api!(cv, v => v.trim_ascii_end().into_std());
             assert_eq_api!(cv, v => v.trim_ascii().into_std());
-            assert_eq_api!(cv, v => v.eq_ignore_ascii_case(b"aBc".into_tic()));
+            assert_eq_api!(cv, v => v.eq_ignore_ascii_case(b"aBc"[..].into_tic()));
             assert_eq_api!(cv, v => v.escape_ascii().collect_to_vec());
             assert_eq_api!(cv, v => v.utf8_chunks().collect_to_vec());
         }

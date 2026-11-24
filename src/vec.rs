@@ -11,6 +11,8 @@ use core::cmp::Ordering;
 use core::hash::{Hash, Hasher};
 use core::iter::FromIterator;
 use core::marker::PhantomData;
+#[cfg(feature = "alloc")]
+use core::mem::transmute;
 use core::mem::MaybeUninit;
 use core::ops::{Deref, DerefMut, Index, IndexMut};
 use core::{fmt, slice};
@@ -28,6 +30,8 @@ use serde::de::{Deserialize, Deserializer};
 #[cfg(feature = "serde")]
 use serde::ser::{Serialize, Serializer};
 
+#[cfg(feature = "alloc")]
+use crate::TiArray;
 use crate::{TiEnumerated, TiRangeBounds, TiSlice, TiSliceIndex};
 
 /// A contiguous growable array type
@@ -101,10 +105,10 @@ use crate::{TiEnumerated, TiRangeBounds, TiSlice, TiSliceIndex};
 /// [`derive_more`]: https://crates.io/crates/derive_more
 #[repr(transparent)]
 pub struct TiVec<K, V, A: Allocator = Global> {
-    /// Raw slice property
+    /// Raw vec property.
     pub raw: Vec<V, A>,
 
-    /// Tied slice index type
+    /// Tied vec index type.
     ///
     /// `fn(T) -> T` is *[PhantomData pattern][phantomdata patterns]*
     /// used to relax auto trait implementations bounds for
@@ -1086,6 +1090,36 @@ impl<K, V, A: Allocator> From<TiVec<K, V, A>> for Vec<V, A> {
     }
 }
 
+impl<K, V, const N: usize> From<TiArray<K, V, N>> for TiVec<K, V>
+where
+    V: Clone,
+{
+    #[inline]
+    fn from(array: TiArray<K, V, N>) -> Self {
+        <[V]>::into_vec(Box::new(array.raw)).into()
+    }
+}
+
+impl<K, V, const N: usize> From<&TiArray<K, V, N>> for TiVec<K, V>
+where
+    V: Clone,
+{
+    #[inline]
+    fn from(array: &TiArray<K, V, N>) -> Self {
+        Self::from(array.as_slice())
+    }
+}
+
+impl<K, V, const N: usize> From<&mut TiArray<K, V, N>> for TiVec<K, V>
+where
+    V: Clone,
+{
+    #[inline]
+    fn from(array: &mut TiArray<K, V, N>) -> Self {
+        Self::from(array.as_slice())
+    }
+}
+
 impl<K, V> From<&TiSlice<K, V>> for TiVec<K, V>
 where
     V: Clone,
@@ -1126,6 +1160,16 @@ where
     }
 }
 
+impl<'a, K, V> From<&'a TiVec<K, V>> for Cow<'a, TiSlice<K, V>>
+where
+    V: Clone,
+{
+    #[inline]
+    fn from(vec: &'a TiVec<K, V>) -> Self {
+        Cow::Borrowed(vec)
+    }
+}
+
 impl<K> From<&str> for TiVec<K, u8> {
     #[inline]
     fn from(s: &str) -> Self {
@@ -1144,6 +1188,27 @@ impl<K> From<CString> for TiVec<K, u8> {
     #[inline]
     fn from(s: CString) -> Self {
         s.into_bytes().into()
+    }
+}
+
+impl<K, V, A: Allocator, const N: usize> TryFrom<TiVec<K, V, A>> for TiArray<K, V, N> {
+    type Error = TiVec<K, V, A>;
+
+    #[inline]
+    fn try_from(vec: TiVec<K, V, A>) -> Result<Self, Self::Error> {
+        Ok(Self::from(<[V; N]>::try_from(Vec::from(vec))?))
+    }
+}
+
+impl<K, V, A: Allocator, const N: usize> TryFrom<TiVec<K, V, A>> for Box<TiArray<K, V, N>> {
+    type Error = TiVec<K, V, A>;
+
+    #[inline]
+    fn try_from(vec: TiVec<K, V, A>) -> Result<Self, Self::Error> {
+        let boxed: Box<[V; N]> = <[V; N]>::try_from(Vec::from(vec))?.into();
+        // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]`
+        // type.
+        Ok(unsafe { transmute::<Box<[V; N]>, Self>(boxed) })
     }
 }
 
@@ -1196,6 +1261,26 @@ where
 {
     #[inline]
     fn eq(&self, other: &&'a TiSlice<K, V2>) -> bool {
+        *self.raw == other.raw
+    }
+}
+
+impl<K, V1, V2, A: Allocator, const N: usize> PartialEq<TiArray<K, V2, N>> for TiVec<K, V1, A>
+where
+    V1: PartialEq<V2>,
+{
+    #[inline]
+    fn eq(&self, other: &TiArray<K, V2, N>) -> bool {
+        *self.raw == other.raw
+    }
+}
+
+impl<K, V1, V2, A: Allocator, const N: usize> PartialEq<&TiArray<K, V2, N>> for TiVec<K, V1, A>
+where
+    V1: PartialEq<V2>,
+{
+    #[inline]
+    fn eq(&self, other: &&TiArray<K, V2, N>) -> bool {
         *self.raw == other.raw
     }
 }
@@ -1455,10 +1540,7 @@ where
     clippy::unwrap_used,
     reason = "okay in tests"
 )]
-#[rustversion::attr(
-    since(1.99.0),
-    expect(clippy::mut_mut, reason = "macro generated code"),
-)]
+#[expect(clippy::mut_mut, reason = "macro generated code")]
 #[cfg(test)]
 mod test {
     use alloc::borrow::{Cow, ToOwned};
@@ -1475,7 +1557,7 @@ mod test {
     use std::io::{IoSlice, Write};
 
     use crate::test_util::{AsSliceAndCapacity, Id};
-    use crate::{TiSlice, TiVec};
+    use crate::{TiArray, TiSlice, TiVec};
 
     #[test]
     fn test_vec_read_api_compatibility() {
@@ -1536,6 +1618,7 @@ mod test {
             assert_eq_api!(mv, v => TheVec::from(v.as_mut_slice()).into_std());
             assert_eq_api!(cv, v => TheVec::from(Cow::Borrowed(v.as_slice())).into_std());
             assert_eq_api!(mv, v => Cow::from(v.clone()).into_std());
+            assert_eq_api!(mv, v => Cow::from(&*v).into_std());
 
             if !v.is_empty() {
                 assert_ne!(cv.0.as_ptr(), cv.1.as_ptr());
@@ -1549,6 +1632,8 @@ mod test {
             assert_eq_api!(cv, v => v.as_slice() == v);
             assert_eq_api!(cv, v => v == &v.as_slice());
             assert_eq_api!(cv, v => &v.as_slice() == v);
+            assert_eq_api!(cv, v => *v == [1, 2, 3].into_tic());
+            assert_eq_api!(cv, v => *v == &[1, 2, 3].into_tic());
             assert_eq_api!(mv, v => v == &(&mut [1_u32, 1234][..]).into_tic());
             assert_eq_api!(mv, v => &(&mut [1_u32, 1234][..]).into_tic() == v);
             assert_eq_api!(cv, v => v.cmp(&alloc::vec![1, 1234].into_tic()));
@@ -1565,27 +1650,14 @@ mod test {
                     TheVec::from_raw_parts(v.as_mut_ptr(), v.len(), v.capacity()).into_std()
                 });
             }
-        }
-    }
 
-    #[rustversion::since(1.93.0)]
-    #[test]
-    fn test_vec_read_api_compatibility_since_1_93() {
-        for slice in [
-            &[0_u32; 0][..],
-            &[1],
-            &[1, 1234],
-            &[1, 2, 4],
-            &[1, 5, 3, 2],
-            &[1, 1, 9, 2, 4, 1, 12345, 12],
-        ] {
-            let vec = slice.to_vec();
-            let ti_vec = TiVec::<Id, _>::from(slice.to_vec());
+            let vec = v.to_vec();
+            let ti_vec = TiVec::<Id, _>::from(v.to_vec());
 
             let vec_raw = vec.into_raw_parts();
             let ti_vec_raw = ti_vec.into_raw_parts();
 
-            if !slice.is_empty() {
+            if !v.is_empty() {
                 assert_ne!(vec_raw.0, ti_vec_raw.0);
             }
             assert_eq!(vec_raw.1, ti_vec_raw.1);
@@ -1596,6 +1668,40 @@ mod test {
                 TiVec::<Id, _>::from_raw_parts(ti_vec_raw.0, ti_vec_raw.1, ti_vec_raw.2)
             });
         }
+
+        test_vec_read_api_compatibility_impl([]);
+        test_vec_read_api_compatibility_impl([1]);
+        test_vec_read_api_compatibility_impl([1, 1234]);
+        test_vec_read_api_compatibility_impl([1, 2, 4]);
+        test_vec_read_api_compatibility_impl([1, 5, 3, 2]);
+        test_vec_read_api_compatibility_impl([1, 1, 9, 2, 4, 1, 12345, 12]);
+    }
+
+    fn test_vec_read_api_compatibility_impl<const N: usize>(mut v: [u32; N]) {
+        assert_eq!(
+            Vec::from(v),
+            Vec::from(TiVec::<Id, _>::from(TiArray::from(v))),
+        );
+        assert_eq!(
+            Vec::from(&v),
+            Vec::from(TiVec::<Id, _>::from(&TiArray::from(v))),
+        );
+        assert_eq!(
+            Vec::from(&mut v),
+            Vec::from(TiVec::<Id, _>::from(&mut TiArray::from(v))),
+        );
+        assert_eq!(
+            <[u32; 3]>::try_from(v.to_vec()),
+            TiArray::<Id, u32, 3>::try_from(TiVec::from(v.to_vec()))
+                .map(<[u32; 3]>::from)
+                .map_err(Vec::from),
+        );
+        assert_eq!(
+            Box::<[u32; 3]>::try_from(v.to_vec()),
+            Box::<TiArray<Id, u32, 3>>::try_from(TiVec::from(v.to_vec()))
+                .map(TiArray::boxed_into)
+                .map_err(Vec::from),
+        );
     }
 
     #[test]

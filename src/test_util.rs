@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 
 use derive_more::{From, Into};
 
-use crate::TiSlice;
+use crate::{TiArray, TiSlice};
 
 #[derive(From, Into, Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Id(pub usize);
@@ -132,6 +132,20 @@ where
     type Item = T::Item;
     fn as_slice_and_capacity(&self) -> (&[Self::Item], usize) {
         T::as_slice_and_capacity(self)
+    }
+}
+
+impl<T, const N: usize> AsSliceAndCapacity for [T; N] {
+    type Item = T;
+    fn as_slice_and_capacity(&self) -> (&[Self::Item], usize) {
+        (self, self.len())
+    }
+}
+
+impl<K, V, const N: usize> AsSliceAndCapacity for TiArray<K, V, N> {
+    type Item = V;
+    fn as_slice_and_capacity(&self) -> (&[Self::Item], usize) {
+        (self.as_slice().as_ref(), N)
     }
 }
 

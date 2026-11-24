@@ -779,3 +779,45 @@ where
         <[V; N]>::borrow_decode(decoder).map(Into::into)
     }
 }
+
+#[expect(
+    dead_code,
+    unused_imports,
+    unused_mut,
+    clippy::fallible_impl_from,
+    clippy::into_iter_on_ref,
+    clippy::too_many_lines,
+    clippy::undocumented_unsafe_blocks,
+    clippy::unwrap_used,
+    reason = "okay in tests"
+)]
+#[cfg(test)]
+mod test {
+    use crate::TiArray;
+
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    struct NonCopy<T>(pub T);
+
+    #[test]
+    fn test_slice_read_core_api_compatibility() {
+        test_slice_read_core_api_compatibility_impl([]);
+        test_slice_read_core_api_compatibility_impl([1]);
+        test_slice_read_core_api_compatibility_impl([1, 1234]);
+        test_slice_read_core_api_compatibility_impl([1, 2, 4]);
+        test_slice_read_core_api_compatibility_impl([1, 5, 3, 2]);
+        test_slice_read_core_api_compatibility_impl([1, 1, 9, 2, 4, 1, 12345, 12]);
+    }
+
+    fn test_slice_read_core_api_compatibility_impl<const N: usize>(v: [u32; N]) {
+        let mut cv = (v, TiArray::from_array(v));
+        let mut cv = (&cv.0, &cv.1);
+
+        let mut mv = (v, TiArray::from_array(v));
+        let mut mv = (&mut mv.0, &mut mv.1);
+
+        assert_eq_api!(cv, v => v.as_slice().into_std());
+        assert_eq_api!(mv, v => v.as_mut_slice().into_std());
+        // assert_eq_api!(cv, v => v.each_ref());
+        // assert_eq_api!(mv, v => v.each_mut());
+    }
+}

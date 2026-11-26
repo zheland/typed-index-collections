@@ -267,10 +267,6 @@ mod core_impls {
         self => ..=self.end.into_tic()
     );
     impl_into_tic!(,
-        (Bound<usize>, Bound<usize>) => (Bound<Id>, Bound<Id>),
-        self => (self.0.into_tic(), self.1.into_tic())
-    );
-    impl_into_tic!(,
         Bound<usize> => Bound<Id>,
         self => match self {
             Bound::Included(index) => Bound::Included(index.into_tic()),
@@ -314,16 +310,28 @@ mod core_impls {
         where T: Clone
     );
 
-    impl_into_std!(
-        for ['a, T, U],
-        (&'a TiSlice<Id, T>, &'a TiSlice<Id, U>) => (&'a [T], &'a [U]),
-        self => (self.0.into_std(), self.1.into_std())
-    );
-    impl_into_std!(
-        for ['a, T, U],
-        (&'a mut TiSlice<Id, T>, &'a mut TiSlice<Id, U>) => (&'a mut [T], &'a mut [U]),
-        self => (self.0.into_std(), self.1.into_std())
-    );
+    impl<T1, T2> IntoTicType for (T1, T2)
+    where
+        T1: IntoTicType,
+        T2: IntoTicType,
+    {
+        type Tic = (T1::Tic, T2::Tic);
+        fn into_tic(self) -> Self::Tic {
+            (self.0.into_tic(), self.1.into_tic())
+        }
+    }
+
+    impl<T1, T2> IntoStdType for (T1, T2)
+    where
+        T1: IntoStdType,
+        T2: IntoStdType,
+    {
+        type Std = (T1::Std, T2::Std);
+        fn into_std(self) -> Self::Std {
+            (self.0.into_std(), self.1.into_std())
+        }
+    }
+
     impl_into_std!(
         for ['a, T, U, V],
         (&'a TiSlice<Id, T>, &'a TiSlice<Id, U>, &'a TiSlice<Id, V>) => (&'a [T], &'a [U], &'a [V]),
@@ -339,13 +347,13 @@ mod core_impls {
 
     impl_into_std!(
         for ['a, T],
-        (&'a T, &'a TiSlice<Id, T>) => (&'a T, &'a [T]),
-        self => (self.0, self.1.into_std())
+        ((), &'a T, &'a TiSlice<Id, T>) => ((), &'a T, &'a [T]),
+        self => ((), self.1, self.2.into_std())
     );
     impl_into_std!(
         for ['a, T],
-        (&'a mut T, &'a mut TiSlice<Id, T>) => (&'a mut T, &'a mut [T]),
-        self => (self.0, self.1.into_std())
+        ((), &'a mut T, &'a mut TiSlice<Id, T>) => ((), &'a mut T, &'a mut [T]),
+        self => ((), self.1, self.2.into_std())
     );
     impl_into_std!(
         for ['a, T, U, V],

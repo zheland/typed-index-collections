@@ -4,8 +4,8 @@
 
 | Type | Method | Implemented | Notes |
 |:--:|:--:|:--:|:--:|
-| `Box<[T]>` | `new_uninit_slice` | | |
-| `Box<[T]>` | `new_zeroed_slice` | | |
+| `Box<[T]>` | `new_uninit_slice` | ⛔️ | type outside crate |
+| `Box<[T]>` | `new_zeroed_slice` | ⛔️ | type outside crate |
 | `Box<[T]>` | `try_new_uninit_slice` | ⛔️ | nightly-only |
 | `Box<[T]>` | `try_new_zeroed_slice` | ⛔️ | nightly-only |
 | `Box<[T], A>` | `new_uninit_slice_in` | ⛔️ | nightly-only |
@@ -28,8 +28,8 @@
 | `[AsciiChar]` | `as_str` | ⛔️ | nightly-only |
 | `[AsciiChar]` | `as_bytes` | ⛔️ | nightly-only |
 | `[u8]` | `is_ascii` | ✅ | `slice/mod.rs` |
-| `[u8]` | `as_ascii` | | |
-| `[u8]` | `as_ascii_unchecked` | | |
+| `[u8]` | `as_ascii` | ⛔️ | nightly-only |
+| `[u8]` | `as_ascii_unchecked` | ⛔️ | nightly-only |
 | `[u8]` | `eq_ignore_ascii_case` | ✅ | `slice/mod.rs` |
 | `[u8]` | `make_ascii_uppercase` | ✅ | `slice/mod.rs` |
 | `[u8]` | `make_ascii_lowercase` | ✅ | `slice/mod.rs` |
@@ -48,14 +48,14 @@
 | `[T]` | `split_last_mut` | ✅ | `slice/mod.rs` |
 | `[T]` | `last` | ✅ | `slice/mod.rs` |
 | `[T]` | `last_mut` | ✅ | `slice/mod.rs` |
-| `[T]` | `first_chunk` | | |
-| `[T]` | `first_chunk_mut` | | |
-| `[T]` | `split_first_chunk` | | |
-| `[T]` | `split_first_chunk_mut` | | |
-| `[T]` | `split_last_chunk` | | |
-| `[T]` | `split_last_chunk_mut` | | |
-| `[T]` | `last_chunk` | | |
-| `[T]` | `last_chunk_mut` | | |
+| `[T]` | `first_chunk` | ✅ | `slice/mod.rs` |
+| `[T]` | `first_chunk_mut` | ✅ | `slice/mod.rs` |
+| `[T]` | `split_first_chunk` | ✅ | `slice/mod.rs` |
+| `[T]` | `split_first_chunk_mut` | ✅ | `slice/mod.rs` |
+| `[T]` | `split_last_chunk` | ✅ | `slice/mod.rs` |
+| `[T]` | `split_last_chunk_mut` | ✅ | `slice/mod.rs` |
+| `[T]` | `last_chunk` | ✅ | `slice/mod.rs` |
+| `[T]` | `last_chunk_mut` | ✅ | `slice/mod.rs` |
 | `[T]` | `get` | ✅ | `slice/mod.rs` |
 | `[T]` | `get_mut` | ✅ | `slice/mod.rs` |
 | `[T]` | `get_unchecked` | ✅ | `slice/mod.rs` |
@@ -64,8 +64,8 @@
 | `[T]` | `as_mut_ptr` | ✅ | `slice/mod.rs` |
 | `[T]` | `as_ptr_range` | ✅ | `slice/mod.rs` |
 | `[T]` | `as_mut_ptr_range` | ✅ | `slice/mod.rs` |
-| `[T]` | `as_array` | | |
-| `[T]` | `as_mut_array` | | |
+| `[T]` | `as_array` | ✅ | `slice/mod.rs` |
+| `[T]` | `as_mut_array` | ✅ | `slice/mod.rs` |
 | `[T]` | `swap` | ✅ | `slice/mod.rs` |
 | `[T]` | `swap_unchecked` | ⛔️ | nightly-only |
 | `[T]` | `reverse` | ✅ | `slice/mod.rs` |
@@ -495,7 +495,7 @@
 | `Vec<T, A>` | `pop_if` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `peek_mut` | ⛔️ | nightly-only |
 | `Vec<T, A>` | `append` | ✅ | `vec.rs` |
-| `Vec<T, A>` | `drain` | ⛔️ | nightly-only |
+| `Vec<T, A>` | `drain` | ⚠️/⛔️ | `AllocatorNightly` |
 | `Vec<T>` | `drain` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `clear` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `len` | ✅ | `vec.rs` |
@@ -512,7 +512,7 @@
 | `Vec<T, A>` | `extend_from_within` | ✅ | `vec.rs` |
 | `Vec<[T; N], A>` | `into_flattened` | | |
 | `Vec<T, A>` | `dedup` | ✅ | `vec.rs` |
-| `Vec<T, A>` | `splice` | ⛔️ | nightly-only |
+| `Vec<T, A>` | `splice` | ⚠️/⛔️ | `AllocatorNightly` |
 | `Vec<T>` | `splice` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `extract_if` | | |
 

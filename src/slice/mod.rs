@@ -47,7 +47,7 @@ pub use slice_index::TiSliceIndex;
 
 #[cfg(feature = "alloc")]
 use crate::TiVec;
-use crate::{TiEnumerated, TiRangeBounds, TiSliceKeys, TiSliceMutMap, TiSliceRefMap};
+use crate::{TiArray, TiEnumerated, TiRangeBounds, TiSliceKeys, TiSliceMutMap, TiSliceRefMap};
 
 /// A dynamically-sized view into a contiguous sequence of `T`
 /// that only accepts keys of the type `K`.
@@ -498,6 +498,116 @@ impl<K, V> TiSlice<K, V> {
         self.raw.last_mut()
     }
 
+    /// Returns an array reference to the first `N` items in the slice.
+    ///
+    /// See [`slice::first_chunk`] for more details.
+    ///
+    /// [`slice::first_chunk`]: https://doc.rust-lang.org/std/primitive.slice.html#method.first_chunk
+    #[inline]
+    pub const fn first_chunk<const N: usize>(&self) -> Option<&TiArray<K, V, N>> {
+        match self.raw.first_chunk() {
+            Some(chunk) => Some(TiArray::from_ref(chunk)),
+            None => None,
+        }
+    }
+
+    /// Returns a mutable array reference to the first `N` items in the slice.
+    ///
+    /// See [`slice::first_chunk_mut`] for more details.
+    ///
+    /// [`slice::first_chunk_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.first_chunk_mut
+    #[inline]
+    pub const fn first_chunk_mut<const N: usize>(&mut self) -> Option<&mut TiArray<K, V, N>> {
+        match self.raw.first_chunk_mut() {
+            Some(chunk) => Some(TiArray::from_mut(chunk)),
+            None => None,
+        }
+    }
+
+    /// Returns an array reference to the first `N` items in the slice and the remaining slice.
+    ///
+    /// See [`slice::split_first_chunk`] for more details.
+    ///
+    /// [`slice::split_first_chunk`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_first_chunk
+    #[inline]
+    pub const fn split_first_chunk<const N: usize>(&self) -> Option<(&TiArray<K, V, N>, &Self)> {
+        match self.raw.split_first_chunk() {
+            Some((first, tail)) => Some((TiArray::from_ref(first), Self::from_ref(tail))),
+            None => None,
+        }
+    }
+
+    /// Returns a mutable array reference to the first `N` items in the slice and the remaining
+    /// slice.
+    ///
+    /// See [`slice::split_first_chunk_mut`] for more details.
+    ///
+    /// [`slice::split_first_chunk_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_first_chunk_mut
+    #[inline]
+    pub const fn split_first_chunk_mut<const N: usize>(
+        &mut self,
+    ) -> Option<(&mut TiArray<K, V, N>, &mut Self)> {
+        match self.raw.split_first_chunk_mut() {
+            Some((first, tail)) => Some((TiArray::from_mut(first), Self::from_mut(tail))),
+            None => None,
+        }
+    }
+
+    /// Returns an array reference to the last `N` items in the slice and the remaining slice.
+    ///
+    /// See [`slice::split_last_chunk`] for more details.
+    ///
+    /// [`slice::split_last_chunk`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_last_chunk
+    #[inline]
+    pub const fn split_last_chunk<const N: usize>(&self) -> Option<(&Self, &TiArray<K, V, N>)> {
+        match self.raw.split_last_chunk() {
+            Some((first, tail)) => Some((Self::from_ref(first), TiArray::from_ref(tail))),
+            None => None,
+        }
+    }
+
+    /// Returns a mutable array reference to the last `N` items in the slice and the remaining
+    /// slice.
+    ///
+    /// See [`slice::split_last_chunk_mut`] for more details.
+    ///
+    /// [`slice::split_last_chunk_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_last_chunk_mut
+    #[inline]
+    pub const fn split_last_chunk_mut<const N: usize>(
+        &mut self,
+    ) -> Option<(&mut Self, &mut TiArray<K, V, N>)> {
+        match self.raw.split_last_chunk_mut() {
+            Some((first, tail)) => Some((Self::from_mut(first), TiArray::from_mut(tail))),
+            None => None,
+        }
+    }
+
+    /// Returns an array reference to the last `N` items in the slice.
+    ///
+    /// See [`slice::last_chunk`] for more details.
+    ///
+    /// [`slice::last_chunk`]: https://doc.rust-lang.org/std/primitive.slice.html#method.last_chunk
+    #[inline]
+    pub const fn last_chunk<const N: usize>(&self) -> Option<&TiArray<K, V, N>> {
+        match self.raw.last_chunk() {
+            Some(chunk) => Some(TiArray::from_ref(chunk)),
+            None => None,
+        }
+    }
+
+    /// Returns a mutable array reference to the last `N` items in the slice.
+    ///
+    /// See [`slice::last_chunk_mut`] for more details.
+    ///
+    /// [`slice::last_chunk_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.last_chunk_mut
+    #[inline]
+    pub const fn last_chunk_mut<const N: usize>(&mut self) -> Option<&mut TiArray<K, V, N>> {
+        match self.raw.last_chunk_mut() {
+            Some(chunk) => Some(TiArray::from_mut(chunk)),
+            None => None,
+        }
+    }
+
     /// Returns the last slice element index of type `K`, or `None` if the slice
     /// is empty.
     ///
@@ -706,6 +816,34 @@ impl<K, V> TiSlice<K, V> {
     #[must_use]
     pub const fn as_mut_ptr_range(&mut self) -> Range<*mut V> {
         self.raw.as_mut_ptr_range()
+    }
+
+    /// Gets a reference to the underlying array.
+    ///
+    /// See [`slice::as_array`] for more details.
+    ///
+    /// [`slice::as_array`]: https://doc.rust-lang.org/std/primitive.slice.html#method.as_array
+    #[inline]
+    #[must_use]
+    pub const fn as_array<const N: usize>(&self) -> Option<&TiArray<K, V, N>> {
+        match self.raw.as_array() {
+            Some(array) => Some(TiArray::from_ref(array)),
+            None => None,
+        }
+    }
+
+    /// Gets a mutable reference to the slice's underlying array.
+    ///
+    /// See [`slice::as_mut_array`] for more details.
+    ///
+    /// [`slice::as_mut_array`]: https://doc.rust-lang.org/std/primitive.slice.html#method.as_mut_array
+    #[inline]
+    #[must_use]
+    pub const fn as_mut_array<const N: usize>(&mut self) -> Option<&mut TiArray<K, V, N>> {
+        match self.raw.as_mut_array() {
+            Some(array) => Some(TiArray::from_mut(array)),
+            None => None,
+        }
     }
 
     /// Swaps two elements in the slice.
@@ -2414,10 +2552,20 @@ mod test {
         assert_eq_api!(mv, v => v.first_mut());
         assert_eq_api!(cv, v => v.last());
         assert_eq_api!(mv, v => v.last_mut());
-        assert_eq_api!(cv, v => v.split_first().into_std());
-        assert_eq_api!(mv, v => v.split_first_mut().into_std());
-        assert_eq_api!(cv, v => v.split_last().into_std());
-        assert_eq_api!(mv, v => v.split_last_mut().into_std());
+
+        assert_eq_api!(mv, v => v.first_chunk::<2>().into_std());
+        assert_eq_api!(mv, v => v.first_chunk_mut::<2>().into_std());
+        assert_eq_api!(mv, v => v.split_first_chunk::<2>().into_std());
+        assert_eq_api!(mv, v => v.split_first_chunk_mut::<2>().into_std());
+        assert_eq_api!(mv, v => v.split_last_chunk::<2>().into_std());
+        assert_eq_api!(mv, v => v.split_last_chunk_mut::<2>().into_std());
+        assert_eq_api!(mv, v => v.last_chunk::<2>().into_std());
+        assert_eq_api!(mv, v => v.last_chunk_mut::<2>().into_std());
+
+        assert_eq_api!(cv, v => v.split_first().map(|v| ((), v.0, v.1)).into_std());
+        assert_eq_api!(mv, v => v.split_first_mut().map(|v| ((), v.0, v.1)).into_std());
+        assert_eq_api!(cv, v => v.split_last().map(|v| ((), v.0, v.1)).into_std());
+        assert_eq_api!(mv, v => v.split_last_mut().map(|v| ((), v.0, v.1)).into_std());
         assert_eq_api!(cv, v => v.split_off_first());
         assert_eq_api!(mv, v => v.split_off_first_mut());
         assert_eq_api!(cv, v => v.split_off_last());
@@ -2442,6 +2590,9 @@ mod test {
             mv.0.as_mut_ptr_range(),
             TiSlice::<Id, _>::from_mut(mv.0).as_mut_ptr_range()
         );
+
+        assert_eq_api!(cv, v => v.as_array::<2>().into_std());
+        assert_eq_api!(mv, v => v.as_mut_array::<2>().into_std());
 
         assert_eq_api!(cv, v => v == <&TheSlice<u32>>::default());
         assert_eq_api!(cv, v => v == <&mut TheSlice<u32>>::default());

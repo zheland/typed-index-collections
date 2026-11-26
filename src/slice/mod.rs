@@ -2032,6 +2032,36 @@ impl<K, V> TiSlice<K, V> {
         *self = rem;
         Some(last)
     }
+
+    /// Returns the index that an element reference points to.
+    ///
+    /// See [`slice::element_offset`] for more details.
+    ///
+    /// [`slice::element_offset`]: https://doc.rust-lang.org/std/primitive.slice.html#method.element_offset
+    #[must_use]
+    #[inline]
+    pub fn element_offset(&self, element: &V) -> Option<K>
+    where
+        usize: Into<K>,
+    {
+        self.raw.element_offset(element).map(Into::into)
+    }
+
+    /// Returns the range of indices that a subslice points to.
+    ///
+    /// See [`slice::subslice_range`] for more details.
+    ///
+    /// [`slice::subslice_range`]: https://doc.rust-lang.org/std/primitive.slice.html#method.subslice_range
+    #[must_use]
+    #[inline]
+    pub fn subslice_range(&self, subslice: &Self) -> Option<Range<K>>
+    where
+        usize: Into<K>,
+    {
+        self.raw
+            .subslice_range(&subslice.raw)
+            .map(|slice| slice.start.into()..slice.end.into())
+    }
 }
 
 impl<K> TiSlice<K, u8> {
@@ -2994,6 +3024,17 @@ mod test {
 
         for a in 1..5 {
             assert_eq_api!(cv, v => v.partition_point(|b| *b < a).into_std());
+        }
+
+        for a in 0..v.len() {
+            assert_eq_api!(cv, v => v.element_offset(&v[a.into_tic()]).into_std());
+
+            for b in a..v.len() {
+                assert_eq_api!(cv,
+                    v => v.subslice_range(&v[a.into_tic()..b.into_tic()]).map(|v| v.start.into_std()));
+                assert_eq_api!(cv,
+                    v => v.subslice_range(&v[a.into_tic()..b.into_tic()]).map(|v| v.end.into_std()));
+            }
         }
 
         test_slice_ro_core_api_compatibility_impl_generic::<N, 1>(va);

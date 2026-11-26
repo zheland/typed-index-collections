@@ -338,18 +338,6 @@ mod core_impls {
         }
     }
 
-    impl<T1, T2, T3> IntoTicType for (T1, T2, T3)
-    where
-        T1: IntoTicType,
-        T2: IntoTicType,
-        T3: IntoTicType,
-    {
-        type Tic = (T1::Tic, T2::Tic, T3::Tic);
-        fn into_tic(self) -> Self::Tic {
-            (self.0.into_tic(), self.1.into_tic(), self.2.into_tic())
-        }
-    }
-
     impl<T1, T2, T3> IntoStdType for (T1, T2, T3)
     where
         T1: IntoStdType,

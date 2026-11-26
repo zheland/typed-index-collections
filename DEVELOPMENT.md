@@ -4,8 +4,8 @@
 
 | Type | Method | Implemented | Notes |
 |:--:|:--:|:--:|:--:|
-| `Box<[T]>` | `new_uninit_slice` | ⛔️ | type outside crate |
-| `Box<[T]>` | `new_zeroed_slice` | ⛔️ | type outside crate |
+| `Box<[T]>` | `new_uninit_slice` | ⛔️ | foreign type |
+| `Box<[T]>` | `new_zeroed_slice` | ⛔️ | foreign type |
 | `Box<[T]>` | `try_new_uninit_slice` | ⛔️ | nightly-only |
 | `Box<[T]>` | `try_new_zeroed_slice` | ⛔️ | nightly-only |
 | `Box<[T], A>` | `new_uninit_slice_in` | ⛔️ | nightly-only |
@@ -110,11 +110,11 @@
 | `[T]` | `contains` | ✅ | `slice/mod.rs` |
 | `[T]` | `starts_with` | ✅ | `slice/mod.rs` |
 | `[T]` | `ends_with` | ✅ | `slice/mod.rs` |
-| `[T]` | `strip_prefix` | | |
-| `[T]` | `strip_suffix` | | |
-| `[T]` | `strip_circumfix` | | |
-| `[T]` | `trim_prefix` | | |
-| `[T]` | `trim_suffix` | | |
+| `[T]` | `strip_prefix` | ⛔️ | `SlicePattern` |
+| `[T]` | `strip_suffix` | ⛔️ | `SlicePattern` |
+| `[T]` | `strip_circumfix` | ⛔️ | `SlicePattern` |
+| `[T]` | `trim_prefix` | ⛔️ | `SlicePattern` |
+| `[T]` | `trim_suffix` | ⛔️ | `SlicePattern` |
 | `[T]` | `binary_search` | ✅ | `slice/mod.rs` |
 | `[T]` | `binary_search_by` | ✅ | `slice/mod.rs` |
 | `[T]` | `binary_search_by_key` | ✅ | `slice/mod.rs` |
@@ -148,21 +148,21 @@
 | `[T]` | `is_sorted_by` | ✅ | `slice/mod.rs` |
 | `[T]` | `is_sorted_by_key` | ✅ | `slice/mod.rs` |
 | `[T]` | `partition_point` | ✅ | `slice/mod.rs` |
-| `[T]` | `split_off` | | |
-| `[T]` | `split_off_mut` | | |
+| `[T]` | `split_off` | ⛔️ | `OneSidedRange` |
+| `[T]` | `split_off_mut` | ⛔️ | `OneSidedRange` |
 | `[T]` | `split_off_first` | ✅ | `slice/mod.rs` |
 | `[T]` | `split_off_first_mut` | ✅ | `slice/mod.rs` |
 | `[T]` | `split_off_last` | ✅ | `slice/mod.rs` |
 | `[T]` | `split_off_last_mut` | ✅ | `slice/mod.rs` |
-| `[T]` | `get_disjoint_unchecked_mut` | | |
-| `[T]` | `get_disjoint_mut` | | |
-| `[T]` | `element_offset` | | |
-| `[T]` | `subslice_range` | | |
+| `[T]` | `get_disjoint_unchecked_mut` | ⛔️ | `GetDisjointMutIndex` |
+| `[T]` | `get_disjoint_mut` | ⛔️ | `GetDisjointMutIndex` |
+| `[T]` | `element_offset` | ✅ | `slice/mod.rs` |
+| `[T]` | `subslice_range` | ✅ | `slice/mod.rs` |
 | `[T]` | `as_slice` | ⛔️ | nightly-only |
 | `[T]` | `as_mut_slice` | ⛔️ | nightly-only |
 | `[MaybeUninit<T>]` | `align_to_uninit_mut` | ⛔️ | nightly-only |
-| `[[T; N]]` | `as_flattened` | | |
-| `[[T; N]]` | `as_flattened_mut` | | |
+| `[[T; N]]` | `as_flattened` | ⛔️ | foreign type |
+| `[[T; N]]` | `as_flattened_mut` | ⛔️ | foreign type |
 | `[f32]` | `sort_floats` | ⛔️ | nightly-only |
 | `[f64]` | `sort_floats` | ⛔️ | nightly-only |
 | `[u8]` | `utf8_chunks` | ✅ | `slice/mod.rs` |

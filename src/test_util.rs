@@ -223,14 +223,34 @@ mod core_impls {
     use core::ops::{Bound, Range, RangeFrom, RangeInclusive, RangeTo, RangeToInclusive};
 
     use crate::test_util::{Id, IntoStdType, IntoTicType};
-    use crate::TiSlice;
+    use crate::{TiArray, TiSlice};
 
     impl_into_tic!(, usize => Id, self => self.into());
     impl_into_std!(, Id => usize, self => self.into());
+
     impl_into_tic!(for ['a, T], &'a [T] => &'a TiSlice<Id, T>, self => self.as_ref());
     impl_into_std!(for ['a, T], &'a TiSlice<Id, T> => &'a [T], self => self.as_ref());
     impl_into_tic!(for ['a, T], &'a mut [T] => &'a mut TiSlice<Id, T>, self => self.as_mut());
     impl_into_std!(for ['a, T], &'a mut TiSlice<Id, T> => &'a mut [T], self => self.as_mut());
+
+    impl_into_tic!(for [T, const N: usize], [T; N] => TiArray<Id, T, N>, self => self.into());
+    impl_into_std!(for [T, const N: usize], TiArray<Id, T, N> => [T; N], self => self.into());
+    impl_into_tic!(
+        for ['a, T, const N: usize],
+        &'a [T; N] => &'a TiArray<Id, T, N>, self => self.as_ref()
+    );
+    impl_into_std!(
+        for ['a, T, const N: usize],
+        &'a TiArray<Id, T, N> => &'a [T; N], self => self.as_ref()
+    );
+    impl_into_tic!(
+        for ['a, T, const N: usize],
+        &'a mut [T; N] => &'a mut TiArray<Id, T, N>, self => self.as_mut()
+    );
+    impl_into_std!(
+        for ['a, T, const N: usize],
+        &'a mut TiArray<Id, T, N> => &'a mut [T; N], self => self.as_mut()
+    );
 
     impl_into_tic!(,
         Range<usize> => Range<Id>,
@@ -382,6 +402,7 @@ macro_rules! assert_eq_api {
         let std_out = {
             use crate::test_util::FakeConversion;
             type TheSlice<T> = [T];
+            type TheArray<T, const N: usize> = [T; N];
             #[cfg(feature = "alloc")]
             type TheVec<T> = alloc::vec::Vec<T>;
             $expr
@@ -390,6 +411,7 @@ macro_rules! assert_eq_api {
         let tic_out = {
             use crate::test_util::{IntoStdType, IntoTicType, MapIntoStdType};
             type TheSlice<T> = crate::TiSlice<crate::test_util::Id, T>;
+            type TheArray<T, const N: usize> = crate::TiArray<crate::test_util::Id, T, N>;
             #[cfg(feature = "alloc")]
             type TheVec<T> = crate::TiVec<crate::test_util::Id, T>;
             $expr

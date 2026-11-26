@@ -2952,7 +2952,7 @@ mod test {
             assert_eq_api!(cv, v => v.trim_ascii_start().into_std());
             assert_eq_api!(cv, v => v.trim_ascii_end().into_std());
             assert_eq_api!(cv, v => v.trim_ascii().into_std());
-            assert_eq_api!(cv, v => v.eq_ignore_ascii_case(b"aBc".into_tic()));
+            assert_eq_api!(cv, v => v.eq_ignore_ascii_case(b"aBc"[..].into_tic()));
             assert_eq_api!(cv, v => v.escape_ascii().collect_to_vec());
             assert_eq_api!(cv, v => v.utf8_chunks().collect_to_vec());
         }

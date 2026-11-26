@@ -11,6 +11,8 @@ use core::cmp::Ordering;
 use core::hash::{Hash, Hasher};
 use core::iter::FromIterator;
 use core::marker::PhantomData;
+#[cfg(feature = "alloc")]
+use core::mem::transmute;
 use core::mem::MaybeUninit;
 use core::ops::{Deref, DerefMut, Index, IndexMut};
 use core::{fmt, slice};
@@ -28,6 +30,8 @@ use serde::de::{Deserialize, Deserializer};
 #[cfg(feature = "serde")]
 use serde::ser::{Serialize, Serializer};
 
+#[cfg(feature = "alloc")]
+use crate::TiArray;
 use crate::{TiEnumerated, TiRangeBounds, TiSlice, TiSliceIndex};
 
 /// A contiguous growable array type
@@ -1086,6 +1090,36 @@ impl<K, V, A: Allocator> From<TiVec<K, V, A>> for Vec<V, A> {
     }
 }
 
+impl<K, V, const N: usize> From<TiArray<K, V, N>> for TiVec<K, V>
+where
+    V: Clone,
+{
+    #[inline]
+    fn from(array: TiArray<K, V, N>) -> Self {
+        <[V]>::into_vec(Box::new(array.raw)).into()
+    }
+}
+
+impl<K, V, const N: usize> From<&TiArray<K, V, N>> for TiVec<K, V>
+where
+    V: Clone,
+{
+    #[inline]
+    fn from(array: &TiArray<K, V, N>) -> Self {
+        Self::from(array.as_slice())
+    }
+}
+
+impl<K, V, const N: usize> From<&mut TiArray<K, V, N>> for TiVec<K, V>
+where
+    V: Clone,
+{
+    #[inline]
+    fn from(array: &mut TiArray<K, V, N>) -> Self {
+        Self::from(array.as_slice())
+    }
+}
+
 impl<K, V> From<&TiSlice<K, V>> for TiVec<K, V>
 where
     V: Clone,
@@ -1126,6 +1160,16 @@ where
     }
 }
 
+impl<'a, K, V> From<&'a TiVec<K, V>> for Cow<'a, TiSlice<K, V>>
+where
+    V: Clone,
+{
+    #[inline]
+    fn from(vec: &'a TiVec<K, V>) -> Self {
+        Cow::Borrowed(vec)
+    }
+}
+
 impl<K> From<&str> for TiVec<K, u8> {
     #[inline]
     fn from(s: &str) -> Self {
@@ -1144,6 +1188,27 @@ impl<K> From<CString> for TiVec<K, u8> {
     #[inline]
     fn from(s: CString) -> Self {
         s.into_bytes().into()
+    }
+}
+
+impl<K, V, A: Allocator, const N: usize> TryFrom<TiVec<K, V, A>> for TiArray<K, V, N> {
+    type Error = TiVec<K, V, A>;
+
+    #[inline]
+    fn try_from(vec: TiVec<K, V, A>) -> Result<Self, Self::Error> {
+        Ok(Self::from(<[V; N]>::try_from(Vec::from(vec))?))
+    }
+}
+
+impl<K, V, A: Allocator, const N: usize> TryFrom<TiVec<K, V, A>> for Box<TiArray<K, V, N>> {
+    type Error = TiVec<K, V, A>;
+
+    #[inline]
+    fn try_from(vec: TiVec<K, V, A>) -> Result<Self, Self::Error> {
+        let boxed: Box<[V; N]> = <[V; N]>::try_from(Vec::from(vec))?.into();
+        // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]`
+        // type.
+        Ok(unsafe { transmute::<Box<[V; N]>, Self>(boxed) })
     }
 }
 
@@ -1196,6 +1261,26 @@ where
 {
     #[inline]
     fn eq(&self, other: &&'a TiSlice<K, V2>) -> bool {
+        *self.raw == other.raw
+    }
+}
+
+impl<K, V1, V2, A: Allocator, const N: usize> PartialEq<TiArray<K, V2, N>> for TiVec<K, V1, A>
+where
+    V1: PartialEq<V2>,
+{
+    #[inline]
+    fn eq(&self, other: &TiArray<K, V2, N>) -> bool {
+        *self.raw == other.raw
+    }
+}
+
+impl<K, V1, V2, A: Allocator, const N: usize> PartialEq<&TiArray<K, V2, N>> for TiVec<K, V1, A>
+where
+    V1: PartialEq<V2>,
+{
+    #[inline]
+    fn eq(&self, other: &&TiArray<K, V2, N>) -> bool {
         *self.raw == other.raw
     }
 }

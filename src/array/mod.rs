@@ -77,7 +77,7 @@ use crate::{TiEnumerated, TiSlice};
 /// #[derive(From, Into)]
 /// struct FooId(usize);
 ///
-/// let mut foos: TiArray<FooId, usize; 3> = [10, 11, 12].into();
+/// let mut foos: TiArray<FooId, usize, 3> = [10, 11, 12].into();
 /// assert_eq!(foos[FooId(2)], 12);
 /// ```
 ///
@@ -147,7 +147,7 @@ impl<K, V, const N: usize> TiArray<K, V, N> {
     /// ```
     /// # use typed_index_collections::TiArray;
     /// pub struct Id(usize);
-    /// let slice: TiArray<Id, usize; 3> = TiArray::from_array([1, 2, 4]);
+    /// let slice: TiArray<Id, usize, 3> = TiArray::from_array([1, 2, 4]);
     /// ```
     #[inline]
     pub const fn from_array(raw: [V; N]) -> Self {
@@ -164,7 +164,7 @@ impl<K, V, const N: usize> TiArray<K, V, N> {
     /// ```
     /// # use typed_index_collections::TiArray;
     /// pub struct Id(usize);
-    /// let slice: &TiArray<Id, usize; 3> = TiArray::from_ref(&[1, 2, 4]);
+    /// let array: &TiArray<Id, usize, 3> = TiArray::from_ref(&[1, 2, 4]);
     /// ```
     #[inline]
     pub const fn from_ref(raw: &[V; N]) -> &Self {
@@ -179,7 +179,7 @@ impl<K, V, const N: usize> TiArray<K, V, N> {
     /// ```
     /// # use typed_index_collections::TiArray;
     /// pub struct Id(usize);
-    /// let slice: &mut TiArray<Id, usize; 3> = TiArray::from_mut(&mut [1, 2, 4]);
+    /// let array: &mut TiArray<Id, usize, 3> = TiArray::from_mut(&mut [1, 2, 4]);
     /// ```
     #[inline]
     pub const fn from_mut(raw: &mut [V; N]) -> &mut Self {
@@ -194,7 +194,7 @@ impl<K, V, const N: usize> TiArray<K, V, N> {
     /// ```
     /// # use typed_index_collections::TiArray;
     /// pub struct Id(usize);
-    /// let boxed: Box<TiArray<Id, usize; 3>> = TiArray::boxed_from(Box::new([1, 2, 4]));
+    /// let boxed: Box<TiArray<Id, usize, 3>> = TiArray::boxed_from(Box::new([1, 2, 4]));
     /// ```
     #[cfg(feature = "alloc")]
     #[inline]
@@ -212,7 +212,7 @@ impl<K, V, const N: usize> TiArray<K, V, N> {
     /// ```
     /// # use typed_index_collections::TiArray;
     /// pub struct Id(usize);
-    /// let boxed: Box<TiArray<Id, usize; 3>> = TiArray::boxed_from(Box::new([1, 2, 4]));
+    /// let boxed: Box<TiArray<Id, usize, 3>> = TiArray::boxed_from(Box::new([1, 2, 4]));
     /// let boxed: Box<[usize; 3]> = boxed.boxed_into();
     /// ```
     #[cfg(feature = "alloc")]
@@ -295,7 +295,7 @@ impl<K, V, const N: usize> TiArray<K, V, N> {
     /// # use typed_index_collections::TiArray;
     /// #[derive(Eq, Debug, From, Into, PartialEq)]
     /// pub struct Id(usize);
-    /// let array: TiArray<Id, usize; 3> = [1, 2, 4].into();
+    /// let array: TiArray<Id, usize, 3> = [1, 2, 4].into();
     /// let mut iterator = array.into_iter_enumerated();
     /// assert_eq!(iterator.next(), Some((Id(0), 1)));
     /// assert_eq!(iterator.next(), Some((Id(1), 2)));
@@ -424,14 +424,6 @@ impl<K, V, const N: usize> AsRef<TiArray<K, Cell<V>, N>> for Cell<TiArray<K, V, 
     }
 }
 
-impl<K, V, const N: usize> AsMut<TiArray<K, Cell<V>, N>> for Cell<TiArray<K, V, N>> {
-    #[inline]
-    fn as_mut(&mut self) -> &mut TiArray<K, Cell<V>, N> {
-        // SAFETY: `V` and `MaybeUninit<V>` have the same layout.
-        unsafe { &mut *ptr::from_mut(self).cast() }
-    }
-}
-
 impl<K, V, const N: usize> Borrow<TiSlice<K, V>> for TiArray<K, V, N> {
     #[inline]
     fn borrow(&self) -> &TiSlice<K, V> {
@@ -458,6 +450,26 @@ where
     }
 }
 
+impl<K, A, B, const N: usize> PartialEq<TiSlice<K, B>> for TiArray<K, A, N>
+where
+    A: PartialEq<B>,
+{
+    #[inline]
+    fn eq(&self, other: &TiSlice<K, B>) -> bool {
+        self.raw == other.raw
+    }
+}
+
+impl<K, A, B, const N: usize> PartialEq<TiArray<K, B, N>> for TiSlice<K, A>
+where
+    A: PartialEq<B>,
+{
+    #[inline]
+    fn eq(&self, other: &TiArray<K, B, N>) -> bool {
+        self.raw == other.raw
+    }
+}
+
 impl<K, A, B, const N: usize> PartialEq<&TiSlice<K, B>> for TiArray<K, A, N>
 where
     A: PartialEq<B>,
@@ -468,12 +480,32 @@ where
     }
 }
 
+impl<K, A, B, const N: usize> PartialEq<TiArray<K, B, N>> for &TiSlice<K, A>
+where
+    A: PartialEq<B>,
+{
+    #[inline]
+    fn eq(&self, other: &TiArray<K, B, N>) -> bool {
+        self.raw == other.raw
+    }
+}
+
 impl<K, A, B, const N: usize> PartialEq<&mut TiSlice<K, B>> for TiArray<K, A, N>
 where
     A: PartialEq<B>,
 {
     #[inline]
     fn eq(&self, other: &&mut TiSlice<K, B>) -> bool {
+        self.raw == other.raw
+    }
+}
+
+impl<K, A, B, const N: usize> PartialEq<TiArray<K, B, N>> for &mut TiSlice<K, A>
+where
+    A: PartialEq<B>,
+{
+    #[inline]
+    fn eq(&self, other: &TiArray<K, B, N>) -> bool {
         self.raw == other.raw
     }
 }
@@ -730,6 +762,8 @@ macro_rules! array_impl_deserialize {
     };
 }
 
+#[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 array_impl_deserialize!(
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
     26, 27, 28, 29, 30, 31, 32
@@ -784,40 +818,108 @@ where
     dead_code,
     unused_imports,
     unused_mut,
-    clippy::fallible_impl_from,
-    clippy::into_iter_on_ref,
-    clippy::too_many_lines,
-    clippy::undocumented_unsafe_blocks,
+    clippy::arithmetic_side_effects,
     clippy::unwrap_used,
     reason = "okay in tests"
 )]
+#[rustversion::attr(
+    since(1.99.0),
+    expect(clippy::mut_mut, reason = "macro generated code"),
+)]
 #[cfg(test)]
 mod test {
+    use core::hash::{Hash, Hasher};
+    use std::hash::DefaultHasher;
+
+    use crate::test_util::Id;
     use crate::TiArray;
 
     #[derive(Clone, Debug, Eq, PartialEq)]
     struct NonCopy<T>(pub T);
 
     #[test]
-    fn test_slice_read_core_api_compatibility() {
-        test_slice_read_core_api_compatibility_impl([]);
-        test_slice_read_core_api_compatibility_impl([1]);
-        test_slice_read_core_api_compatibility_impl([1, 1234]);
-        test_slice_read_core_api_compatibility_impl([1, 2, 4]);
-        test_slice_read_core_api_compatibility_impl([1, 5, 3, 2]);
-        test_slice_read_core_api_compatibility_impl([1, 1, 9, 2, 4, 1, 12345, 12]);
+    fn test_array_read_core_api_compatibility() {
+        test_array_read_core_api_compatibility_impl([]);
+        test_array_read_core_api_compatibility_impl([1]);
+        test_array_read_core_api_compatibility_impl([1, 1234]);
+        test_array_read_core_api_compatibility_impl([1, 2, 4]);
+        test_array_read_core_api_compatibility_impl([1, 5, 3, 2]);
+        test_array_read_core_api_compatibility_impl([1, 1, 9, 2, 4, 1, 12345, 12]);
     }
 
-    fn test_slice_read_core_api_compatibility_impl<const N: usize>(v: [u32; N]) {
+    #[inline]
+    fn test_array_read_core_api_compatibility_impl<const N: usize>(v: [u32; N]) {
         let mut cv = (v, TiArray::from_array(v));
         let mut cv = (&cv.0, &cv.1);
 
         let mut mv = (v, TiArray::from_array(v));
         let mut mv = (&mut mv.0, &mut mv.1);
 
+        assert_eq_api!(cv, v => v.map(|v| v + 123).into_std());
         assert_eq_api!(cv, v => v.as_slice().into_std());
         assert_eq_api!(mv, v => v.as_mut_slice().into_std());
-        // assert_eq_api!(cv, v => v.each_ref());
-        // assert_eq_api!(mv, v => v.each_mut());
+        assert_eq_api!(cv, v => v.each_ref().into_std());
+        assert_eq_api!(mv, v => v.each_mut().into_std());
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_array_hash_compatibility() {
+        test_array_hash_compatibility_impl([]);
+        test_array_hash_compatibility_impl([1]);
+        test_array_hash_compatibility_impl([1, 1234]);
+        test_array_hash_compatibility_impl([1, 2, 4]);
+        test_array_hash_compatibility_impl([1, 5, 3, 2]);
+        test_array_hash_compatibility_impl([1, 1, 9, 2, 4, 1, 12345, 12]);
+    }
+
+    #[inline]
+    fn test_array_hash_compatibility_impl<const N: usize>(v: [u32; N]) {
+        let mut cv = (v, TiArray::<Id, _, _>::from(v));
+        let mut cv = (&cv.0, &cv.1);
+        assert_eq_api!(cv, v => {
+            let mut hasher = DefaultHasher::new();
+            v.hash(&mut hasher);
+            hasher.finish()
+        });
+    }
+
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn test_array_debug() {
+        let s0: TiArray<Id, u32, _> = TiArray::from([]);
+        let s1: TiArray<Id, u32, _> = TiArray::from([12]);
+        let s2: TiArray<Id, u32, _> = TiArray::from([23, 34]);
+        assert_eq!(&alloc::format!("{s0:?}"), "{}");
+        assert_eq!(&alloc::format!("{s1:?}"), "{Id(0): 12}");
+        assert_eq!(&alloc::format!("{s2:?}"), "{Id(0): 23, Id(1): 34}");
+    }
+
+    #[cfg(all(feature = "alloc", feature = "serde"))]
+    #[test]
+    fn test_array_serialize() {
+        let s0: TiArray<Id, u32, _> = TiArray::from([]);
+        let s1: TiArray<Id, u32, _> = TiArray::from([12]);
+        let s2: TiArray<Id, u32, _> = TiArray::from([23, 34]);
+        assert_eq!(&serde_json::to_string(&s0).unwrap(), "[]");
+        assert_eq!(&serde_json::to_string(&s1).unwrap(), "[12]");
+        assert_eq!(&serde_json::to_string(&s2).unwrap(), "[23,34]");
+    }
+
+    #[cfg(all(feature = "alloc", feature = "bincode"))]
+    #[test]
+    fn test_arrau_encode() {
+        let config = bincode::config::standard();
+        let s0: TiArray<Id, u32, _> = TiArray::from([]);
+        let s1: TiArray<Id, u32, _> = TiArray::from([12]);
+        let s2: TiArray<Id, u32, _> = TiArray::from([23, 34]);
+        let s3: TiArray<Id, u32, _> = TiArray::from([0x1234_5678, 0x2345_6789]);
+        assert_eq!(&bincode::encode_to_vec(s0, config).unwrap(), &[0; 0]);
+        assert_eq!(&bincode::encode_to_vec(s1, config).unwrap(), &[12]);
+        assert_eq!(&bincode::encode_to_vec(s2, config).unwrap(), &[23, 34]);
+        assert_eq!(
+            &bincode::encode_to_vec(s3, config).unwrap(),
+            &[252, 0x78, 0x56, 0x34, 0x12, 252, 0x89, 0x67, 0x45, 0x23]
+        );
     }
 }

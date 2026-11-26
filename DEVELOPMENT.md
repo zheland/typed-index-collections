@@ -76,13 +76,13 @@
 | `[T]` | `chunks_mut` | ✅ | `slice/mod.rs` |
 | `[T]` | `chunks_exact` | ✅ | `slice/mod.rs` |
 | `[T]` | `chunks_exact_mut` | ✅ | `slice/mod.rs` |
-| `[T]` | `as_chunks_unchecked` | | |
-| `[T]` | `as_chunks` | | |
-| `[T]` | `as_rchunks` | | |
-| `[T]` | `as_chunks_unchecked_mut` | | |
-| `[T]` | `as_chunks_mut` | | |
-| `[T]` | `as_rchunks_mut` | | |
-| `[T]` | `array_windows` | | |
+| `[T]` | `as_chunks_unchecked` | ✅ | `slice/mod.rs` |
+| `[T]` | `as_chunks` | ✅ | `slice/mod.rs` |
+| `[T]` | `as_rchunks` | ✅ | `slice/mod.rs` |
+| `[T]` | `as_chunks_unchecked_mut` | ✅ | `slice/mod.rs` |
+| `[T]` | `as_chunks_mut` | ✅ | `slice/mod.rs` |
+| `[T]` | `as_rchunks_mut` | ✅ | `slice/mod.rs` |
+| `[T]` | `array_windows` | ⚠️ | omitted |
 | `[T]` | `rchunks` | ✅ | `slice/mod.rs` |
 | `[T]` | `rchunks_mut` | ✅ | `slice/mod.rs` |
 | `[T]` | `rchunks_exact` | ✅ | `slice/mod.rs` |

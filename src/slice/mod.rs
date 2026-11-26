@@ -1080,6 +1080,130 @@ impl<K, V> TiSlice<K, V> {
         self.raw.chunks_exact_mut(chunk_size).map(Self::from_mut)
     }
 
+    /// Splits the slice into a slice of `N`-element arrays,
+    /// assuming that there's no remainder.
+    ///
+    /// See [`slice::as_chunks_unchecked`] for more details.
+    ///
+    /// # Safety
+    ///
+    /// This may only be called when
+    /// - The slice splits exactly into `N`-element chunks (aka `self.len() % N == 0`).
+    /// - `N != 0`.
+    ///
+    /// [`slice::as_chunks_unchecked`]: https://doc.rust-lang.org/std/primitive.slice.html#method.as_chunks_unchecked
+    #[expect(clippy::as_conversions, reason = "transparent over a `[V; N]` type")]
+    #[inline]
+    #[must_use]
+    #[track_caller]
+    pub const unsafe fn as_chunks_unchecked<const N: usize>(&self) -> &[TiArray<K, V, N>] {
+        // SAFETY: Guaranteed by the caller.
+        let chunks = unsafe { self.raw.as_chunks_unchecked::<N>() };
+        // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]` type.
+        unsafe { &*(core::ptr::from_ref::<[[V; N]]>(chunks) as *const [TiArray<K, V, N>]) }
+    }
+
+    /// Splits the slice into a slice of `N`-element arrays,
+    /// starting at the beginning of the slice,
+    /// and a remainder slice with length strictly less than `N`.
+    ///
+    /// See [`slice::as_chunks`] for more details.
+    ///
+    /// [`slice::as_chunks`]: https://doc.rust-lang.org/std/primitive.slice.html#method.as_chunks
+    #[expect(clippy::as_conversions, reason = "transparent over a `[V; N]` type")]
+    #[inline]
+    #[track_caller]
+    #[must_use]
+    pub const fn as_chunks<const N: usize>(&self) -> (&[TiArray<K, V, N>], &Self) {
+        let (chunks, remainder) = self.raw.as_chunks::<N>();
+        // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]` type.
+        let chunks =
+            unsafe { &*(core::ptr::from_ref::<[[V; N]]>(chunks) as *const [TiArray<K, V, N>]) };
+        (chunks, Self::from_ref(remainder))
+    }
+
+    /// Splits the slice into a slice of `N`-element arrays,
+    /// starting at the end of the slice,
+    /// and a remainder slice with length strictly less than `N`.
+    ///
+    /// See [`slice::as_rchunks`] for more details.
+    ///
+    /// [`slice::as_rchunks`]: https://doc.rust-lang.org/std/primitive.slice.html#method.as_rchunks
+    #[expect(clippy::as_conversions, reason = "transparent over a `[V; N]` type")]
+    #[inline]
+    #[track_caller]
+    #[must_use]
+    pub const fn as_rchunks<const N: usize>(&self) -> (&Self, &[TiArray<K, V, N>]) {
+        let (remainder, chunks) = self.raw.as_rchunks::<N>();
+        // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]` type.
+        let chunks =
+            unsafe { &*(core::ptr::from_ref::<[[V; N]]>(chunks) as *const [TiArray<K, V, N>]) };
+        (Self::from_ref(remainder), chunks)
+    }
+
+    /// Splits the slice into a slice of `N`-element arrays,
+    /// assuming that there's no remainder.
+    ///
+    /// See [`slice::as_chunks_unchecked_mut`] for more details.
+    ///
+    /// # Safety
+    ///
+    /// This may only be called when
+    /// - The slice splits exactly into `N`-element chunks (aka `self.len() % N == 0`).
+    /// - `N != 0`.
+    ///
+    /// [`slice::as_chunks_unchecked_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.as_chunks_unchecked_mut
+    #[expect(clippy::as_conversions, reason = "transparent over a `[V; N]` type")]
+    #[inline]
+    #[must_use]
+    #[track_caller]
+    pub const unsafe fn as_chunks_unchecked_mut<const N: usize>(
+        &mut self,
+    ) -> &mut [TiArray<K, V, N>] {
+        // SAFETY: Guaranteed by the caller.
+        let chunks = unsafe { self.raw.as_chunks_unchecked_mut::<N>() };
+        // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]` type.
+        unsafe { &mut *(core::ptr::from_mut::<[[V; N]]>(chunks) as *mut [TiArray<K, V, N>]) }
+    }
+
+    /// Splits the slice into a slice of `N`-element arrays,
+    /// starting at the beginning of the slice,
+    /// and a remainder slice with length strictly less than `N`.
+    ///
+    /// See [`slice::as_chunks_mut`] for more details.
+    ///
+    /// [`slice::as_chunks_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.as_chunks_mut
+    #[expect(clippy::as_conversions, reason = "transparent over a `[V; N]` type")]
+    #[inline]
+    #[track_caller]
+    #[must_use]
+    pub const fn as_chunks_mut<const N: usize>(&mut self) -> (&mut [TiArray<K, V, N>], &mut Self) {
+        let (chunks, remainder) = self.raw.as_chunks_mut::<N>();
+        // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]` type.
+        let chunks =
+            unsafe { &mut *(core::ptr::from_mut::<[[V; N]]>(chunks) as *mut [TiArray<K, V, N>]) };
+        (chunks, Self::from_mut(remainder))
+    }
+
+    /// Splits the slice into a slice of `N`-element arrays,
+    /// starting at the end of the slice,
+    /// and a remainder slice with length strictly less than `N`.
+    ///
+    /// See [`slice::as_rchunks_mut`] for more details.
+    ///
+    /// [`slice::as_rchunks_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.as_rchunks_mut
+    #[expect(clippy::as_conversions, reason = "transparent over a `[V; N]` type")]
+    #[inline]
+    #[track_caller]
+    #[must_use]
+    pub const fn as_rchunks_mut<const N: usize>(&mut self) -> (&mut Self, &mut [TiArray<K, V, N>]) {
+        let (remainder, chunks) = self.raw.as_rchunks_mut::<N>();
+        // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]` type.
+        let chunks =
+            unsafe { &mut *(core::ptr::from_mut::<[[V; N]]>(chunks) as *mut [TiArray<K, V, N>]) };
+        (Self::from_mut(remainder), chunks)
+    }
+
     /// Returns an iterator over `chunk_size` elements of the slice at a time,
     /// starting at the end of the slice.
     ///
@@ -2515,7 +2639,7 @@ mod test {
     #[cfg(feature = "std")]
     use std::io::{BufRead, IoSlice, IoSliceMut, Read, Write};
 
-    use crate::test_util::{CollectToVec, Id};
+    use crate::test_util::{CollectToVec, Id, Keep};
     use crate::TiSlice;
 
     #[derive(Clone, Debug, Eq, PartialEq)]
@@ -2562,10 +2686,10 @@ mod test {
         assert_eq_api!(mv, v => v.last_chunk::<2>().into_std());
         assert_eq_api!(mv, v => v.last_chunk_mut::<2>().into_std());
 
-        assert_eq_api!(cv, v => v.split_first().map(|v| ((), v.0, v.1)).into_std());
-        assert_eq_api!(mv, v => v.split_first_mut().map(|v| ((), v.0, v.1)).into_std());
-        assert_eq_api!(cv, v => v.split_last().map(|v| ((), v.0, v.1)).into_std());
-        assert_eq_api!(mv, v => v.split_last_mut().map(|v| ((), v.0, v.1)).into_std());
+        assert_eq_api!(cv, v => v.split_first().map(|v| (Keep(v.0), v.1)).into_std());
+        assert_eq_api!(mv, v => v.split_first_mut().map(|v| (Keep(v.0), v.1)).into_std());
+        assert_eq_api!(cv, v => v.split_last().map(|v| (Keep(v.0), v.1)).into_std());
+        assert_eq_api!(mv, v => v.split_last_mut().map(|v| (Keep(v.0), v.1)).into_std());
         assert_eq_api!(cv, v => v.split_off_first());
         assert_eq_api!(mv, v => v.split_off_first_mut());
         assert_eq_api!(cv, v => v.split_off_last());
@@ -2591,7 +2715,11 @@ mod test {
             TiSlice::<Id, _>::from_mut(mv.0).as_mut_ptr_range()
         );
 
+        assert_eq_api!(cv, v => v.as_array::<0>().into_std());
+        assert_eq_api!(cv, v => v.as_array::<1>().into_std());
         assert_eq_api!(cv, v => v.as_array::<2>().into_std());
+        assert_eq_api!(mv, v => v.as_mut_array::<0>().into_std());
+        assert_eq_api!(mv, v => v.as_mut_array::<1>().into_std());
         assert_eq_api!(mv, v => v.as_mut_array::<2>().into_std());
 
         assert_eq_api!(cv, v => v == <&TheSlice<u32>>::default());
@@ -2867,6 +2995,29 @@ mod test {
         for a in 1..5 {
             assert_eq_api!(cv, v => v.partition_point(|b| *b < a).into_std());
         }
+
+        test_slice_ro_core_api_compatibility_impl_generic::<N, 1>(va);
+    }
+
+    fn test_slice_ro_core_api_compatibility_impl_generic<const N: usize, const M: usize>(
+        mut va: [u32; N],
+    ) {
+        let v = va.as_slice();
+        let mut cv = (v, TiSlice::from_ref(v));
+
+        let mut mv = (v.to_vec(), v.to_vec());
+        let mut mv = (mv.0.as_mut_slice(), TiSlice::from_mut(mv.1.as_mut_slice()));
+
+        assert_eq_api!(cv, v => unsafe { v.as_chunks_unchecked::<M>() }.map_into_std().collect_to_vec());
+        assert_eq_api!(mv, v => unsafe { v.as_chunks_unchecked_mut::<M>() }.map_into_std().collect_to_vec());
+        assert_eq_api!(cv, v => v.as_chunks::<M>().0.map_into_std().collect_to_vec());
+        assert_eq_api!(cv, v => v.as_chunks::<M>().1.collect_to_vec());
+        assert_eq_api!(mv, v => v.as_chunks_mut::<M>().0.map_into_std().collect_to_vec());
+        assert_eq_api!(mv, v => v.as_chunks_mut::<M>().1.collect_to_vec());
+        assert_eq_api!(cv, v => v.as_rchunks::<M>().0.collect_to_vec());
+        assert_eq_api!(cv, v => v.as_rchunks::<M>().1.map_into_std().collect_to_vec());
+        assert_eq_api!(mv, v => v.as_rchunks_mut::<M>().0.collect_to_vec());
+        assert_eq_api!(mv, v => v.as_rchunks_mut::<M>().1.map_into_std().collect_to_vec());
     }
 
     #[test]
@@ -2913,21 +3064,29 @@ mod test {
 
         for i in 0..v.len() {
             restore(&mut mv);
-            assert_eq_api!(mv, v => v.select_nth_unstable(i.into_tic()).into_std());
+            assert_eq_api!(mv, v => {
+                let (v1, v2, v3) =
+                    v.select_nth_unstable(i.into_tic());
+                (v1, Keep(v2), v3).into_std()
+            });
         }
 
         for i in 0..v.len() {
             restore(&mut mv);
-            assert_eq_api!(mv, v => v.select_nth_unstable_by(
-                    i.into_tic(), |a, b| b.cmp(a)
-                ).into_std());
+            assert_eq_api!(mv, v => {
+                let (v1, v2, v3) =
+                    v.select_nth_unstable_by(i.into_tic(), |a, b| b.cmp(a));
+                (v1, Keep(v2), v3).into_std()
+            });
         }
 
         for i in 0..v.len() {
             restore(&mut mv);
-            assert_eq_api!(mv, v => v.select_nth_unstable_by_key(
-                    i.into_tic(), |a| a * (a % 3)
-                ).into_std());
+            assert_eq_api!(mv, v => {
+                let (v1, v2, v3) =
+                    v.select_nth_unstable_by_key(i.into_tic(), |a| a * (a % 3));
+                (v1, Keep(v2), v3).into_std()
+            });
         }
 
         for a in 0..v.len() {

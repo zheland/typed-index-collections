@@ -24,6 +24,9 @@ pub trait MapIntoStdType {
     fn map_into_std(self) -> Self::StdIter;
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Keep<T>(pub T);
+
 impl<I, T> MapIntoStdType for I
 where
     I: IntoIterator<Item = T>,
@@ -222,11 +225,14 @@ mod core_impls {
     use alloc::borrow::Cow;
     use core::ops::{Bound, Range, RangeFrom, RangeInclusive, RangeTo, RangeToInclusive};
 
-    use crate::test_util::{Id, IntoStdType, IntoTicType};
+    use crate::test_util::{Id, IntoStdType, IntoTicType, Keep};
     use crate::{TiArray, TiSlice};
 
     impl_into_tic!(, usize => Id, self => self.into());
     impl_into_std!(, Id => usize, self => self.into());
+
+    impl_into_tic!(for [T], Keep<T> => Keep<T>, self => self);
+    impl_into_std!(for [T], Keep<T> => Keep<T>, self => self);
 
     impl_into_tic!(for ['a, T], &'a [T] => &'a TiSlice<Id, T>, self => self.as_ref());
     impl_into_std!(for ['a, T], &'a TiSlice<Id, T> => &'a [T], self => self.as_ref());
@@ -332,41 +338,29 @@ mod core_impls {
         }
     }
 
-    impl_into_std!(
-        for ['a, T, U, V],
-        (&'a TiSlice<Id, T>, &'a TiSlice<Id, U>, &'a TiSlice<Id, V>) => (&'a [T], &'a [U], &'a [V]),
-        self => (self.0.into_std(), self.1.into_std(), self.2.into_std())
-    );
-    impl_into_std!(
-        for ['a, T, U, V],
-        (
-            &'a mut TiSlice<Id, T>, &'a mut TiSlice<Id, U>, &'a mut TiSlice<Id, V>
-        ) => (&'a mut [T], &'a mut [U], &'a mut [V]),
-        self => (self.0.into_std(), self.1.into_std(), self.2.into_std())
-    );
+    impl<T1, T2, T3> IntoTicType for (T1, T2, T3)
+    where
+        T1: IntoTicType,
+        T2: IntoTicType,
+        T3: IntoTicType,
+    {
+        type Tic = (T1::Tic, T2::Tic, T3::Tic);
+        fn into_tic(self) -> Self::Tic {
+            (self.0.into_tic(), self.1.into_tic(), self.2.into_tic())
+        }
+    }
 
-    impl_into_std!(
-        for ['a, T],
-        ((), &'a T, &'a TiSlice<Id, T>) => ((), &'a T, &'a [T]),
-        self => ((), self.1, self.2.into_std())
-    );
-    impl_into_std!(
-        for ['a, T],
-        ((), &'a mut T, &'a mut TiSlice<Id, T>) => ((), &'a mut T, &'a mut [T]),
-        self => ((), self.1, self.2.into_std())
-    );
-    impl_into_std!(
-        for ['a, T, U, V],
-        (&'a TiSlice<Id, T>, &'a U, &'a TiSlice<Id, V>) => (&'a [T], &'a U, &'a [V]),
-        self => (self.0.into_std(), self.1, self.2.into_std())
-    );
-    impl_into_std!(
-        for ['a, T, U, V],
-        (
-            &'a mut TiSlice<Id, T>, &'a mut U, &'a mut TiSlice<Id, V>
-        ) => (&'a mut [T], &'a mut U, &'a mut [V]),
-        self => (self.0.into_std(), self.1, self.2.into_std())
-    );
+    impl<T1, T2, T3> IntoStdType for (T1, T2, T3)
+    where
+        T1: IntoStdType,
+        T2: IntoStdType,
+        T3: IntoStdType,
+    {
+        type Std = (T1::Std, T2::Std, T3::Std);
+        fn into_std(self) -> Self::Std {
+            (self.0.into_std(), self.1.into_std(), self.2.into_std())
+        }
+    }
 
     #[cfg(feature = "alloc")]
     impl_into_std!(

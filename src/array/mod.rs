@@ -2,6 +2,8 @@
 mod boxed;
 
 #[cfg(feature = "alloc")]
+use alloc::boxed::Box;
+#[cfg(feature = "alloc")]
 use core::alloc::Allocator;
 use core::borrow::{Borrow, BorrowMut};
 use core::cell::Cell;
@@ -12,8 +14,6 @@ use core::mem::{transmute_copy, ManuallyDrop, MaybeUninit};
 use core::ops::{Index, IndexMut};
 use core::{array, fmt, ptr, slice};
 
-#[cfg(feature = "alloc")]
-use alloc::boxed::Box;
 #[cfg(feature = "bincode")]
 use bincode::de::{BorrowDecoder, Decoder};
 #[cfg(feature = "bincode")]
@@ -39,19 +39,23 @@ use crate::{TiEnumerated, TiSlice};
 /// Their implementation can be easily done
 /// with [`derive_more`] crate and `#[derive(From, Into)]`.
 ///
+/// Stdlib arrays coerce to slices (`[T]`), so slice methods may be called on
+/// stdlib arrays.
+/// The `TiArray` type cannot coerce to `TiSlice` due to compiler
+/// limitations, so you need to call `.as_slice` or `.as_mut_slice` explicitly
+/// to use `TiSlice` methods.
+///
 /// `TiArray<K, V, N>` can be converted to [`[V; N]`][`array`] and
 /// back using [`From`] and [`Into`].
 ///
 /// There are also zero-cost conversions available between references:
 /// - [`&[V; N]`][`array`] and `&TiArray<K, V, N>` with [`AsRef`],
-/// - [`&mut [V; N]`][`array`] and `&mut TiArray<K, V, N>` with
-///   [`AsMut`],
+/// - [`&mut [V; N]`][`array`] and `&mut TiArray<K, V, N>` with [`AsMut`],
 ///
 /// Added methods:
-/// - [`from_ref`] - Converts a [`&[V; N]`][`array`] into a
-///   `&TiArray<K, V, N>`.
-/// - [`from_mut`] - Converts a [`&mut [V; N]`][`array`] into
-///   a `&mut TiArray<K, V, N>`.
+/// - [`from_ref`] - Converts a [`&[V; N]`][`array`] into a `&TiArray<K, V, N>`.
+/// - [`from_mut`] - Converts a [`&mut [V; N]`][`array`] into a `&mut TiArray<K,
+///   V, N>`.
 /// - [`push_and_get_key`] - Appends an element to the back of a collection and
 ///   returns its index of type `K`.
 /// - [`pop_key_value`] - Removes the last element from a vector and returns it
@@ -63,6 +67,12 @@ use crate::{TiEnumerated, TiSlice};
 ///   specified range in the vector and yields the current count and the removed
 ///   items. It acts like `self.drain(range).enumerate()`, but instead of
 ///   `usize` it returns index of type `K`.
+/// - [`iter`] - Returns an iterator over the slice. Rust arrays implement
+///   `IntoIterator` for references but do not implement `iter`. Arrays coerce
+///   to slices, which provide the `iter` method.
+/// - [`iter_mut`] - Returns an iterator over the slice. Rust arrays implement
+///   `IntoIterator` for mutable references but do not implement `iter`. Arrays
+///   coerce to slices, which provide the `iter` method.
 /// - [`into_iter_enumerated`] - Converts the vector into iterator over all
 ///   key-value pairs with `K` used for iteration indices. It acts like
 ///   `self.into_iter().enumerate()`, but use `K` instead of `usize` for
@@ -168,7 +178,8 @@ impl<K, V, const N: usize> TiArray<K, V, N> {
     /// ```
     #[inline]
     pub const fn from_ref(raw: &[V; N]) -> &Self {
-        // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]` type.
+        // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]`
+        // type.
         unsafe { &*(ptr::from_ref::<[V; N]>(raw).cast::<Self>()) }
     }
 
@@ -183,7 +194,8 @@ impl<K, V, const N: usize> TiArray<K, V, N> {
     /// ```
     #[inline]
     pub const fn from_mut(raw: &mut [V; N]) -> &mut Self {
-        // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]` type.
+        // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]`
+        // type.
         unsafe { &mut *(ptr::from_mut::<[V; N]>(raw).cast::<Self>()) }
     }
 
@@ -201,7 +213,8 @@ impl<K, V, const N: usize> TiArray<K, V, N> {
     #[must_use]
     pub fn boxed_from<A: Allocator>(boxed: Box<[V; N], A>) -> Box<Self, A> {
         let (ptr, alloc) = Box::into_raw_with_allocator(boxed);
-        // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]` type.
+        // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]`
+        // type.
         unsafe { Box::from_raw_in(ptr.cast::<Self>(), alloc) }
     }
 
@@ -220,12 +233,13 @@ impl<K, V, const N: usize> TiArray<K, V, N> {
     #[must_use]
     pub fn boxed_into<A: Allocator>(self: Box<Self, A>) -> Box<[V; N], A> {
         let (ptr, alloc) = Box::into_raw_with_allocator(self);
-        // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]` type.
+        // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]`
+        // type.
         unsafe { Box::from_raw_in(ptr.cast::<[V; N]>(), alloc) }
     }
 
-    /// Returns an array of the same size as `self`, with function `f` applied to each element
-    /// in order.
+    /// Returns an array of the same size as `self`, with function `f` applied
+    /// to each element in order.
     ///
     /// See [`array::map`] for more details.
     ///
@@ -280,6 +294,26 @@ impl<K, V, const N: usize> TiArray<K, V, N> {
     #[inline]
     pub const fn each_mut(&mut self) -> TiArray<K, &mut V, N> {
         TiArray::from_array(self.raw.each_mut())
+    }
+
+    /// Returns an iterator over the slice.
+    ///
+    /// See [`slice::iter`] for more details.
+    ///
+    /// [`slice::iter`]: https://doc.rust-lang.org/std/primitive.slice.html#method.iter
+    #[inline]
+    pub fn iter(&self) -> slice::Iter<'_, V> {
+        self.raw.iter()
+    }
+
+    /// Returns an iterator that allows modifying each value.
+    ///
+    /// See [`slice::iter_mut`] for more details.
+    ///
+    /// [`slice::iter_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.iter_mut
+    #[inline]
+    pub fn iter_mut(&mut self) -> slice::IterMut<'_, V> {
+        self.raw.iter_mut()
     }
 
     /// Converts the array into iterator over all key-value pairs
@@ -583,8 +617,8 @@ impl<K, V, const N: usize> From<TiArray<K, MaybeUninit<V>, N>> for MaybeUninit<T
 
 // Recursive macro for implementing n-ary tuple functions and operations
 //
-// Also provides implementations for tuples with lesser arity. For example, tuple_impls!(A B C)
-// will implement everything for (A, B, C), (A, B) and (A,).
+// Also provides implementations for tuples with lesser arity. For example,
+// tuple_impls!(A B C) will implement everything for (A, B, C), (A, B) and (A,).
 macro_rules! tuple_impls {
     // Stopping criteria (1-ary tuple)
     ($t:ident) => {
@@ -704,7 +738,6 @@ impl<K, V, const N: usize> IntoIterator for TiArray<K, V, N> {
     }
 }
 
-#[expect(clippy::into_iter_without_iter, reason = "skipped in stdlib")]
 impl<'a, K, V, const N: usize> IntoIterator for &'a TiArray<K, V, N> {
     type Item = &'a V;
     type IntoIter = slice::Iter<'a, V>;
@@ -715,7 +748,6 @@ impl<'a, K, V, const N: usize> IntoIterator for &'a TiArray<K, V, N> {
     }
 }
 
-#[expect(clippy::into_iter_without_iter, reason = "skipped in stdlib")]
 impl<'a, K, V, const N: usize> IntoIterator for &'a mut TiArray<K, V, N> {
     type Item = &'a mut V;
     type IntoIter = slice::IterMut<'a, V>;
@@ -819,47 +851,256 @@ where
     unused_imports,
     unused_mut,
     clippy::arithmetic_side_effects,
-    clippy::unwrap_used,
+    clippy::clone_on_copy,
+    clippy::into_iter_on_ref,
+    clippy::undocumented_unsafe_blocks,
     reason = "okay in tests"
 )]
-#[rustversion::attr(
-    since(1.99.0),
-    expect(clippy::mut_mut, reason = "macro generated code"),
-)]
+#[expect(clippy::mut_mut, reason = "macro generated code")]
 #[cfg(test)]
 mod test {
+    use core::borrow::{Borrow, BorrowMut};
+    use core::cell::Cell;
     use core::hash::{Hash, Hasher};
+    use core::mem::MaybeUninit;
+    #[cfg(feature = "std")]
     use std::hash::DefaultHasher;
 
-    use crate::test_util::Id;
-    use crate::TiArray;
+    use crate::test_util::{CollectToVec, Id};
+    use crate::{TiArray, TiSlice};
 
     #[derive(Clone, Debug, Eq, PartialEq)]
     struct NonCopy<T>(pub T);
 
     #[test]
-    fn test_array_read_core_api_compatibility() {
-        test_array_read_core_api_compatibility_impl([]);
-        test_array_read_core_api_compatibility_impl([1]);
-        test_array_read_core_api_compatibility_impl([1, 1234]);
-        test_array_read_core_api_compatibility_impl([1, 2, 4]);
-        test_array_read_core_api_compatibility_impl([1, 5, 3, 2]);
-        test_array_read_core_api_compatibility_impl([1, 1, 9, 2, 4, 1, 12345, 12]);
+    fn test_array_ro_core_api_compatibility() {
+        test_array_ro_core_api_compatibility_impl([], []);
+        test_array_ro_core_api_compatibility_impl([1], [2]);
+        test_array_ro_core_api_compatibility_impl([1, 1234], [1, 1234]);
+        test_array_ro_core_api_compatibility_impl([1, 2, 4], [2, 3, 5]);
+        test_array_ro_core_api_compatibility_impl([1, 5, 3, 2], [1, 5, 3, 2]);
+        test_array_ro_core_api_compatibility_impl(
+            [1, 1, 9, 2, 4, 1, 12345, 12],
+            [2, 2, 10, 3, 5, 2, 23456, 23],
+        );
     }
 
-    #[inline]
-    fn test_array_read_core_api_compatibility_impl<const N: usize>(v: [u32; N]) {
+    fn test_array_ro_core_api_compatibility_impl<const N: usize>(mut v: [u32; N], mut u: [u32; N]) {
         let mut cv = (v, TiArray::from_array(v));
         let mut cv = (&cv.0, &cv.1);
 
         let mut mv = (v, TiArray::from_array(v));
         let mut mv = (&mut mv.0, &mut mv.1);
 
+        assert_eq_api!(cv, v => AsRef::<TheSlice<_>>::as_ref(v).into_std());
+        assert_eq_api!(mv, v => AsMut::<TheSlice<_>>::as_mut(v).into_std());
+        assert_eq_api!(cv, v => Borrow::<TheSlice<_>>::borrow(v).into_std());
+        assert_eq_api!(mv, v => BorrowMut::<TheSlice<_>>::borrow_mut(v).into_std());
+
+        assert_eq_api!(cv, v => AsRef::<TiArray<_, _, _>>::as_ref(v));
+        assert_eq_api!(mv, v => AsMut::<TiArray<_, _, _>>::as_mut(v));
+        assert_eq!(cv.0, AsRef::<[_]>::as_ref(AsRef::<[_; _]>::as_ref(cv.1)));
+        assert_eq!(mv.0, AsMut::<[_]>::as_mut(AsMut::<[_; _]>::as_mut(mv.1)));
+
         assert_eq_api!(cv, v => v.map(|v| v + 123).into_std());
         assert_eq_api!(cv, v => v.as_slice().into_std());
         assert_eq_api!(mv, v => v.as_mut_slice().into_std());
         assert_eq_api!(cv, v => v.each_ref().into_std());
         assert_eq_api!(mv, v => v.each_mut().into_std());
+        assert_eq_api!(mv, v => v.clone().into_std());
+
+        assert_eq_api!(cv, v => (*v).eq(&u.into_tic()));
+        assert_eq_api!(cv, v => (*v).cmp(&u.into_tic()));
+        assert_eq_api!(cv, v => (*v).partial_cmp(&u.into_tic()));
+
+        assert_eq_api!(cv, v => (*v).eq(u.into_tic().as_slice()));
+        assert_eq_api!(cv, v => (*v).eq(&u.into_tic().as_slice()));
+        assert_eq_api!(cv, v => (*v).eq(&&mut *u.into_tic().as_mut_slice()));
+        assert_eq_api!(cv, v => (v.as_slice()).eq(&u.into_tic()));
+        assert_eq_api!(cv, v => (&v.as_slice()).eq(&u.into_tic()));
+        assert_eq_api!(mv, v => (&&mut *v.as_mut_slice()).eq(&u.into_tic()));
+
+        assert_eq_api!(
+            cv, v => <&TheArray::<u32, 3>>::try_from(v.as_slice()).ok().into_std()
+        );
+        assert_eq_api!(
+            mv, v => <&mut TheArray::<u32, 3>>::try_from(v.as_mut_slice()).ok().into_std()
+        );
+
+        assert_eq_api!(
+            cv, v => Into::<TheArray<MaybeUninit<u32>, N>>::into(
+                MaybeUninit::new(*v)
+            ).map(|v| unsafe { v.assume_init() }).into_std()
+        );
+        assert_eq_api!(
+            cv, v => {
+                let array = Into::<MaybeUninit<TheArray<u32, N>>>::into(
+                    v.map(MaybeUninit::new)
+                );
+                unsafe { array.assume_init() }.into_std()
+            }
+        );
+        assert_eq_api!(
+            cv, v => AsRef::<TheArray<MaybeUninit<u32>, N>>::as_ref(
+                &MaybeUninit::new(*v)
+            ).map(|v| unsafe { v.assume_init() }).into_std()
+        );
+        assert_eq_api!(
+            mv, v => AsMut::<TheArray<MaybeUninit<u32>, N>>::as_mut(
+                &mut MaybeUninit::new(*v)
+            ).map(|v| unsafe { v.assume_init() }).into_std()
+        );
+        let cell1 = Cell::new(v);
+        let cell2 = Cell::new(TiArray::<Id, u32, N>::from(v));
+        assert_eq!(
+            AsRef::<[Cell<u32>; N]>::as_ref(&cell1),
+            AsRef::<[Cell<u32>; N]>::as_ref(AsRef::<TiArray<Id, Cell<u32>, N>>::as_ref(&cell2))
+        );
+
+        assert_eq!(
+            <[u32; 3]>::try_from(v.as_slice()).ok(),
+            TiArray::<Id, u32, 3>::try_from(TiSlice::from_ref(v.as_slice()))
+                .map(<[u32; 3]>::from)
+                .ok(),
+        );
+        assert_eq!(
+            <[u32; 3]>::try_from(v.as_mut_slice()).ok(),
+            TiArray::<Id, u32, 3>::try_from(TiSlice::from_mut(v.as_mut_slice()))
+                .map(<[u32; 3]>::from)
+                .ok(),
+        );
+
+        if !v.is_empty() {
+            let mut w = TiArray::from(v);
+            w[Id(0)] = 123;
+        }
+
+        assert_eq_api!(cv, v => (*v).into_iter().collect_to_vec());
+        assert_eq_api!(cv, v => v.iter().collect_to_vec());
+        assert_eq_api!(cv, v => v.into_iter().collect_to_vec());
+        assert_eq_api!(mv, v => v.iter_mut().collect_to_vec());
+        assert_eq_api!(mv, v => (&mut *v).into_iter().collect_to_vec());
+    }
+
+    #[test]
+    fn test_array_default_compatibility() {
+        assert_eq!(
+            <[u32; 0]>::from(TiArray::<Id, u32, 0>::default()),
+            <[u32; 0]>::default()
+        );
+        assert_eq!(
+            <[u32; 1]>::from(TiArray::<Id, u32, 1>::default()),
+            <[u32; 1]>::default()
+        );
+        assert_eq!(
+            <[u32; 2]>::from(TiArray::<Id, u32, 2>::default()),
+            <[u32; 2]>::default()
+        );
+        assert_eq!(
+            <[u32; 16]>::from(TiArray::<Id, u32, 16>::default()),
+            <[u32; 16]>::default()
+        );
+        assert_eq!(
+            <[u32; 32]>::from(TiArray::<Id, u32, 32>::default()),
+            <[u32; 32]>::default()
+        );
+    }
+
+    #[test]
+    fn test_array_tuple_conv_compatibility() {
+        assert_eq!(TiArray::<Id, _, _>::from((1,)), TiArray::from([1]));
+        assert_eq!(TiArray::<Id, _, _>::from((1, 2)), TiArray::from([1, 2]));
+        assert_eq!(
+            TiArray::<Id, _, _>::from((1, 2, 3)),
+            TiArray::from([1, 2, 3]),
+        );
+        assert_eq!(
+            TiArray::<Id, _, _>::from((1, 2, 3, 4)),
+            TiArray::from([1, 2, 3, 4]),
+        );
+        assert_eq!(
+            TiArray::<Id, _, _>::from((1, 2, 3, 4, 5)),
+            TiArray::from([1, 2, 3, 4, 5]),
+        );
+        assert_eq!(
+            TiArray::<Id, _, _>::from((1, 2, 3, 4, 5, 6)),
+            TiArray::from([1, 2, 3, 4, 5, 6]),
+        );
+        assert_eq!(
+            TiArray::<Id, _, _>::from((1, 2, 3, 4, 5, 6, 7)),
+            TiArray::from([1, 2, 3, 4, 5, 6, 7]),
+        );
+        assert_eq!(
+            TiArray::<Id, _, _>::from((1, 2, 3, 4, 5, 6, 7, 8)),
+            TiArray::from([1, 2, 3, 4, 5, 6, 7, 8]),
+        );
+        assert_eq!(
+            TiArray::<Id, _, _>::from((1, 2, 3, 4, 5, 6, 7, 8, 9)),
+            TiArray::from([1, 2, 3, 4, 5, 6, 7, 8, 9]),
+        );
+        assert_eq!(
+            TiArray::<Id, _, _>::from((1, 2, 3, 4, 5, 6, 7, 8, 9, 10)),
+            TiArray::from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+        );
+        assert_eq!(
+            TiArray::<Id, _, _>::from((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)),
+            TiArray::from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]),
+        );
+        assert_eq!(
+            TiArray::<Id, _, _>::from((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)),
+            TiArray::from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+        );
+
+        assert_eq!(<(_,)>::from(TiArray::<Id, _, _>::from([1])), (1,));
+        assert_eq!(<(_, _)>::from(TiArray::<Id, _, _>::from([1, 2])), (1, 2));
+        assert_eq!(
+            <(_, _, _)>::from(TiArray::<Id, _, _>::from([1, 2, 3])),
+            (1, 2, 3)
+        );
+        assert_eq!(
+            <(_, _, _, _)>::from(TiArray::<Id, _, _>::from([1, 2, 3, 4])),
+            (1, 2, 3, 4)
+        );
+        assert_eq!(
+            <(_, _, _, _, _)>::from(TiArray::<Id, _, _>::from([1, 2, 3, 4, 5])),
+            (1, 2, 3, 4, 5)
+        );
+        assert_eq!(
+            <(_, _, _, _, _, _)>::from(TiArray::<Id, _, _>::from([1, 2, 3, 4, 5, 6])),
+            (1, 2, 3, 4, 5, 6),
+        );
+        assert_eq!(
+            <(_, _, _, _, _, _, _)>::from(TiArray::<Id, _, _>::from([1, 2, 3, 4, 5, 6, 7])),
+            (1, 2, 3, 4, 5, 6, 7),
+        );
+        assert_eq!(
+            <(_, _, _, _, _, _, _, _)>::from(TiArray::<Id, _, _>::from([1, 2, 3, 4, 5, 6, 7, 8])),
+            (1, 2, 3, 4, 5, 6, 7, 8),
+        );
+        assert_eq!(
+            <(_, _, _, _, _, _, _, _, _)>::from(TiArray::<Id, _, _>::from([
+                1, 2, 3, 4, 5, 6, 7, 8, 9
+            ])),
+            (1, 2, 3, 4, 5, 6, 7, 8, 9),
+        );
+        assert_eq!(
+            <(_, _, _, _, _, _, _, _, _, _)>::from(TiArray::<Id, _, _>::from([
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+            ])),
+            (1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+        );
+        assert_eq!(
+            <(_, _, _, _, _, _, _, _, _, _, _)>::from(TiArray::<Id, _, _>::from([
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+            ])),
+            (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11),
+        );
+        assert_eq!(
+            <(_, _, _, _, _, _, _, _, _, _, _, _)>::from(TiArray::<Id, _, _>::from([
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+            ])),
+            (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
+        );
     }
 
     #[cfg(feature = "std")]
@@ -873,7 +1114,7 @@ mod test {
         test_array_hash_compatibility_impl([1, 1, 9, 2, 4, 1, 12345, 12]);
     }
 
-    #[inline]
+    #[cfg(feature = "std")]
     fn test_array_hash_compatibility_impl<const N: usize>(v: [u32; N]) {
         let mut cv = (v, TiArray::<Id, _, _>::from(v));
         let mut cv = (&cv.0, &cv.1);
@@ -895,6 +1136,7 @@ mod test {
         assert_eq!(&alloc::format!("{s2:?}"), "{Id(0): 23, Id(1): 34}");
     }
 
+    #[expect(clippy::unwrap_used, reason = "okay in tests")]
     #[cfg(all(feature = "alloc", feature = "serde"))]
     #[test]
     fn test_array_serialize() {
@@ -906,9 +1148,10 @@ mod test {
         assert_eq!(&serde_json::to_string(&s2).unwrap(), "[23,34]");
     }
 
-    #[cfg(all(feature = "alloc", feature = "bincode"))]
+    #[expect(clippy::unwrap_used, reason = "okay in tests")]
+    #[cfg(feature = "bincode")]
     #[test]
-    fn test_arrau_encode() {
+    fn test_array_encode() {
         let config = bincode::config::standard();
         let s0: TiArray<Id, u32, _> = TiArray::from([]);
         let s1: TiArray<Id, u32, _> = TiArray::from([12]);
@@ -921,5 +1164,46 @@ mod test {
             &bincode::encode_to_vec(s3, config).unwrap(),
             &[252, 0x78, 0x56, 0x34, 0x12, 252, 0x89, 0x67, 0x45, 0x23]
         );
+    }
+
+    #[expect(clippy::unwrap_used, reason = "okay in tests")]
+    #[cfg(feature = "bincode")]
+    #[test]
+    fn test_array_decode() {
+        fn decode_whole<const N: usize>(bytes: &[u8]) -> TiArray<Id, u32, N> {
+            let config = bincode::config::standard();
+            let (decoded, len) = bincode::decode_from_slice(bytes, config).unwrap();
+            assert_eq!(len, bytes.len());
+            decoded
+        }
+
+        let s0: TiArray<Id, u32, 0> = decode_whole(&[]);
+        let s1: TiArray<Id, u32, 1> = decode_whole(&[12]);
+        let s2: TiArray<Id, u32, 2> = decode_whole(&[23, 34]);
+        let s3: TiArray<Id, u32, 2> =
+            decode_whole(&[252, 0x78, 0x56, 0x34, 0x12, 252, 0x89, 0x67, 0x45, 0x23]);
+        assert_eq!(s0.as_slice().raw, [0; 0][..]);
+        assert_eq!(s1.as_slice().raw, [12][..]);
+        assert_eq!(s2.as_slice().raw, [23, 34][..]);
+        assert_eq!(s3.as_slice().raw, [0x1234_5678, 0x2345_6789][..]);
+    }
+
+    #[expect(clippy::unwrap_used, reason = "okay in tests")]
+    #[cfg(feature = "bincode")]
+    #[test]
+    fn test_array_borrow_decode() {
+        fn decode_whole<const N: usize>(bytes: &[u8]) -> TiArray<Id, &str, N> {
+            let config = bincode::config::standard();
+            let (decoded, len) = bincode::borrow_decode_from_slice(bytes, config).unwrap();
+            assert_eq!(len, bytes.len());
+            decoded
+        }
+
+        let s0: TiArray<Id, &str, 0> = decode_whole(&[]);
+        let s1: TiArray<Id, &str, 1> = decode_whole(&[1, b'a']);
+        let s2: TiArray<Id, &str, 2> = decode_whole(&[2, b'b', b'c', 3, b'd', b'e', b'f']);
+        assert_eq!(s0.raw, [""; 0][..]);
+        assert_eq!(s1.raw, ["a"][..]);
+        assert_eq!(s2.raw, ["bc", "def"][..]);
     }
 }

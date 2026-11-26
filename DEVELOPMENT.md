@@ -252,7 +252,7 @@
 | `Vec<T, A>` | `BorrowMut<[T]>` | | |
 | `ByteStr` | `BorrowMut<[u8]>` | ⛔️ | nightly-only |
 | `ByteString` | `BorrowMut<[u8]>` | ⛔️ | nightly-only |
-| `Box<[T]>` | `From<[T; N]>` | | |
+| `Box<[T]>` | `From<[T; N]>` | ✅ | `array/boxed.rs` |
 | `Box<[T]>` | `From<&[T]>` | | |
 | `Box<[T]>` | `From<&mut [T]>` | | |
 | `Box<[T]>` | `From<Cow<'_, [T]>>` | | |
@@ -395,7 +395,7 @@
 | `MaybeUninit<[T; N]>` | `From<[MaybeUninit<T>; N]>` | ✅ | `array/mod.rs` |
 | `[T; N]` | `From<(T₁, T₂, …, Tₙ)>` | ✅ | `array/mod.rs` |
 | `(T₁, T₂, …, Tₙ)` | `From<[T; N]>` | ✅ | `array/mod.rs` |
-| `Box<[T]>` | `From<[T; N]>` | | |
+| `Box<[T]>` | `From<[T; N]>` | ✅ | `array/boxed.rs` |
 | `Rc<[T]>` | `From<[T; N]>` | | |
 | `Arc<[T]>` | `From<[T; N]>` | | |
 | `Cow<'a, [T]>` | `From<&[T; N]>` | | |
@@ -495,7 +495,8 @@
 | `Vec<T, A>` | `pop_if` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `peek_mut` | ⛔️ | nightly-only |
 | `Vec<T, A>` | `append` | ✅ | `vec.rs` |
-| `Vec<T, A>` | `drain` | ✅/⛔️ | `vec.rs`, ~~A~~ |
+| `Vec<T, A>` | `drain` | ⛔️ | nightly-only |
+| `Vec<T>` | `drain` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `clear` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `len` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `is_empty` | ✅ | `vec.rs` |
@@ -511,7 +512,8 @@
 | `Vec<T, A>` | `extend_from_within` | ✅ | `vec.rs` |
 | `Vec<[T; N], A>` | `into_flattened` | | |
 | `Vec<T, A>` | `dedup` | ✅ | `vec.rs` |
-| `Vec<T, A>` | `splice` | ✅/⛔️ | `vec.rs`, ~~A~~ |
+| `Vec<T, A>` | `splice` | ⛔️ | nightly-only |
+| `Vec<T>` | `splice` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `extract_if` | | |
 
 | Type | Trait | Implemented | Notes |

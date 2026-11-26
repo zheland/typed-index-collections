@@ -1,10 +1,16 @@
+use alloc::boxed::{self, Box};
 use core::alloc::Allocator;
 use core::mem::{transmute_copy, ManuallyDrop};
 use core::slice;
 
-use alloc::boxed::{self, Box};
+use crate::{TiArray, TiSlice};
 
-use crate::TiArray;
+impl<K, V, const N: usize> From<TiArray<K, V, N>> for Box<TiSlice<K, V>> {
+    #[inline]
+    fn from(array: TiArray<K, V, N>) -> Self {
+        TiSlice::boxed_from(Box::new(array.raw))
+    }
+}
 
 impl<K, V, A: Allocator, const N: usize> IntoIterator for Box<TiArray<K, V, N>, A> {
     type Item = V;
@@ -77,7 +83,22 @@ mod test {
         let mut cv = (&cv.0, &cv.1);
 
         assert_eq_api!(
+            cv, v => Box::<TheSlice<_>>::from(*v).into_std()
+        );
+        assert_eq_api!(
             cv, v => IntoIterator::into_iter(Box::<TheArray<u32, N>>::new(*v)).collect::<Vec<_>>()
+        );
+        assert_eq_api!(
+            cv, v => {
+                let boxed = Box::<TheArray<u32, N>>::new(*v);
+                IntoIterator::into_iter(&boxed).copied().collect::<Vec<_>>()
+            }
+        );
+        assert_eq_api!(
+            cv, v => {
+                let mut boxed = Box::<TheArray<u32, N>>::new(*v);
+                IntoIterator::into_iter(&mut boxed).map(|v| *v).collect::<Vec<_>>()
+            }
         );
     }
 

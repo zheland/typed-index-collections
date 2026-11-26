@@ -2358,10 +2358,6 @@ where
     clippy::unwrap_used,
     reason = "okay in tests"
 )]
-#[rustversion::attr(
-    before(1.92.0),
-    expect(clippy::zero_repeat_side_effects, reason = "okay in tests"),
-)]
 #[cfg(test)]
 mod test {
     #[cfg(feature = "alloc")]
@@ -2720,10 +2716,7 @@ mod test {
         }
     }
 
-    #[rustversion::attr(
-        since(1.94.0),
-        expect(clippy::needless_for_each, reason = "intentionally tested"),
-    )]
+    #[expect(clippy::needless_for_each, reason = "intentionally tested")]
     #[test]
     fn test_slice_write_core_api_compatibility() {
         for v in [

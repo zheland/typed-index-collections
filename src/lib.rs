@@ -43,7 +43,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! typed-index-collections = "4.0.0-alpha.3"
+//! typed-index-collections = "4.0.0-rc.1"
 //! ```
 //!
 //! This crate depends on the standard library by default that is useful
@@ -53,7 +53,7 @@
 //!
 //! ```toml
 //! [dependencies.typed-index-collections]
-//! version = "4.0.0-alpha.3"
+//! version = "4.0.0-rc.1"
 //! default-features = false
 //! features = ["alloc"]
 //! ```
@@ -65,7 +65,7 @@
 //! ```toml
 //! [dependencies]
 //! derive_more = "0.99"
-//! typed-index-collections = "4.0.0-alpha.3"
+//! typed-index-collections = "4.0.0-rc.1"
 //! ```
 //!
 //! # Examples

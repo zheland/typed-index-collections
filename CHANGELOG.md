@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [4.0.0-rc.1] - 2026-11-27
 ### Added
 - `TiArray` wrapper for Rust `array`.
 - `TiArray` API compatibility tests.
@@ -209,7 +210,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `TiSlice` API compatibility tests.
 - Crate API documentation with examples.
 
-[Unreleased]: https://github.com/zheland/typed-index-collections/compare/v4.0.0-alpha.3...HEAD
+[Unreleased]: https://github.com/zheland/typed-index-collections/compare/v4.0.0-rc.1...HEAD
+[4.0.0-rc.1]: https://github.com/zheland/typed-index-collections/compare/v4.0.0-alpha.3...v4.0.0-rc.1
 [4.0.0-alpha.3]: https://github.com/zheland/typed-index-collections/compare/v4.0.0-alpha.2...v4.0.0-alpha.3
 [4.0.0-alpha.2]: https://github.com/zheland/typed-index-collections/compare/v3.5.0...v4.0.0-alpha.2
 [3.5.0]: https://github.com/zheland/typed-index-collections/compare/v3.4.0...v3.5.0

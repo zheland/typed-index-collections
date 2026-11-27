@@ -56,24 +56,20 @@ use crate::{TiEnumerated, TiSlice};
 /// - [`from_ref`] - Converts a [`&[V; N]`][`array`] into a `&TiArray<K, V, N>`.
 /// - [`from_mut`] - Converts a [`&mut [V; N]`][`array`] into a `&mut TiArray<K,
 ///   V, N>`.
-/// - [`push_and_get_key`] - Appends an element to the back of a collection and
-///   returns its index of type `K`.
-/// - [`pop_key_value`] - Removes the last element from a vector and returns it
-///   with its index of type `K`, or [`None`] if the vector is empty.
-/// - [`pop_key_value_if`] - Removes the last element from a vector and returns
-///   it with its index of type `K`, or [`None`] if the predicate returns false
-///   or the vector is empty.
-/// - [`drain_enumerated`] - Creates a draining iterator that removes the
-///   specified range in the vector and yields the current count and the removed
-///   items. It acts like `self.drain(range).enumerate()`, but instead of
-///   `usize` it returns index of type `K`.
 /// - [`iter`] - Returns an iterator over the slice. Rust arrays implement
 ///   `IntoIterator` for references but do not implement `iter`. Arrays coerce
 ///   to slices, which provide the `iter` method.
 /// - [`iter_mut`] - Returns an iterator over the slice. Rust arrays implement
 ///   `IntoIterator` for mutable references but do not implement `iter`. Arrays
 ///   coerce to slices, which provide the `iter` method.
-/// - [`into_iter_enumerated`] - Converts the vector into iterator over all
+/// - [`iter_enumerated`] - Returns an iterator over all key-value pairs. It
+///   acts like `self.iter().enumerate()`, but use `K` instead of `usize` for
+///   iteration indices.
+/// - [`iter_mut_enumerated`] - Returns an iterator over all key-value pairs,
+///   with mutable references to the values. It acts like
+///   `self.iter_mut().enumerate()`, but use `K` instead of `usize` for
+///   iteration indices.
+/// - [`into_iter_enumerated`] - Converts the array into iterator over all
 ///   key-value pairs with `K` used for iteration indices. It acts like
 ///   `self.into_iter().enumerate()`, but use `K` instead of `usize` for
 ///   iteration indices.
@@ -96,6 +92,8 @@ use crate::{TiEnumerated, TiSlice};
 /// [`from_mut`]: #method.from_mut
 /// [`boxed_from`]: #method.boxed_from
 /// [`boxed_into`]: #method.boxed_into
+/// [`iter`]: #method.iter
+/// [`iter_mut`]: #method.iter_mut
 /// [`iter_enumerated`]: #method.iter_enumerated
 /// [`iter_mut_enumerated`]: #method.iter_mut_enumerated
 /// [`into_iter_enumerated`]: #method.into_iter_enumerated
@@ -306,6 +304,40 @@ impl<K, V, const N: usize> TiArray<K, V, N> {
         self.raw.iter()
     }
 
+    /// Returns an iterator over all key-value pairs.
+    ///
+    /// It acts like `self.iter().enumerate()`,
+    /// but use `K` instead of `usize` for iteration indices.
+    ///
+    /// See [`slice::iter`] for more details.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use derive_more::{From, Into};
+    /// # use typed_index_collections::TiArray;
+    /// #[derive(Debug, Eq, From, Into, PartialEq)]
+    /// pub struct Id(usize);
+    /// let array: TiArray<Id, usize, 3> = TiArray::from_array([1, 2, 4]);
+    /// let mut iterator = array.iter_enumerated();
+    /// assert_eq!(iterator.next(), Some((Id(0), &1)));
+    /// assert_eq!(iterator.next(), Some((Id(1), &2)));
+    /// assert_eq!(iterator.next(), Some((Id(2), &4)));
+    /// assert_eq!(iterator.next(), None);
+    /// ```
+    ///
+    /// [`slice::iter`]: https://doc.rust-lang.org/std/primitive.slice.html#method.iter
+    #[inline]
+    pub fn iter_enumerated(&self) -> TiEnumerated<slice::Iter<'_, V>, K, &V>
+    where
+        usize: Into<K>,
+    {
+        self.raw
+            .iter()
+            .enumerate()
+            .map(|(key, value)| (key.into(), value))
+    }
+
     /// Returns an iterator that allows modifying each value.
     ///
     /// See [`slice::iter_mut`] for more details.
@@ -314,6 +346,39 @@ impl<K, V, const N: usize> TiArray<K, V, N> {
     #[inline]
     pub fn iter_mut(&mut self) -> slice::IterMut<'_, V> {
         self.raw.iter_mut()
+    }
+
+    /// Returns an iterator over all key-value pairs, with mutable references to
+    /// the values.
+    ///
+    /// It acts like `self.iter_mut().enumerate()`,
+    /// but use `K` instead of `usize` for iteration indices.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use derive_more::{From, Into};
+    /// # use typed_index_collections::TiArray;
+    /// #[derive(Debug, Eq, From, Into, PartialEq)]
+    /// pub struct Id(usize);
+    /// let array = [1, 2, 4];
+    /// let mut array: TiArray<Id, usize, 3> = TiArray::from_array(array);
+    /// for (key, value) in array.iter_mut_enumerated() {
+    ///     *value += key.0;
+    /// }
+    /// assert_eq!(array.raw, [1, 3, 6]);
+    /// ```
+    ///
+    /// [`slice::iter_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.iter_mut
+    #[inline]
+    pub fn iter_mut_enumerated(&mut self) -> TiEnumerated<slice::IterMut<'_, V>, K, &mut V>
+    where
+        usize: Into<K>,
+    {
+        self.raw
+            .iter_mut()
+            .enumerate()
+            .map(|(key, value)| (key.into(), value))
     }
 
     /// Converts the array into iterator over all key-value pairs
@@ -795,7 +860,6 @@ macro_rules! array_impl_deserialize {
 }
 
 #[cfg(feature = "serde")]
-#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 array_impl_deserialize!(
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
     26, 27, 28, 29, 30, 31, 32

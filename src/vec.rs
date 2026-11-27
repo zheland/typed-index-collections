@@ -1306,10 +1306,7 @@ impl<K, V, A: Allocator> From<TiVec<K, V, A>> for Vec<V, A> {
     }
 }
 
-impl<K, V, const N: usize> From<TiArray<K, V, N>> for TiVec<K, V>
-where
-    V: Clone,
-{
+impl<K, V, const N: usize> From<TiArray<K, V, N>> for TiVec<K, V> {
     #[inline]
     fn from(array: TiArray<K, V, N>) -> Self {
         <[V]>::into_vec(Box::new(array.raw)).into()

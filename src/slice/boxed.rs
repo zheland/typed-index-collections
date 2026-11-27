@@ -44,6 +44,15 @@ impl<K, V: Clone, A: Allocator + Clone> Clone for Box<TiSlice<K, V>, A> {
         vec.extend_from_slice(self);
         vec.into_boxed_slice()
     }
+
+    #[inline]
+    fn clone_from(&mut self, source: &Self) {
+        if self.len() == source.len() {
+            self.clone_from_slice(source);
+        } else {
+            *self = source.clone();
+        }
+    }
 }
 
 impl<K, V> IntoIterator for Box<TiSlice<K, V>> {
@@ -171,6 +180,21 @@ mod test {
             );
             assert_eq_api!(cv, v => Box::<TheSlice<_>>::from(v).into_std());
             assert_eq_api!(cv, v => Box::<TheSlice<_>>::from(v).clone().into_std());
+            assert_eq_api!(
+                cv, v => Box::<TheSlice<_>>::from(v).clone_from(&Box::<TheSlice<_>>::from(v))
+            );
+            assert_eq_api!(
+                cv, v => Box::<TheSlice<_>>::from(v)
+                    .clone_from(&Box::<TheSlice<_>>::from([1].into_tic()))
+            );
+            assert_eq_api!(
+                cv, v => Box::<TheSlice<_>>::from(v)
+                    .clone_from(&Box::<TheSlice<_>>::from([1, 2].into_tic()))
+            );
+            assert_eq_api!(
+                cv, v => Box::<TheSlice<_>>::from(v)
+                    .clone_from(&Box::<TheSlice<_>>::from([1, 2, 3].into_tic()))
+            );
             assert_eq_api!(
                 cv, v => IntoIterator::into_iter(Box::<TheSlice<u32>>::from(v)).collect::<Vec<_>>()
             );

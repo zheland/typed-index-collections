@@ -182,7 +182,7 @@
 
 | Type | Trait | Implemented | Notes |
 |:--:|:--:|:--:|:--:|
-| `Box<[T], A>` | `Clone` | | |
+| `Box<[T], A>` | `Clone` | ✅ | `slice/boxed.rs` |
 | `[T]` | `CloneToUninit` | ⛔️ | nightly-only |
 | `[T]` | `ConstParamTy_` | ⛔️ | nightly-only |
 | `[T]` | `Eq` | ✅ | `slice/mod.rs` |
@@ -219,7 +219,7 @@
 | `[T]` | `Hash` | ✅ | `slice/mod.rs` |
 | `&[T]` | `Default` | ✅ | `slice/mod.rs` |
 | `&mut [T]` | `Default` | ✅ | `slice/mod.rs` |
-| `Box<[T]>` | `Default` | | |
+| `Box<[T]>` | `Default` | ✅ | `slice/boxed.rs` |
 | `[T]` | `Debug` | ✅ | `slice/mod.rs` |
 | `[T]` | `AsRef<[T]>` | ✅ | `slice/mod.rs` |
 | `[T; N]` | `AsRef<[T]>` | ✅ | `array/mod.rs` |
@@ -244,12 +244,12 @@
 | `Simd<T, N>` | `AsMut<[T]>` | ⛔️ | nightly-only |
 | `ByteStr` | `AsMut<[u8]>` | ⛔️ | nightly-only |
 | `ByteString` | `AsMut<[u8]>` | ⛔️ | nightly-only |
-| `[T; N]` | `Borrow<[T]>` | | |
-| `Vec<T, A>` | `Borrow<[T]>` | | |
+| `[T; N]` | `Borrow<[T]>` | ✅ | `array/mod.rs` |
+| `Vec<T, A>` | `Borrow<[T]>` | ✅ | `vec.rs` |
 | `ByteStr` | `Borrow<[u8]>` | ⛔️ | nightly-only |
 | `ByteString` | `Borrow<[u8]>` | ⛔️ | nightly-only |
-| `[T; N]` | `BorrowMut<[T]>` | | |
-| `Vec<T, A>` | `BorrowMut<[T]>` | | |
+| `[T; N]` | `BorrowMut<[T]>` | ✅ | `array/mod.rs` |
+| `Vec<T, A>` | `BorrowMut<[T]>` | ✅ | `vec.rs` |
 | `ByteStr` | `BorrowMut<[u8]>` | ⛔️ | nightly-only |
 | `ByteString` | `BorrowMut<[u8]>` | ⛔️ | nightly-only |
 | `Box<[T]>` | `From<[T; N]>` | ✅ | `array/boxed.rs` |

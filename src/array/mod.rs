@@ -2,6 +2,8 @@
 mod boxed;
 
 #[cfg(feature = "alloc")]
+use alloc::borrow::Cow;
+#[cfg(feature = "alloc")]
 use alloc::boxed::Box;
 #[cfg(feature = "alloc")]
 use core::alloc::Allocator;
@@ -701,6 +703,15 @@ impl<K, V, const N: usize> From<TiArray<K, MaybeUninit<V>, N>> for MaybeUninit<T
     }
 }
 
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl<'a, K, V: Clone, const N: usize> From<&'a TiArray<K, V, N>> for Cow<'a, TiSlice<K, V>> {
+    #[inline]
+    fn from(value: &'a TiArray<K, V, N>) -> Self {
+        Cow::Borrowed(value.as_slice())
+    }
+}
+
 // Recursive macro for implementing n-ary tuple functions and operations
 //
 // Also provides implementations for tuples with lesser arity. For example,
@@ -1227,6 +1238,31 @@ mod test {
             v.hash(&mut hasher);
             hasher.finish()
         });
+    }
+
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn test_array_ro_alloc_api_compatibility() {
+        test_array_ro_alloc_api_compatibility_impl([]);
+        test_array_ro_alloc_api_compatibility_impl([1]);
+        test_array_ro_alloc_api_compatibility_impl([1, 1234]);
+        test_array_ro_alloc_api_compatibility_impl([1, 2, 4]);
+        test_array_ro_alloc_api_compatibility_impl([1, 5, 3, 2]);
+        test_array_ro_alloc_api_compatibility_impl([1, 1, 9, 2, 4, 1, 12345, 12]);
+    }
+
+    #[cfg(feature = "alloc")]
+    fn test_array_ro_alloc_api_compatibility_impl<const N: usize>(v: [u32; N]) {
+        use alloc::borrow::Cow;
+
+        assert_eq!(
+            Cow::from(&TiArray::<Id, _, _>::from_array(v)),
+            TiSlice::<Id, _>::from_ref(&v),
+        );
+        assert!(matches!(
+            Cow::from(&TiArray::<Id, _, _>::from_array(v)),
+            Cow::Borrowed(_),
+        ));
     }
 
     #[cfg(feature = "alloc")]

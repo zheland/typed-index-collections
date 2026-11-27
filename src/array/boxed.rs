@@ -12,6 +12,23 @@ impl<K, V, const N: usize> From<TiArray<K, V, N>> for Box<TiSlice<K, V>> {
     }
 }
 
+impl<K, V, const N: usize> TryFrom<Box<TiSlice<K, V>>> for Box<TiArray<K, V, N>>
+where
+    V: Copy,
+{
+    type Error = Box<TiSlice<K, V>>;
+
+    #[inline]
+    fn try_from(slice: Box<TiSlice<K, V>>) -> Result<Self, Self::Error> {
+        let slice = TiSlice::boxed_into(slice);
+        let array: Box<[V; N]> = match slice.try_into() {
+            Ok(array) => array,
+            Err(slice) => return Err(TiSlice::boxed_from(slice)),
+        };
+        Ok(TiArray::boxed_from(array))
+    }
+}
+
 impl<K, V, A: Allocator, const N: usize> IntoIterator for Box<TiArray<K, V, N>, A> {
     type Item = V;
     type IntoIter = boxed::BoxedArrayIntoIter<V, N, A>;
@@ -99,6 +116,21 @@ mod test {
                 let mut boxed = Box::<TheArray<u32, N>>::new(*v);
                 IntoIterator::into_iter(&mut boxed).map(|v| *v).collect::<Vec<_>>()
             }
+        );
+
+        let slice1: &TiSlice<Id, _> = TiSlice::from_ref(&v);
+        let slice1: Box<TiSlice<_, _>> = Box::from(slice1);
+        let result1: Result<Box<TiArray<_, _, 3>>, _> = slice1.try_into();
+
+        let slice2: &[_] = &v;
+        let slice2: Box<[_]> = Box::from(slice2);
+        let result2: Result<Box<[_; 3]>, _> = slice2.try_into();
+
+        assert_eq!(
+            result1
+                .map(TiArray::boxed_into)
+                .map_err(TiSlice::boxed_into),
+            result2
         );
     }
 

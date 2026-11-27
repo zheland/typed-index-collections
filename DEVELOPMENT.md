@@ -256,10 +256,10 @@
 | `Box<[T]>` | `From<Cow<'_, [T]>>` | ✅ | `slice/boxed.rs` |
 | `Box<[T], A>` | `From<Vec<T, A>>` | ✅ | `slice/boxed.rs` |
 | `Vec<T, A>` | `From<Box<[T], A>>` | ✅ | `slice/boxed.rs` |
-| `Rc<[T]>` | `From<&[T]>` | | |
-| `Rc<[T]>` | `From<&mut [T]>` | | |
-| `Arc<[T]>` | `From<&[T]>` | | |
-| `Arc<[T]>` | `From<&mut [T]>` | | |
+| `Rc<[T]>` | `From<&[T]>` | ⚠️ | omitted |
+| `Rc<[T]>` | `From<&mut [T]>` | ⚠️ | omitted |
+| `Arc<[T]>` | `From<&[T]>` | ⚠️ | omitted |
+| `Arc<[T]>` | `From<&mut [T]>` | ⚠️ | omitted |
 | `Cow<'_, [T]>` | `From<&[T]>` | ✅ | `slice/mod.rs` |
 | `Vec<T>` | `From<&[T]>` | ✅ | `vec.rs` |
 | `Vec<T>` | `From<&mut [T]>` | ✅ | `vec.rs` |
@@ -272,7 +272,7 @@
 | `[T; N]` | `TryFrom<&[T]>` | ✅ | `array/mod.rs` |
 | `[T; N]` | `TryFrom<&mut [T]>` | ✅ | `array/mod.rs` |
 | `&mut [T; N]` | `TryFrom<&mut [T]>` | ✅ | `array/mod.rs` |
-| `Box<[T; N], A>` | `TryFrom<Box<[T], A>>` | | |
+| `Box<[T; N], A>` | `TryFrom<Box<[T], A>>` | ✅ | `array/boxed.rs` |
 | `Simd<T, N>` | `TryFrom<&[T]>` | ⛔️ | nightly-only |
 | `Simd<T, N>` | `TryFrom<&mut [T]>` | ⛔️ | nightly-only |
 | `[T]` | `!Iterator` | ⛔️ | nightly-only |
@@ -394,9 +394,9 @@
 | `[T; N]` | `From<(T₁, T₂, …, Tₙ)>` | ✅ | `array/mod.rs` |
 | `(T₁, T₂, …, Tₙ)` | `From<[T; N]>` | ✅ | `array/mod.rs` |
 | `Box<[T]>` | `From<[T; N]>` | ✅ | `array/boxed.rs` |
-| `Rc<[T]>` | `From<[T; N]>` | | |
-| `Arc<[T]>` | `From<[T; N]>` | | |
-| `Cow<'a, [T]>` | `From<&[T; N]>` | | |
+| `Rc<[T]>` | `From<[T; N]>` | ⚠️ | omitted |
+| `Arc<[T]>` | `From<[T; N]>` | ⚠️ | omitted |
+| `Cow<'_, [T]>` | `From<&[T; N]>` | ✅ | `array/mod.rs` |
 | `Vec<T>` | `From<[T; N]>` | ✅ | `vec.rs` |
 | `Vec<T>` | `From<&[T; N]>` | ✅ | `vec.rs` |
 | `Vec<T>` | `From<&mut [T; N]>` | ✅ | `vec.rs` |
@@ -420,7 +420,7 @@
 | `[T; N]` | `TryFrom<&mut [T]>` | ✅ | `array/mod.rs` |
 | `&[T; N]` | `TryFrom<&[T]>` | ✅ | `array/mod.rs` |
 | `&mut [T; N]` | `TryFrom<&mut [T]>` | ✅ | `array/mod.rs` |
-| `Box<[T; N], A>` | `TryFrom<Box<T>, A>` | | |
+| `Box<[T; N], A>` | `TryFrom<Box<[T], A>>` | ✅ | `array/boxed.rs` |
 | `[T; N]` | `TryFrom<Vec<T, A>>` | ✅ | `vec.rs` |
 | `Box<[T; N], A>` | `TryFrom<Vec<T, A>>` | ✅ | `vec.rs` |
 | `[T; N]` | `!Iterator` | ⛔️ | nightly-only |

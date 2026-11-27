@@ -15,6 +15,7 @@ use core::marker::PhantomData;
 use core::mem::transmute;
 use core::mem::MaybeUninit;
 use core::ops::{Deref, DerefMut, Index, IndexMut};
+use core::ptr::NonNull;
 use core::{fmt, slice};
 #[cfg(feature = "std")]
 use std::io::{IoSlice, Result as IoResult, Write};
@@ -181,13 +182,66 @@ impl<K, V> TiVec<K, V, Global> {
         }
     }
 
+    /// Creates a `Vec<T>` directly from a `NonNull` pointer, a length, and a
+    /// capacity.
+    ///
+    /// See [`Vec::from_parts`] for more details.
+    ///
+    /// # Safety
+    ///
+    /// This is highly unsafe, due to the number of invariants that aren't
+    /// checked.
+    /// See [`Vec::from_parts`] for more details.
+    ///
+    /// [`Vec::from_parts`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.from_parts
+    #[inline]
+    #[must_use]
+    pub unsafe fn from_parts(ptr: NonNull<V>, length: usize, capacity: usize) -> Self {
+        Self {
+            // SAFETY: Guaranteed by the caller.
+            raw: unsafe { Vec::from_parts(ptr, length, capacity) },
+            _marker: PhantomData,
+        }
+    }
+
+    /// Creates a `Vec<T>` where each element is produced by calling `f` with
+    /// that element's index while walking forward through the `Vec<T>`.
+    ///
+    /// See [`Vec::from_fn`] for more details.
+    ///
+    /// [`Vec::from_fn`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.from_fn
+    #[inline]
+    pub fn from_fn<F>(length: usize, f: F) -> Self
+    where
+        F: FnMut(usize) -> V,
+    {
+        Self {
+            raw: Vec::from_fn(length, f),
+            _marker: PhantomData,
+        }
+    }
+
     /// Decomposes a `TiVec<K, V>` into its raw components.
     ///
     /// See [`Vec::into_raw_parts`] for more details.
+    ///
+    /// [`Vec::into_raw_parts`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.into_raw_parts
     #[inline]
     #[must_use]
     pub fn into_raw_parts(self) -> (*mut V, usize, usize) {
         self.raw.into_raw_parts()
+    }
+
+    /// Decomposes a `Vec<T>` into its raw components: `(NonNull pointer,
+    /// length, capacity)`.
+    ///
+    /// See [`Vec::into_parts`] for more details.
+    ///
+    /// [`Vec::into_parts`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.into_parts
+    #[inline]
+    #[must_use = "losing the pointer will leak memory"]
+    pub fn into_parts(self) -> (NonNull<V>, usize, usize) {
+        self.raw.into_parts()
     }
 
     /// Creates a draining iterator that removes the specified range in the
@@ -348,7 +402,7 @@ impl<K, V, A: Allocator> TiVec<K, V, A> {
     /// checked.
     /// See [`Vec::from_raw_parts_in`] for more details.
     ///
-    /// [`Vec::from_raw_parts_in`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.from_raw_parts
+    /// [`Vec::from_raw_parts_in`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.from_raw_parts_in
     #[inline]
     pub unsafe fn from_raw_parts_in(ptr: *mut V, length: usize, capacity: usize, alloc: A) -> Self {
         Self {
@@ -358,14 +412,50 @@ impl<K, V, A: Allocator> TiVec<K, V, A> {
         }
     }
 
+    #[doc(alias = "from_non_null_parts_in")]
+    /// Creates a `TiVec<K, V, A>` directly from a `NonNull` pointer, a length,
+    /// a capacity, and an allocator.
+    ///
+    /// See [`Vec::from_parts_in`] for more details.
+    ///
+    /// # Safety
+    ///
+    /// This is highly unsafe, due to the number of invariants that aren't
+    /// checked.
+    /// See [`Vec::from_parts_in`] for more details.
+    ///
+    /// [`Vec::from_parts_in`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.from_parts_in
+    #[inline]
+    pub unsafe fn from_parts_in(ptr: NonNull<V>, length: usize, capacity: usize, alloc: A) -> Self {
+        Self {
+            // SAFETY: Guaranteed by the caller.
+            raw: unsafe { Vec::from_parts_in(ptr, length, capacity, alloc) },
+            _marker: PhantomData,
+        }
+    }
+
     /// Decomposes a `TiVec<K, V, A>` into its raw components: `(pointer,
     /// length, capacity, allocator)`.
     ///
     /// See [`Vec::into_raw_parts_with_allocator`] for more details.
+    ///
+    /// [`Vec::into_raw_parts_with_allocator`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.into_raw_parts_with_allocator
     #[inline]
     #[must_use]
     pub fn into_raw_parts_with_allocator(self) -> (*mut V, usize, usize, A) {
         self.raw.into_raw_parts_with_allocator()
+    }
+
+    /// Decomposes a `TiVec<K, V>` into its raw components: `(NonNull pointer,
+    /// length, capacity, allocator)`.
+    ///
+    /// See [`Vec::into_parts_with_allocator`] for more details.
+    ///
+    /// [`Vec::into_parts_with_allocator`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.into_parts_with_allocator
+    #[inline]
+    #[must_use = "losing the pointer will leak memory"]
+    pub fn into_parts_with_allocator(self) -> (NonNull<V>, usize, usize, A) {
+        self.raw.into_parts_with_allocator()
     }
 
     /// Converts a [`&std::vec::Vec<V>`] into a `&TiVec<K, V>`.
@@ -630,6 +720,27 @@ impl<K, V, A: Allocator> TiVec<K, V, A> {
         self.raw.insert(index.into(), element);
     }
 
+    /// Inserts an element at position `index` within the vector, shifting all
+    /// elements after it to the right, and returning a reference to the new
+    /// element.
+    ///
+    /// See [`Vec::insert_mut`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `index > len`.
+    ///
+    /// [`Vec::insert_mut`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.insert_mut
+    #[inline]
+    #[track_caller]
+    #[must_use = "if you don't need a reference to the value, use `Vec::insert` instead"]
+    pub fn insert_mut(&mut self, index: K, element: V) -> &mut V
+    where
+        K: Into<usize>,
+    {
+        self.raw.insert_mut(index.into(), element)
+    }
+
     /// Removes and returns the element at position `index` within the vector,
     /// shifting all elements after it to the left.
     ///
@@ -716,6 +827,22 @@ impl<K, V, A: Allocator> TiVec<K, V, A> {
     #[inline]
     pub fn push(&mut self, value: V) {
         self.raw.push(value);
+    }
+
+    /// Appends an element to the back of a collection, returning a reference to
+    /// it.
+    ///
+    /// See [`Vec::push_mut`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity exceeds `isize::MAX` _bytes_.
+    ///
+    /// [`Vec::push_mut`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.push_mut
+    #[inline]
+    #[must_use = "if you don't need a reference to the value, use `Vec::push` instead"]
+    pub fn push_mut(&mut self, value: V) -> &mut V {
+        self.raw.push_mut(value)
     }
 
     /// Appends an element to the back of a collection and returns its index of
@@ -1020,6 +1147,29 @@ impl<K, V, A: Allocator> TiVec<K, V, A> {
         V: PartialEq,
     {
         self.raw.dedup();
+    }
+}
+
+impl<K, V, A: Allocator, const N: usize> TiVec<K, [V; N], A> {
+    /// Takes a `Vec<[T; N]>` and flattens it into a `Vec<T>`.
+    ///
+    /// See [`Vec::into_flattened`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the length of the resulting vector would overflow a `usize`.
+    ///
+    /// This is only possible when flattening a vector of arrays of zero-sized
+    /// types, and thus tends to be irrelevant in practice. If
+    /// `size_of::<T>() > 0`, this will never panic.
+    ///
+    /// [`Vec::into_flattened`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.into_flattened
+    #[inline]
+    pub fn into_flattened(self) -> TiVec<K, V, A> {
+        TiVec {
+            raw: self.raw.into_flattened(),
+            _marker: PhantomData,
+        }
     }
 }
 
@@ -1735,6 +1885,23 @@ mod test {
         drop(unsafe { Vec::from_raw_parts(vec_raw.0, vec_raw.1, vec_raw.2) });
         drop(unsafe { TiVec::<Id, _>::from_raw_parts(ti_vec_raw.0, ti_vec_raw.1, ti_vec_raw.2) });
 
+        let vec = v.to_vec();
+        let ti_vec = TiVec::<Id, _>::from(v.to_vec());
+
+        let vec_raw = vec.into_parts();
+        let ti_vec_raw = ti_vec.into_parts();
+
+        if !v.is_empty() {
+            assert_ne!(vec_raw.0, ti_vec_raw.0);
+        }
+        assert_eq!(vec_raw.1, ti_vec_raw.1);
+        assert_eq!(vec_raw.2, ti_vec_raw.2);
+
+        drop(unsafe { Vec::from_parts(vec_raw.0, vec_raw.1, vec_raw.2) });
+        drop(unsafe { TiVec::<Id, _>::from_parts(ti_vec_raw.0, ti_vec_raw.1, ti_vec_raw.2) });
+
+        assert_eq_api!(cv, v => TheVec::from_fn(v.len(), |i| v[i.into_tic()] * 2).into_std());
+
         assert_eq!(
             Vec::from(va),
             Vec::from(TiVec::<Id, _>::from(TiArray::from(va))),
@@ -1759,6 +1926,11 @@ mod test {
                 .map(TiArray::boxed_into)
                 .map_err(Vec::from),
         );
+
+        assert_eq_api!(cv, _v => {
+            let vec = [va; 4].into_iter().collect::<TheVec<_>>();
+            vec.into_flattened().into_std()
+        });
     }
 
     #[test]
@@ -1831,6 +2003,11 @@ mod test {
         assert_eq_api!(mv, v => v.pop());
 
         restore(&mut mv);
+        assert_eq_api!(mv, v => v.pop());
+        assert_eq_api!(mv, v => v.push_mut(123));
+        assert_eq_api!(mv, v => v.pop());
+
+        restore(&mut mv);
         assert_eq_api!(mv, v => v.pop_if(|v| *v < 10));
         assert_eq_api!(mv, v => v.push(234));
 
@@ -1868,6 +2045,8 @@ mod test {
             assert_eq_api!(mv, v => v.swap_remove(i.into_tic()));
             restore(&mut mv);
             assert_eq_api!(mv, v => v.insert(i.into_tic(), 123));
+            restore(&mut mv);
+            assert_eq_api!(mv, v => v.insert_mut(i.into_tic(), 123));
             restore(&mut mv);
             assert_eq_api!(mv, v => v.remove(i.into_tic()));
             restore(&mut mv);
@@ -2111,6 +2290,19 @@ mod test {
         assert_eq!(alloc.deallocs(), 0);
 
         let vec2: TiVec<Id, i32, _> = unsafe { TiVec::from_raw_parts_in(ptr, len, cap, alloc_ref) };
+        assert_eq!(&vec2.as_slice().raw, &[1, 2, 3, 4]);
+        assert!(is_our_alloc(&alloc_ref));
+        assert_eq!(alloc.allocs(), 2);
+        assert_eq!(alloc.deallocs(), 0);
+
+        let (ptr, len, cap, alloc_ref) = vec2.into_parts_with_allocator();
+        assert_eq!(len, 4);
+        assert!(cap >= 4);
+        assert!(is_our_alloc(&alloc_ref));
+        assert_eq!(alloc.allocs(), 2);
+        assert_eq!(alloc.deallocs(), 0);
+
+        let vec2: TiVec<Id, i32, _> = unsafe { TiVec::from_parts_in(ptr, len, cap, alloc_ref) };
         assert_eq!(&vec2.as_slice().raw, &[1, 2, 3, 4]);
         assert!(is_our_alloc(&alloc_ref));
         assert_eq!(alloc.allocs(), 2);

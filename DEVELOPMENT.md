@@ -448,20 +448,20 @@
 | `Vec<T>` | `with_capacity` | ✅ | `vec.rs` |
 | `Vec<T>` | `try_with_capacity` | ⛔️ | nightly-only |
 | `Vec<T>` | `from_raw_parts` | ✅ | `vec.rs` |
-| `Vec<T>` | `from_parts` | | |
-| `Vec<T>` | `from_fn` | | |
+| `Vec<T>` | `from_parts` | ✅ | `vec.rs` |
+| `Vec<T>` | `from_fn` | ✅ | `vec.rs` |
 | `Vec<T>` | `into_raw_parts` | ✅ | `vec.rs` |
-| `Vec<T>` | `into_parts` | | |
+| `Vec<T>` | `into_parts` | ✅ | `vec.rs` |
 | `Vec<T>` | `const_make_global` | ⛔️ | nightly-only |
 | `Vec<T, A>` | `with_capacity_in` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `push` | ✅ | `vec.rs` |
-| `Vec<T, A>` | `push_mut` | | |
+| `Vec<T, A>` | `push_mut` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `new_in` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `try_with_capacity_in` | ⛔️ | nightly-only |
 | `Vec<T, A>` | `from_raw_parts_in` | ✅ | `vec.rs` |
-| `Vec<T, A>` | `from_parts_in` | | |
+| `Vec<T, A>` | `from_parts_in` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `into_raw_parts_with_allocator` | ✅ | `vec.rs` |
-| `Vec<T, A>` | `into_parts_with_allocator` | | |
+| `Vec<T, A>` | `into_parts_with_allocator` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `capacity` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `reserve` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `reserve_exact` | ✅ | `vec.rs` |
@@ -483,7 +483,7 @@
 | `Vec<T, A>` | `set_len` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `swap_remove` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `insert` | ✅ | `vec.rs` |
-| `Vec<T, A>` | `insert_mut` | | |
+| `Vec<T, A>` | `insert_mut` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `remove` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `try_remove` | ⛔️ | nightly-only |
 | `Vec<T, A>` | `retain` | ✅ | `vec.rs` |
@@ -510,11 +510,11 @@
 | `Vec<T, A>` | `resize` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `extend_from_slice` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `extend_from_within` | ✅ | `vec.rs` |
-| `Vec<[T; N], A>` | `into_flattened` | | |
+| `Vec<[T; N], A>` | `into_flattened` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `dedup` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `splice` | ⚠️/⛔️ | `AllocatorNightly` |
 | `Vec<T>` | `splice` | ✅ | `vec.rs` |
-| `Vec<T, A>` | `extract_if` | | |
+| `Vec<T, A>` | `extract_if` | ⚠️/⛔️ | `AllocatorNightly` |
 
 | Type | Trait | Implemented | Notes |
 |:--:|:--:|:--:|:--:|

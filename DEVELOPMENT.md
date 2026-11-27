@@ -13,18 +13,18 @@
 | `Box<[T], A>` | `try_new_uninit_slice_in` | ⛔️ | nightly-only |
 | `Box<[T], A>` | `try_new_zeroed_slice_in` | ⛔️ | nightly-only |
 | `Box<[T], A>` | `into_array` | ⛔️ | nightly-only |
-| `Box<[MaybeUninit<T>], A>` | `assume_init` | | |
-| `[MaybeUninit<T>]` | `write_copy_of_slice` | | |
-| `[MaybeUninit<T>]` | `write_clone_of_slice` | | |
+| `Box<[MaybeUninit<T>], A>` | `assume_init` | ⛔️ | foreign type |
+| `[MaybeUninit<T>]` | `write_copy_of_slice` | ✅ | `slice/mod.rs` |
+| `[MaybeUninit<T>]` | `write_clone_of_slice` | ✅ | `slice/mod.rs` |
 | `[MaybeUninit<T>]` | `write_filled` | ⛔️ | nightly-only |
 | `[MaybeUninit<T>]` | `write_with` | ⛔️ | nightly-only |
 | `[MaybeUninit<T>]` | `write_default` | ⛔️ | nightly-only |
 | `[MaybeUninit<T>]` | `write_iter` | ⛔️ | nightly-only |
 | `[MaybeUninit<T>]` | `as_bytes` | ⛔️ | nightly-only |
 | `[MaybeUninit<T>]` | `as_bytes_mut` | ⛔️ | nightly-only |
-| `[MaybeUninit<T>]` | `assume_init_drop` | | |
-| `[MaybeUninit<T>]` | `assume_init_ref` | | |
-| `[MaybeUninit<T>]` | `assume_init_mut` | | |
+| `[MaybeUninit<T>]` | `assume_init_drop` | ✅ | `slice/mod.rs` |
+| `[MaybeUninit<T>]` | `assume_init_ref` | ✅ | `slice/mod.rs` |
+| `[MaybeUninit<T>]` | `assume_init_mut` | ✅ | `slice/mod.rs` |
 | `[AsciiChar]` | `as_str` | ⛔️ | nightly-only |
 | `[AsciiChar]` | `as_bytes` | ⛔️ | nightly-only |
 | `[u8]` | `is_ascii` | ✅ | `slice/mod.rs` |
@@ -37,7 +37,7 @@
 | `[u8]` | `trim_ascii_start` | ✅ | `slice/mod.rs` |
 | `[u8]` | `trim_ascii_end` | ✅ | `slice/mod.rs` |
 | `[u8]` | `trim_ascii` | ✅ | `slice/mod.rs` |
-| `[u8]` | `split_ascii_whitespace` | | |
+| `[u8]` | `split_ascii_whitespace` | ⛔️ | nightly-only |
 | `[T]` | `len` | ✅ | `slice/mod.rs` |
 | `[T]` | `is_empty` | ✅ | `slice/mod.rs` |
 | `[T]` | `first` | ✅ | `slice/mod.rs` |

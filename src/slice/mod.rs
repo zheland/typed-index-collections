@@ -23,6 +23,7 @@ use core::cmp::Ordering;
 use core::fmt;
 use core::hash::{Hash, Hasher};
 use core::marker::PhantomData;
+use core::mem::MaybeUninit;
 use core::ops::{Index, IndexMut, Range};
 use core::slice::{
     ChunkBy, ChunkByMut, Chunks, ChunksExact, ChunksExactMut, ChunksMut, EscapeAscii, Iter,
@@ -2342,6 +2343,101 @@ impl<K> TiSlice<K, u8> {
     }
 }
 
+impl<K, V> TiSlice<K, MaybeUninit<V>> {
+    /// Copies the elements from `src` to `self`,
+    /// returning a mutable reference to the now initialized contents of `self`.
+    ///
+    /// See [`slice::write_copy_of_slice`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if the two slices have different lengths.
+    ///
+    ///
+    /// [`slice::write_copy_of_slice`]: https://doc.rust-lang.org/std/primitive.slice.html#method.write_copy_of_slice
+    #[inline]
+    pub const fn write_copy_of_slice(&mut self, src: &TiSlice<K, V>) -> &mut TiSlice<K, V>
+    where
+        V: Copy,
+    {
+        let written = self.raw.write_copy_of_slice(&src.raw);
+        TiSlice::from_mut(written)
+    }
+
+    /// Clones the elements from `src` to `self`,
+    /// returning a mutable reference to the now initialized contents of `self`.
+    /// Any already initialized elements will not be dropped.
+    ///
+    /// See [`slice::write_clone_of_slice`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if the two slices have different lengths, or if
+    /// the implementation of `Clone` panics.
+    ///
+    /// If there is a panic, the already cloned elements will be dropped.
+    ///
+    /// [`slice::write_clone_of_slice`]: https://doc.rust-lang.org/std/primitive.slice.html#method.write_clone_of_slice
+    #[inline]
+    pub fn write_clone_of_slice(&mut self, src: &TiSlice<K, V>) -> &mut TiSlice<K, V>
+    where
+        V: Clone,
+    {
+        let written = self.raw.write_clone_of_slice(&src.raw);
+        TiSlice::from_mut(written)
+    }
+
+    /// Drops the contained values in place.
+    ///
+    /// # Safety
+    ///
+    /// It is up to the caller to guarantee that every `MaybeUninit<T>` in the
+    /// slice really is in an initialized state. Calling this when the content
+    /// is not yet fully initialized causes undefined behavior.
+    ///
+    /// On top of that, all additional invariants of the type `T` must be
+    /// satisfied, as the `Drop` implementation of `T` (or its members) may
+    /// rely on this. For example, setting a `Vec<T>` to an invalid but
+    /// non-null address makes it initialized (under the current implementation;
+    /// this does not constitute a stable guarantee), because the only
+    /// requirement the compiler knows about it is that the data pointer must be
+    /// non-null. Dropping such a `Vec<T>` however will cause undefined
+    /// behaviour.
+    #[inline]
+    pub unsafe fn assume_init_drop(&mut self) {
+        // SAFETY: Guaranteed by the caller.
+        unsafe { self.raw.assume_init_drop() }
+    }
+
+    /// Gets a shared reference to the contained value.
+    ///
+    /// # Safety
+    ///
+    /// Calling this when the content is not yet fully initialized causes
+    /// undefined behavior: it is up to the caller to guarantee that every
+    /// `MaybeUninit<T>` in the slice really is in an initialized state.
+    #[inline]
+    pub const unsafe fn assume_init_ref(&self) -> &TiSlice<K, V> {
+        // SAFETY: Guaranteed by the caller.
+        TiSlice::from_ref(unsafe { self.raw.assume_init_ref() })
+    }
+
+    /// Gets a mutable (unique) reference to the contained value.
+    ///
+    /// # Safety
+    ///
+    /// Calling this when the content is not yet fully initialized causes
+    /// undefined behavior: it is up to the caller to guarantee that every
+    /// `MaybeUninit<T>` in the slice really is in an initialized state. For
+    /// instance, `.assume_init_mut()` cannot be used to initialize a
+    /// `MaybeUninit` slice.
+    #[inline]
+    pub const unsafe fn assume_init_mut(&mut self) -> &mut TiSlice<K, V> {
+        // SAFETY: Guaranteed by the caller.
+        TiSlice::from_mut(unsafe { self.raw.assume_init_mut() })
+    }
+}
+
 impl<K, V> fmt::Debug for TiSlice<K, V>
 where
     K: fmt::Debug,
@@ -2673,6 +2769,7 @@ mod test {
     use alloc::vec::Vec;
     use core::borrow::{Borrow, BorrowMut};
     use core::hash::{Hash, Hasher};
+    use core::mem::MaybeUninit;
     use core::ops::Bound;
     #[cfg(feature = "std")]
     use std::hash::DefaultHasher;
@@ -2680,7 +2777,7 @@ mod test {
     use std::io::{BufRead, IoSlice, IoSliceMut, Read, Write};
 
     use crate::test_util::{CollectToVec, Id, Keep};
-    use crate::TiSlice;
+    use crate::{TiArray, TiSlice};
 
     #[derive(Clone, Debug, Eq, PartialEq)]
     struct NonCopy<T>(pub T);
@@ -3041,11 +3138,56 @@ mod test {
 
             for b in a..v.len() {
                 assert_eq_api!(cv,
-                    v => v.subslice_range(&v[a.into_tic()..b.into_tic()]).map(|v| v.start.into_std()));
+                    v => v.subslice_range(&v[a.into_tic()..b.into_tic()])
+                        .map(|v| v.start.into_std())
+                );
                 assert_eq_api!(cv,
-                    v => v.subslice_range(&v[a.into_tic()..b.into_tic()]).map(|v| v.end.into_std()));
+                    v => v.subslice_range(&v[a.into_tic()..b.into_tic()])
+                        .map(|v| v.end.into_std())
+                );
             }
         }
+
+        let mut dst1 = [MaybeUninit::uninit(); 32];
+        let mut dst2 = TiArray::from([MaybeUninit::uninit(); 32]);
+        let init1 = dst1.as_mut_slice()[..v.len()].write_copy_of_slice(v);
+        let init2 = dst2.as_mut_slice()[..v.len()].write_copy_of_slice(TiSlice::from_ref(v));
+        assert_eq!(init1, &mut init2.raw);
+
+        let mut dst1 = [MaybeUninit::uninit(); 32];
+        let mut dst2 = TiArray::from([MaybeUninit::uninit(); 32]);
+        let init1 = dst1.as_mut_slice()[..v.len()].write_clone_of_slice(v);
+        let init2 = dst2.as_mut_slice()[..v.len()].write_clone_of_slice(TiSlice::from_ref(v));
+        assert_eq!(init1, &mut init2.raw);
+
+        unsafe {
+            TiArray::<Id, _, _>::from(va)
+                .map(MaybeUninit::new)
+                .as_mut_slice()
+                .assume_init_drop();
+        }
+
+        assert_eq!(
+            unsafe {
+                &TiArray::<Id, _, _>::from(va)
+                    .map(MaybeUninit::new)
+                    .as_mut_slice()
+                    .assume_init_ref()
+                    .raw
+            },
+            unsafe { va.map(MaybeUninit::new).as_mut_slice().assume_init_ref() },
+        );
+
+        assert_eq!(
+            unsafe {
+                &mut TiArray::<Id, _, _>::from(va)
+                    .map(MaybeUninit::new)
+                    .as_mut_slice()
+                    .assume_init_mut()
+                    .raw
+            },
+            unsafe { va.map(MaybeUninit::new).as_mut_slice().assume_init_mut() },
+        );
 
         test_slice_ro_core_api_compatibility_impl_generic::<N, 1>(va);
     }

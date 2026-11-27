@@ -853,6 +853,10 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::swap`] for more details.
     ///
+    /// # Panics
+    ///
+    /// Panics if `a` or `b` are out of bounds.
+    ///
     /// [`slice::swap`]: https://doc.rust-lang.org/std/primitive.slice.html#method.swap
     #[inline]
     pub fn swap(&mut self, a: K, b: K)
@@ -1030,6 +1034,10 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::windows`] for more details.
     ///
+    /// # Panics
+    ///
+    /// Panics if `size` is zero.
+    ///
     /// [`slice::windows`]: https://doc.rust-lang.org/std/primitive.slice.html#method.windows
     #[inline]
     pub fn windows(&self, size: usize) -> TiSliceRefMap<Windows<'_, V>, K, V> {
@@ -1040,6 +1048,10 @@ impl<K, V> TiSlice<K, V> {
     /// starting at the beginning of the slice.
     ///
     /// See [`slice::chunks`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `chunk_size` is zero.
     ///
     /// [`slice::chunks`]: https://doc.rust-lang.org/std/primitive.slice.html#method.chunks
     #[inline]
@@ -1052,6 +1064,10 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::chunks_mut`] for more details.
     ///
+    /// # Panics
+    ///
+    /// Panics if `chunk_size` is zero.
+    ///
     /// [`slice::chunks_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.chunks_mut
     #[inline]
     pub fn chunks_mut(&mut self, chunk_size: usize) -> TiSliceMutMap<ChunksMut<'_, V>, K, V> {
@@ -1063,6 +1079,10 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::chunks_exact`] for more details.
     ///
+    /// # Panics
+    ///
+    /// Panics if `chunk_size` is zero.
+    ///
     /// [`slice::chunks_exact`]: https://doc.rust-lang.org/std/primitive.slice.html#method.chunks_exact
     #[inline]
     pub fn chunks_exact(&self, chunk_size: usize) -> TiSliceRefMap<ChunksExact<'_, V>, K, V> {
@@ -1073,6 +1093,10 @@ impl<K, V> TiSlice<K, V> {
     /// starting at the beginning of the slice.
     ///
     /// See [`slice::chunks_exact_mut`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `chunk_size` is zero.
     ///
     /// [`slice::chunks_exact_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.chunks_exact_mut
     #[inline]
@@ -1114,6 +1138,14 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::as_chunks`] for more details.
     ///
+    /// # Panics
+    ///
+    /// Panics if `N` is zero.
+    ///
+    /// Note that this check is against a const generic parameter, not a runtime
+    /// value, and thus a particular monomorphization will either always panic
+    /// or it will never panic.
+    ///
     /// [`slice::as_chunks`]: https://doc.rust-lang.org/std/primitive.slice.html#method.as_chunks
     #[expect(clippy::as_conversions, reason = "transparent over a `[V; N]` type")]
     #[inline]
@@ -1133,6 +1165,14 @@ impl<K, V> TiSlice<K, V> {
     /// and a remainder slice with length strictly less than `N`.
     ///
     /// See [`slice::as_rchunks`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `N` is zero.
+    ///
+    /// Note that this check is against a const generic parameter, not a runtime
+    /// value, and thus a particular monomorphization will either always panic
+    /// or it will never panic.
     ///
     /// [`slice::as_rchunks`]: https://doc.rust-lang.org/std/primitive.slice.html#method.as_rchunks
     #[expect(clippy::as_conversions, reason = "transparent over a `[V; N]` type")]
@@ -1181,6 +1221,14 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::as_chunks_mut`] for more details.
     ///
+    /// # Panics
+    ///
+    /// Panics if `N` is zero.
+    ///
+    /// Note that this check is against a const generic parameter, not a runtime
+    /// value, and thus a particular monomorphization will either always panic
+    /// or it will never panic.
+    ///
     /// [`slice::as_chunks_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.as_chunks_mut
     #[expect(clippy::as_conversions, reason = "transparent over a `[V; N]` type")]
     #[inline]
@@ -1201,6 +1249,14 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::as_rchunks_mut`] for more details.
     ///
+    /// # Panics
+    ///
+    /// Panics if `N` is zero.
+    ///
+    /// Note that this check is against a const generic parameter, not a runtime
+    /// value, and thus a particular monomorphization will either always panic
+    /// or it will never panic.
+    ///
     /// [`slice::as_rchunks_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.as_rchunks_mut
     #[expect(clippy::as_conversions, reason = "transparent over a `[V; N]` type")]
     #[inline]
@@ -1220,6 +1276,10 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::rchunks`] for more details.
     ///
+    /// # Panics
+    ///
+    /// Panics if `chunk_size` is zero.
+    ///
     /// [`slice::rchunks`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rchunks
     #[inline]
     pub fn rchunks(&self, chunk_size: usize) -> TiSliceRefMap<RChunks<'_, V>, K, V> {
@@ -1230,6 +1290,10 @@ impl<K, V> TiSlice<K, V> {
     /// starting at the end of the slice.
     ///
     /// See [`slice::rchunks_mut`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `chunk_size` is zero.
     ///
     /// [`slice::rchunks_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rchunks_mut
     #[inline]
@@ -1242,6 +1306,10 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::rchunks_exact`] for more details.
     ///
+    /// # Panics
+    ///
+    /// Panics if `chunk_size` is zero.
+    ///
     /// [`slice::rchunks_exact`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rchunks_exact
     #[inline]
     pub fn rchunks_exact(&self, chunk_size: usize) -> TiSliceRefMap<RChunksExact<'_, V>, K, V> {
@@ -1252,6 +1320,10 @@ impl<K, V> TiSlice<K, V> {
     /// starting at the end of the slice.
     ///
     /// See [`slice::rchunks_exact_mut`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `chunk_size` is zero.
     ///
     /// [`slice::rchunks_exact_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rchunks_exact_mut
     #[inline]
@@ -1294,6 +1366,11 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::split_at`] for more details.
     ///
+    /// # Panics
+    ///
+    /// Panics if `mid > len`.  For a non-panicking alternative see
+    /// [`split_at_checked`](slice::split_at_checked).
+    ///
     /// [`slice::split_at`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_at
     #[inline]
     pub fn split_at(&self, mid: K) -> (&Self, &Self)
@@ -1307,6 +1384,11 @@ impl<K, V> TiSlice<K, V> {
     /// Divides one mutable slice into two at an index.
     ///
     /// See [`slice::split_at_mut`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `mid > len`.  For a non-panicking alternative see
+    /// [`split_at_mut_checked`](slice::split_at_mut_checked).
     ///
     /// [`slice::split_at_mut`]: https://doc.rust-lang.org/std/primitive.slice.html#method.split_at_mut
     #[inline]
@@ -1648,7 +1730,13 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::sort_unstable`] for more details.
     ///
+    /// # Panics
+    ///
+    /// May panic if the implementation of [`Ord`] for `T` does not implement a
+    /// [total order], or if the [`Ord`] implementation panics.
+    ///
     /// [`slice::sort_unstable`]: https://doc.rust-lang.org/std/primitive.slice.html#method.sort_unstable
+    /// [total order]: https://en.wikipedia.org/wiki/Total_order
     #[inline]
     pub fn sort_unstable(&mut self)
     where
@@ -1662,7 +1750,13 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::sort_unstable_by`] for more details.
     ///
+    /// # Panics
+    ///
+    /// May panic if the implementation of [`Ord`] for `T` does not implement a
+    /// [total order], or if the [`Ord`] implementation panics.
+    ///
     /// [`slice::sort_unstable_by`]: https://doc.rust-lang.org/std/primitive.slice.html#method.sort_unstable_by
+    /// [total order]: https://en.wikipedia.org/wiki/Total_order
     #[inline]
     pub fn sort_unstable_by<F>(&mut self, compare: F)
     where
@@ -1676,7 +1770,13 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::sort_unstable_by_key`] for more details.
     ///
+    /// # Panics
+    ///
+    /// May panic if the implementation of [`Ord`] for `T` does not implement a
+    /// [total order], or if the [`Ord`] implementation panics.
+    ///
     /// [`slice::sort_unstable_by_key`]: https://doc.rust-lang.org/std/primitive.slice.html#method.sort_unstable_by_key
+    /// [total order]: https://en.wikipedia.org/wiki/Total_order
     #[inline]
     pub fn sort_unstable_by_key<K2, F>(&mut self, f: F)
     where
@@ -1699,6 +1799,7 @@ impl<K, V> TiSlice<K, V> {
     /// [total order].
     ///
     /// [`slice::select_nth_unstable`]: https://doc.rust-lang.org/std/primitive.slice.html#method.select_nth_unstable
+    /// [total order]: https://en.wikipedia.org/wiki/Total_order
     #[inline]
     pub fn select_nth_unstable(&mut self, index: K) -> (&mut Self, &mut V, &mut Self)
     where
@@ -1721,6 +1822,7 @@ impl<K, V> TiSlice<K, V> {
     /// May panic if `compare` does not implement a [total order].
     ///
     /// [`slice::select_nth_unstable_by`]: https://doc.rust-lang.org/std/primitive.slice.html#method.select_nth_unstable_by
+    /// [total order]: https://en.wikipedia.org/wiki/Total_order
     #[inline]
     pub fn select_nth_unstable_by<F>(
         &mut self,
@@ -1770,6 +1872,12 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::rotate_left`] for more details.
     ///
+    /// # Panics
+    ///
+    /// This function will panic if `mid` is greater than the length of the
+    /// slice. Note that `mid == self.len()` does _not_ panic and is a no-op
+    /// rotation.
+    ///
     /// [`slice::rotate_left`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rotate_left
     #[inline]
     pub fn rotate_left(&mut self, mid: K)
@@ -1785,6 +1893,12 @@ impl<K, V> TiSlice<K, V> {
     /// index `self.next_key() - k` will become the first element in the slice.
     ///
     /// See [`slice::rotate_right`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if `k` is greater than the length of the
+    /// slice. Note that `k == self.len()` does _not_ panic and is a no-op
+    /// rotation.
     ///
     /// [`slice::rotate_right`]: https://doc.rust-lang.org/std/primitive.slice.html#method.rotate_right
     #[inline]
@@ -1825,6 +1939,10 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::clone_from_slice`] for more details.
     ///
+    /// # Panics
+    ///
+    /// This function will panic if the two slices have different lengths.
+    ///
     /// [`slice::clone_from_slice`]: https://doc.rust-lang.org/std/primitive.slice.html#method.clone_from_slice
     #[inline]
     pub fn clone_from_slice(&mut self, src: &Self)
@@ -1837,6 +1955,10 @@ impl<K, V> TiSlice<K, V> {
     /// Copies all elements from `src` into `self`, using a memcpy.
     ///
     /// See [`slice::copy_from_slice`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if the two slices have different lengths.
     ///
     /// [`slice::copy_from_slice`]: https://doc.rust-lang.org/std/primitive.slice.html#method.copy_from_slice
     #[inline]
@@ -1852,6 +1974,11 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::copy_within`] for more details.
     ///
+    /// # Panics
+    ///
+    /// This function will panic if either range exceeds the end of the slice,
+    /// or if the end of `src` is before the start.
+    ///
     /// [`slice::copy_within`]: https://doc.rust-lang.org/std/primitive.slice.html#method.copy_within
     #[inline]
     pub fn copy_within<R>(&mut self, src: R, dest: K)
@@ -1865,8 +1992,11 @@ impl<K, V> TiSlice<K, V> {
 
     /// Swaps all elements in `self` with those in `other`.
     ///
-    ///
     /// See [`slice::swap_with_slice`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if the two slices have different lengths.
     ///
     /// [`slice::swap_with_slice`]: https://doc.rust-lang.org/std/primitive.slice.html#method.swap_with_slice
     #[inline]
@@ -2048,6 +2178,10 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::element_offset`] for more details.
     ///
+    /// # Panics
+    ///
+    /// Panics if `T` is zero-sized.
+    ///
     /// [`slice::element_offset`]: https://doc.rust-lang.org/std/primitive.slice.html#method.element_offset
     #[must_use]
     #[inline]
@@ -2061,6 +2195,10 @@ impl<K, V> TiSlice<K, V> {
     /// Returns the range of indices that a subslice points to.
     ///
     /// See [`slice::subslice_range`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `T` is zero-sized.
     ///
     /// [`slice::subslice_range`]: https://doc.rust-lang.org/std/primitive.slice.html#method.subslice_range
     #[must_use]
@@ -2183,7 +2321,13 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::sort`] for more details.
     ///
+    /// # Panics
+    ///
+    /// May panic if the implementation of [`Ord`] for `T` does not implement a
+    /// [total order], or if the [`Ord`] implementation itself panics.
+    ///
     /// [`slice::sort`]: https://doc.rust-lang.org/std/primitive.slice.html#method.sort
+    /// [total order]: https://en.wikipedia.org/wiki/Total_order
     #[inline]
     pub fn sort(&mut self)
     where
@@ -2196,7 +2340,13 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::sort_by`] for more details.
     ///
+    /// # Panics
+    ///
+    /// May panic if `compare` does not implement a [total order], or if
+    /// `compare` itself panics.
+    ///
     /// [`slice::sort_by`]: https://doc.rust-lang.org/std/primitive.slice.html#method.sort_by
+    /// [total order]: https://en.wikipedia.org/wiki/Total_order
     #[inline]
     pub fn sort_by<F>(&mut self, compare: F)
     where
@@ -2209,7 +2359,13 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::sort_by_key`] for more details.
     ///
+    /// # Panics
+    ///
+    /// May panic if the implementation of [`Ord`] for `K` does not implement a
+    /// [total order], or if the [`Ord`] implementation panics.
+    ///
     /// [`slice::sort_by_key`]: https://doc.rust-lang.org/std/primitive.slice.html#method.sort_by_key
+    /// [total order]: https://en.wikipedia.org/wiki/Total_order
     #[inline]
     pub fn sort_by_key<K2, F>(&mut self, f: F)
     where
@@ -2223,7 +2379,13 @@ impl<K, V> TiSlice<K, V> {
     ///
     /// See [`slice::sort_by_cached_key`] for more details.
     ///
+    /// # Panics
+    ///
+    /// May panic if the implementation of [`Ord`] for `K` does not implement a
+    /// [total order], or if the [`Ord`] implementation panics.
+    ///
     /// [`slice::sort_by_cached_key`]: https://doc.rust-lang.org/std/primitive.slice.html#method.sort_by_cached_key
+    /// [total order]: https://en.wikipedia.org/wiki/Total_order
     #[inline]
     pub fn sort_by_cached_key<K2, F>(&mut self, f: F)
     where
@@ -2277,6 +2439,10 @@ impl<K, V> TiSlice<K, V> {
     /// Creates a vector by repeating a slice `n` times.
     ///
     /// See [`slice::repeat`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if the capacity would overflow.
     ///
     /// [`slice::repeat`]: https://doc.rust-lang.org/std/primitive.slice.html#method.repeat
     #[inline]
@@ -2352,7 +2518,6 @@ impl<K, V> TiSlice<K, MaybeUninit<V>> {
     /// # Panics
     ///
     /// This function will panic if the two slices have different lengths.
-    ///
     ///
     /// [`slice::write_copy_of_slice`]: https://doc.rust-lang.org/std/primitive.slice.html#method.write_copy_of_slice
     #[inline]

@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `TiArray` wrapper for Rust `array`.
 - `TiArray` API compatibility tests.
+- Compatible methods and trait implementations for `TiSlice` and `TiVec`
+  to mirror the stable Rust API for slice and `Vec` up to Rust 1.100.0.
 
 ## [4.0.0-alpha.3] - 2026-11-17
 ### Added

@@ -260,35 +260,35 @@
 | `Arc<[T]>` | `From<&[T]>` | | |
 | `Arc<[T]>` | `From<&mut [T]>` | | |
 | `Cow<'_, [T]>` | `From<&[T]>` | ✅ | `slice/mod.rs` |
-| `Vec<T>` | `From<&[T]>` | | |
-| `Vec<T>` | `From<&mut [T]>` | | |
+| `Vec<T>` | `From<&[T]>` | ✅ | `vec.rs` |
+| `Vec<T>` | `From<&mut [T]>` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `From<Box<[T], A>>` | | |
 | `Box<[u8], A>` | `From<Box<str, A>>` | | |
 | `BorrowedBuf<'_, T>` | `From<&mut [MaybeUninit<T>]>` | | |
 | `BorrowedBuf<'_, T>` | `From<&mut [T]>` | | |
 | `Box<[u8]>` | `From<Box<ByteStr>>` | ⛔️ | nightly-only |
 | `Box<ByteStr>` | `From<Box<[u8]>>` | ⛔️ | nightly-only |
-| `&[T; N]` | `TryFrom<&[T]>` | | |
-| `[T; N]` | `TryFrom<&[T]>` | | |
-| `[T; N]` | `TryFrom<&mut [T]>` | | |
-| `&mut [T; N]` | `TryFrom<&mut [T]>` | | |
+| `&[T; N]` | `TryFrom<&[T]>` | ✅ | `array/mod.rs` |
+| `[T; N]` | `TryFrom<&[T]>` | ✅ | `array/mod.rs` |
+| `[T; N]` | `TryFrom<&mut [T]>` | ✅ | `array/mod.rs` |
+| `&mut [T; N]` | `TryFrom<&mut [T]>` | ✅ | `array/mod.rs` |
 | `Box<[T; N], A>` | `TryFrom<Box<[T], A>>` | | |
-| `Simd<T, N>` | `TryFrom<&[T]>` | | |
-| `Simd<T, N>` | `TryFrom<&mut [T]>` | | |
+| `Simd<T, N>` | `TryFrom<&[T]>` | ⛔️ | nightly-only |
+| `Simd<T, N>` | `TryFrom<&mut [T]>` | ⛔️ | nightly-only |
 | `[T]` | `!Iterator` | ⛔️ | nightly-only |
 | `Box<[T]>` | `!Iterator` | ⛔️ | nightly-only |
 | `&Box<[T]>` | `!Iterator` | ⛔️ | nightly-only |
 | `&mut Box<[T]>` | `!Iterator` | ⛔️ | nightly-only |
 | `&[T]` | `IntoIterator` | ✅ | `slice/mod.rs` |
 | `&mut [T]` | `IntoIterator` | ✅ | `slice/mod.rs` |
-| `Box<[T], A>` | `IntoIterator` | | |
+| `Box<[T], A>` | `IntoIterator` | ✅ | `slice/boxed.rs` |
 | `&Box<[T], A>` | `IntoIterator` | | |
 | `&mut Box<[T], A>` | `IntoIterator` | | |
-| `Box<[T]>` | `FromIterator<T>` | | |
+| `Box<[T]>` | `FromIterator<T>` | ✅ | `slice/boxed.rs` |
 | `ByteString` | `FromIterator<&[u8]>` | ⛔️ | nightly-only |
 | `[T]` | `Index<I>` | ✅ | `slice/mod.rs` |
 | `[T]` | `IndexMut<I>` | ✅ | `slice/mod.rs` |
-| `[T]` | `ToOwned` | | |
+| `[T]` | `ToOwned` | ✅ | `slice/mod.rs` |
 | `&[u8]` | `Read` | ✅ | `slice/mod.rs` |
 | `&[u8]` | `BufRead` | ✅ | `slice/mod.rs` |
 | `&mut [u8]` | `Write` | ✅ | `slice/mod.rs` |
@@ -397,9 +397,9 @@
 | `Rc<[T]>` | `From<[T; N]>` | | |
 | `Arc<[T]>` | `From<[T; N]>` | | |
 | `Cow<'a, [T]>` | `From<&[T; N]>` | | |
-| `Vec<T>` | `From<[T; N]>` | | |
-| `Vec<T>` | `From<&[T; N]>` | | |
-| `Vec<T>` | `From<&mut [T; N]>` | | |
+| `Vec<T>` | `From<[T; N]>` | ✅ | `vec.rs` |
+| `Vec<T>` | `From<&[T; N]>` | ✅ | `vec.rs` |
+| `Vec<T>` | `From<&mut [T; N]>` | ✅ | `vec.rs` |
 | `VecDeque<T>` | `From<[T; N]>` | ⚠️ | omitted |
 | `BTreeSet<T>` | `From<[T; N]>` | ⚠️ | omitted |
 | `BTreeMap<K, V>` | `From<[(K, V); N]>` | ⚠️ | omitted |
@@ -410,12 +410,12 @@
 | `[T; N]` | `From<Simd<T, N>>` | ⛔️ | nightly-only |
 | `Simd<T, N>` | `From<[T; N]>` | ⛔️ | nightly-only |
 | `[bool; N]` | `From<Mask<T, N>>` | ⛔️ | nightly-only |
-| `IpAddr` | `From<[u8; 4]>` | | |
-| `Ipv4Addr` | `From<[u8; 4]>` | | |
-| `IpAddr` | `From<[u8; 16]>` | | |
-| `Ipv6Addr` | `From<[u8; 16]>` | | |
-| `IpAddr` | `From<[u16; 8]>` | | |
-| `Ipv6Addr` | `From<[u16; 8]>` | | |
+| `IpAddr` | `From<[u8; 4]>` | ⚠️ | omitted |
+| `Ipv4Addr` | `From<[u8; 4]>` | ⚠️ | omitted |
+| `IpAddr` | `From<[u8; 16]>` | ⚠️ | omitted |
+| `Ipv6Addr` | `From<[u8; 16]>` | ⚠️ | omitted |
+| `IpAddr` | `From<[u16; 8]>` | ⚠️ | omitted |
+| `Ipv6Addr` | `From<[u16; 8]>` | ⚠️ | omitted |
 | `[T; N]` | `TryFrom<&[T]>` | ✅ | `array/mod.rs` |
 | `[T; N]` | `TryFrom<&mut [T]>` | ✅ | `array/mod.rs` |
 | `&[T; N]` | `TryFrom<&[T]>` | ✅ | `array/mod.rs` |

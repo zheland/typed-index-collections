@@ -187,22 +187,20 @@
 | `[T]` | `ConstParamTy_` | ⛔️ | nightly-only |
 | `[T]` | `Eq` | ✅ | `slice/mod.rs` |
 | `[T]` | `PartialEq<[U]>` | ✅ | `slice/mod.rs` |
-| `&[T]` | `PartialEq<[U]>` | | |
-| `&mut [T]` | `PartialEq<[U]>` | | |
-| `[T]` | `PartialEq<[U; N]>` | | |
-| `&[T]` | `PartialEq<[U; N]>` | | |
-| `[T; N]` | `PartialEq<&[U]>` | | |
-| `&mut [T]` | `PartialEq<[U; N]>` | | |
-| `[T; N]` | `PartialEq<&mut [U]>` | | |
-| `&[T]` | `PartialEq<Cow<'_, [U]>>` | | |
-| `Cow<'_, [T]>` | `PartialEq<&[U]>` | | |
-| `&mut [T]` | `PartialEq<Cow<'_, [U]>>` | | |
-| `Cow<'_, [T]>` | `PartialEq<&mut [U]>` | | |
-| `[T]` | `PartialEq<Vec<U, A>>` | | |
-| `&[T]` | `PartialEq<Vec<U, A>>` | | |
-| `&mut [T]` | `PartialEq<Vec<U, A>>` | | |
-| `Vec<T, A>` | `PartialEq<&[U]>` | | |
-| `Vec<T, A>` | `PartialEq<&mut [U]>` | | |
+| `[T]` | `PartialEq<[U; N]>` | ✅ | `array/mod.rs` |
+| `&[T]` | `PartialEq<[U; N]>` | ✅ | `array/mod.rs` |
+| `[T; N]` | `PartialEq<&[U]>` | ✅ | `array/mod.rs` |
+| `&mut [T]` | `PartialEq<[U; N]>` | ✅ | `array/mod.rs` |
+| `[T; N]` | `PartialEq<&mut [U]>` | ✅ | `array/mod.rs` |
+| `&[T]` | `PartialEq<Cow<'_, [U]>>` | ✅ | `slice/mod.rs` |
+| `Cow<'_, [T]>` | `PartialEq<&[U]>` | ✅ | `slice/mod.rs` |
+| `&mut [T]` | `PartialEq<Cow<'_, [U]>>` | ✅ | `slice/mod.rs` |
+| `Cow<'_, [T]>` | `PartialEq<&mut [U]>` | ✅ | `slice/mod.rs` |
+| `[T]` | `PartialEq<Vec<U, A>>` | ✅ | `vec.rs` |
+| `&[T]` | `PartialEq<Vec<U, A>>` | ✅ | `vec.rs` |
+| `&mut [T]` | `PartialEq<Vec<U, A>>` | ✅ | `vec.rs` |
+| `Vec<T, A>` | `PartialEq<&[U]>` | ✅ | `vec.rs` |
+| `Vec<T, A>` | `PartialEq<&mut [U]>` | ✅ | `vec.rs` |
 | `VecDeque<T, A>` | `PartialEq<&[U]>` | ⚠️ | omitted |
 | `VecDeque<T, A>` | `PartialEq<&mut [U]>` | ⚠️ | omitted |
 | `ByteStr` | `PartialEq<&[u8]>` | ⛔️ | nightly-only |

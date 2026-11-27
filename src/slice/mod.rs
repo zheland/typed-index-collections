@@ -2682,6 +2682,56 @@ where
     }
 }
 
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl<K, A, B> PartialEq<Cow<'_, TiSlice<K, B>>> for &TiSlice<K, A>
+where
+    A: PartialEq<B>,
+    B: Clone,
+{
+    #[inline]
+    fn eq(&self, other: &Cow<'_, TiSlice<K, B>>) -> bool {
+        self.raw == other.raw
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl<K, A, B> PartialEq<&TiSlice<K, B>> for Cow<'_, TiSlice<K, A>>
+where
+    A: PartialEq<B> + Clone,
+{
+    #[inline]
+    fn eq(&self, other: &&TiSlice<K, B>) -> bool {
+        self.raw == other.raw
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl<K, A, B> PartialEq<Cow<'_, TiSlice<K, B>>> for &mut TiSlice<K, A>
+where
+    A: PartialEq<B>,
+    B: Clone,
+{
+    #[inline]
+    fn eq(&self, other: &Cow<'_, TiSlice<K, B>>) -> bool {
+        self.raw == other.raw
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+impl<K, A, B> PartialEq<&mut TiSlice<K, B>> for Cow<'_, TiSlice<K, A>>
+where
+    A: PartialEq<B> + Clone,
+{
+    #[inline]
+    fn eq(&self, other: &&mut TiSlice<K, B>) -> bool {
+        self.raw == other.raw
+    }
+}
+
 impl<K, V> Ord for TiSlice<K, V>
 where
     V: Ord,
@@ -3544,6 +3594,7 @@ mod test {
         }
     }
 
+    #[expect(clippy::unnecessary_mut_passed, reason = "okay in tests")]
     #[cfg(feature = "alloc")]
     #[test]
     fn test_slice_read_alloc_api_compatibility() {
@@ -3557,6 +3608,9 @@ mod test {
         ] {
             let mut cv = (v, TiSlice::from_ref(v));
 
+            let mut mv = (v.to_vec(), v.to_vec());
+            let mut mv = (mv.0.as_mut_slice(), TiSlice::from_mut(mv.1.as_mut_slice()));
+
             assert_eq_api!(cv, v => Cow::from(v).into_std());
             assert_eq_api!(cv, v => matches!(Cow::from(v), Cow::Borrowed(_)));
             assert_eq_api!(cv, v => Cow::from(v).into_owned().into_std());
@@ -3565,6 +3619,11 @@ mod test {
             assert_eq_api!(cv, v => v.to_vec().into_boxed_slice().into_vec().into_std());
             assert_eq_api!(cv, v => v.to_owned().into_std());
             assert_eq_api!(cv, v => v.repeat(5).into_std());
+
+            assert_eq_api!(cv, v => (&v).eq(&Cow::Borrowed(v)));
+            assert_eq_api!(cv, v => Cow::Borrowed(v).eq(&v));
+            assert_eq_api!(mv, v => (&mut *v).eq(&Cow::Borrowed([1, 2, 4].as_slice().into_tic())));
+            assert_eq_api!(mv, v => Cow::Borrowed([1, 2, 4].as_slice().into_tic()).eq(&&mut *v));
         }
 
         for v in [

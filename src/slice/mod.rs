@@ -19,8 +19,8 @@ use alloc::string::String;
 use alloc::vec::Vec;
 #[cfg(feature = "alloc")]
 use core::alloc::Allocator;
+use core::cell::Cell;
 use core::cmp::Ordering;
-use core::fmt;
 use core::hash::{Hash, Hasher};
 use core::marker::PhantomData;
 use core::mem::MaybeUninit;
@@ -31,6 +31,7 @@ use core::slice::{
     RSplitNMut, Split, SplitInclusive, SplitInclusiveMut, SplitMut, SplitN, SplitNMut, Windows,
 };
 use core::str::Utf8Chunks;
+use core::{fmt, ptr};
 #[cfg(feature = "std")]
 use std::io::{BufRead, IoSlice, IoSliceMut, Read, Result as IoResult, Write};
 
@@ -194,7 +195,7 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub const fn from_ref(raw: &[V]) -> &Self {
         // SAFETY: `TiSlice<K, V>` is `repr(transparent)` over a `[V]` type.
-        unsafe { &*(core::ptr::from_ref::<[V]>(raw) as *const Self) }
+        unsafe { &*(ptr::from_ref::<[V]>(raw) as *const Self) }
     }
 
     /// Converts a `&mut [V]` into a `&mut TiSlice<K, V>`.
@@ -210,7 +211,7 @@ impl<K, V> TiSlice<K, V> {
     #[inline]
     pub const fn from_mut(raw: &mut [V]) -> &mut Self {
         // SAFETY: `TiSlice<K, V>` is `repr(transparent)` over a `[V]` type.
-        unsafe { &mut *(core::ptr::from_mut::<[V]>(raw) as *mut Self) }
+        unsafe { &mut *(ptr::from_mut::<[V]>(raw) as *mut Self) }
     }
 
     /// Converts a [`Box<[V], A>`][`Box`] into a `Box<TiSlice<K, V>, A>`.
@@ -1129,7 +1130,7 @@ impl<K, V> TiSlice<K, V> {
         let chunks = unsafe { self.raw.as_chunks_unchecked::<N>() };
         // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]`
         // type.
-        unsafe { &*(core::ptr::from_ref::<[[V; N]]>(chunks) as *const [TiArray<K, V, N>]) }
+        unsafe { &*(ptr::from_ref::<[[V; N]]>(chunks) as *const [TiArray<K, V, N>]) }
     }
 
     /// Splits the slice into a slice of `N`-element arrays,
@@ -1155,8 +1156,7 @@ impl<K, V> TiSlice<K, V> {
         let (chunks, remainder) = self.raw.as_chunks::<N>();
         // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]`
         // type.
-        let chunks =
-            unsafe { &*(core::ptr::from_ref::<[[V; N]]>(chunks) as *const [TiArray<K, V, N>]) };
+        let chunks = unsafe { &*(ptr::from_ref::<[[V; N]]>(chunks) as *const [TiArray<K, V, N>]) };
         (chunks, Self::from_ref(remainder))
     }
 
@@ -1183,8 +1183,7 @@ impl<K, V> TiSlice<K, V> {
         let (remainder, chunks) = self.raw.as_rchunks::<N>();
         // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]`
         // type.
-        let chunks =
-            unsafe { &*(core::ptr::from_ref::<[[V; N]]>(chunks) as *const [TiArray<K, V, N>]) };
+        let chunks = unsafe { &*(ptr::from_ref::<[[V; N]]>(chunks) as *const [TiArray<K, V, N>]) };
         (Self::from_ref(remainder), chunks)
     }
 
@@ -1212,7 +1211,7 @@ impl<K, V> TiSlice<K, V> {
         let chunks = unsafe { self.raw.as_chunks_unchecked_mut::<N>() };
         // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]`
         // type.
-        unsafe { &mut *(core::ptr::from_mut::<[[V; N]]>(chunks) as *mut [TiArray<K, V, N>]) }
+        unsafe { &mut *(ptr::from_mut::<[[V; N]]>(chunks) as *mut [TiArray<K, V, N>]) }
     }
 
     /// Splits the slice into a slice of `N`-element arrays,
@@ -1239,7 +1238,7 @@ impl<K, V> TiSlice<K, V> {
         // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]`
         // type.
         let chunks =
-            unsafe { &mut *(core::ptr::from_mut::<[[V; N]]>(chunks) as *mut [TiArray<K, V, N>]) };
+            unsafe { &mut *(ptr::from_mut::<[[V; N]]>(chunks) as *mut [TiArray<K, V, N>]) };
         (chunks, Self::from_mut(remainder))
     }
 
@@ -1267,7 +1266,7 @@ impl<K, V> TiSlice<K, V> {
         // SAFETY: `TiArray<K, V, N>` is `repr(transparent)` over a `[V; N]`
         // type.
         let chunks =
-            unsafe { &mut *(core::ptr::from_mut::<[[V; N]]>(chunks) as *mut [TiArray<K, V, N>]) };
+            unsafe { &mut *(ptr::from_mut::<[[V; N]]>(chunks) as *mut [TiArray<K, V, N>]) };
         (Self::from_mut(remainder), chunks)
     }
 
@@ -2661,6 +2660,15 @@ impl<K, V> AsMut<TiSlice<K, V>> for [V] {
     }
 }
 
+#[expect(clippy::as_conversions, reason = "transparent over a `[V]` type")]
+impl<K, V> AsRef<TiSlice<K, Cell<V>>> for Cell<TiSlice<K, V>> {
+    #[inline]
+    fn as_ref(&self) -> &TiSlice<K, Cell<V>> {
+        // SAFETY: `V` and `Cell<V>` have the same layout.
+        unsafe { &*(ptr::from_ref(self) as *const TiSlice<K, Cell<V>>) }
+    }
+}
+
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl<'a, K, V: Clone> From<&'a TiSlice<K, V>> for Cow<'a, TiSlice<K, V>> {
@@ -2901,7 +2909,7 @@ impl<K> Write for &mut TiSlice<K, u8> {
 #[cfg(feature = "std")]
 #[inline]
 fn as_readable_byte_slice<'a, 'b, K>(value: &'a mut &'b TiSlice<K, u8>) -> &'a mut &'b [u8] {
-    let ptr: *mut &TiSlice<K, u8> = core::ptr::from_mut::<&TiSlice<K, u8>>(value);
+    let ptr: *mut &TiSlice<K, u8> = ptr::from_mut::<&TiSlice<K, u8>>(value);
     let ptr: *mut &[u8] = ptr.cast();
     // SAFETY: `TiSlice<K, V>` is `repr(transparent)` over a `[V]` type.
     unsafe { &mut *ptr }
@@ -2913,7 +2921,7 @@ fn as_readable_byte_slice<'a, 'b, K>(value: &'a mut &'b TiSlice<K, u8>) -> &'a m
 fn as_writable_byte_slice<'a, 'b, K>(
     value: &'a mut &'b mut TiSlice<K, u8>,
 ) -> &'a mut &'b mut [u8] {
-    let ptr: *mut &mut TiSlice<K, u8> = core::ptr::from_mut::<&mut TiSlice<K, u8>>(value);
+    let ptr: *mut &mut TiSlice<K, u8> = ptr::from_mut::<&mut TiSlice<K, u8>>(value);
     let ptr: *mut &mut [u8] = ptr.cast();
     // SAFETY: `TiSlice<K, V>` is `repr(transparent)` over a `[V]` type.
     unsafe { &mut *ptr }
@@ -2983,6 +2991,7 @@ mod test {
     #[cfg(feature = "alloc")]
     use alloc::vec::Vec;
     use core::borrow::{Borrow, BorrowMut};
+    use core::cell::Cell;
     use core::hash::{Hash, Hasher};
     use core::mem::MaybeUninit;
     use core::ops::Bound;
@@ -3402,6 +3411,15 @@ mod test {
                     .raw
             },
             unsafe { va.map(MaybeUninit::new).as_mut_slice().assume_init_mut() },
+        );
+
+        let cell1 = Cell::from(va);
+        let cell1: &Cell<[u32]> = &cell1;
+        let mut cell2 = TiSlice::<Id, u32>::from_mut(&mut va);
+        let cell2: &Cell<TiSlice<Id, u32>> = Cell::from_mut(cell2);
+        assert_eq!(
+            AsRef::<[Cell<u32>]>::as_ref(cell1),
+            AsRef::<[Cell<u32>]>::as_ref(AsRef::<TiSlice<Id, Cell<u32>>>::as_ref(&cell2))
         );
 
         test_slice_ro_core_api_compatibility_impl_generic::<N, 1>(va);

@@ -222,23 +222,23 @@
 | `[T]` | `AsRef<[T]>` | ✅ | `slice/mod.rs` |
 | `[T; N]` | `AsRef<[T]>` | ✅ | `array/mod.rs` |
 | `Vec<T, A>` | `AsRef<[T]>` | ✅ | `vec.rs` |
-| `MaybeUninit<[T; N]>` | `AsRef<[MaybeUninit<T>]>` | | |
-| `Cell<[T]>` | `AsRef<[Cell<T>]>` | | |
-| `Cell<[T; N]>` | `AsRef<[Cell<T>]>` | | |
-| `Drain<'_, T, A>` | `AsRef<[T]>` | | |
-| `IntoIter<T, A>` | `AsRef<[T]>` | | |
-| `Iter<'_, T>` | `AsRef<[T]>` | | |
-| `IterMut<'_, T>` | `AsRef<[T]>` | | |
+| `MaybeUninit<[T; N]>` | `AsRef<[MaybeUninit<T>]>` | ✅ | `array/mod.rs` |
+| `MaybeUninit<[T; N]>` | `AsMut<[MaybeUninit<T>]>` | ✅ | `array/mod.rs` |
+| `Cell<[T]>` | `AsRef<[Cell<T>]>` | ✅ | `slice/mod.rs` |
+| `Cell<[T; N]>` | `AsRef<[Cell<T>]>` | ✅ | `array/mod.rs` |
+| `Drain<'_, T, A>` | `AsRef<[T]>` | ⚠️ | omitted |
+| `IntoIter<T, A>` | `AsRef<[T]>` | ⚠️ | omitted |
+| `Iter<'_, T>` | `AsRef<[T]>` | ⚠️ | omitted |
+| `IterMut<'_, T>` | `AsRef<[T]>` | ⚠️ | omitted |
 | `Simd<T, N>` | `AsRef<[T]>` | ⛔️ | nightly-only |
 | `ByteStr` | `AsRef<[u8]>` | ⛔️ | nightly-only |
 | `ByteString` | `AsRef<[u8]>` | ⛔️ | nightly-only |
-| `Drain<'a>` | `AsRef<[u8]>` | | |
-| `String` | `AsRef<[u8]>` | | |
-| `str` | `AsRef<[u8]>` | | |
+| `Drain<'a>` | `AsRef<[u8]>` | ⚠️ | omitted |
+| `String` | `AsRef<[u8]>` | ⚠️ | omitted |
+| `str` | `AsRef<[u8]>` | ⚠️ | omitted |
 | `[T]` | `AsMut<[T]>` | ✅ | `slice/mod.rs` |
 | `[T; N]` | `AsMut<[T]>` | ✅ | `array/mod.rs` |
 | `Vec<T, A>` | `AsMut<[T]>` | ✅ | `vec.rs` |
-| `MaybeUninit<[T; N]>` | `AsMut<[MaybeUninit<T>]>` | | |
 | `Simd<T, N>` | `AsMut<[T]>` | ⛔️ | nightly-only |
 | `ByteStr` | `AsMut<[u8]>` | ⛔️ | nightly-only |
 | `ByteString` | `AsMut<[u8]>` | ⛔️ | nightly-only |

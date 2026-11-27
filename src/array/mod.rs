@@ -515,11 +515,32 @@ impl<K, V, const N: usize> AsMut<TiArray<K, MaybeUninit<V>, N>> for MaybeUninit<
     }
 }
 
+impl<K, V, const N: usize> AsRef<TiSlice<K, MaybeUninit<V>>> for MaybeUninit<TiArray<K, V, N>> {
+    #[inline]
+    fn as_ref(&self) -> &TiSlice<K, MaybeUninit<V>> {
+        AsRef::<TiArray<K, MaybeUninit<V>, N>>::as_ref(self).as_ref()
+    }
+}
+
+impl<K, V, const N: usize> AsMut<TiSlice<K, MaybeUninit<V>>> for MaybeUninit<TiArray<K, V, N>> {
+    #[inline]
+    fn as_mut(&mut self) -> &mut TiSlice<K, MaybeUninit<V>> {
+        AsMut::<TiArray<K, MaybeUninit<V>, N>>::as_mut(self).as_mut()
+    }
+}
+
 impl<K, V, const N: usize> AsRef<TiArray<K, Cell<V>, N>> for Cell<TiArray<K, V, N>> {
     #[inline]
     fn as_ref(&self) -> &TiArray<K, Cell<V>, N> {
-        // SAFETY: `V` and `MaybeUninit<V>` have the same layout.
+        // SAFETY: `V` and `Cell<V>` have the same layout.
         unsafe { &*ptr::from_ref(self).cast() }
+    }
+}
+
+impl<K, V, const N: usize> AsRef<TiSlice<K, Cell<V>>> for Cell<TiArray<K, V, N>> {
+    #[inline]
+    fn as_ref(&self) -> &TiSlice<K, Cell<V>> {
+        AsRef::<TiArray<K, Cell<V>, N>>::as_ref(self).as_slice()
     }
 }
 
@@ -1004,6 +1025,7 @@ mod test {
                 unsafe { array.assume_init() }.into_std()
             }
         );
+
         assert_eq_api!(
             cv, v => AsRef::<TheArray<MaybeUninit<u32>, N>>::as_ref(
                 &MaybeUninit::new(*v)
@@ -1014,11 +1036,29 @@ mod test {
                 &mut MaybeUninit::new(*v)
             ).map(|v| unsafe { v.assume_init() }).into_std()
         );
+        assert_eq_api!(
+            cv, v => AsRef::<TheSlice<MaybeUninit<u32>>>::as_ref(
+                &MaybeUninit::new(*v)
+            ).iter().map(|v| unsafe { v.assume_init() }).collect_to_vec()
+        );
+        assert_eq_api!(
+            mv, v => AsMut::<TheSlice<MaybeUninit<u32>>>::as_mut(
+                &mut MaybeUninit::new(*v)
+            ).iter().map(|v| unsafe { v.assume_init() }).collect_to_vec()
+        );
+
         let cell1 = Cell::new(v);
         let cell2 = Cell::new(TiArray::<Id, u32, N>::from(v));
         assert_eq!(
             AsRef::<[Cell<u32>; N]>::as_ref(&cell1),
             AsRef::<[Cell<u32>; N]>::as_ref(AsRef::<TiArray<Id, Cell<u32>, N>>::as_ref(&cell2))
+        );
+
+        let cell1 = Cell::new(v);
+        let cell2 = Cell::new(TiArray::<Id, u32, N>::from(v));
+        assert_eq!(
+            AsRef::<[Cell<u32>]>::as_ref(&cell1),
+            AsRef::<[Cell<u32>]>::as_ref(AsRef::<TiSlice<Id, Cell<u32>>>::as_ref(&cell2))
         );
 
         assert_eq!(

@@ -1,8 +1,10 @@
+use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::vec;
 use core::alloc::Allocator;
 use core::iter::FromIterator;
 use core::mem::{transmute_copy, ManuallyDrop};
+use core::slice;
 
 #[cfg(feature = "bincode")]
 use bincode::de::{BorrowDecode, BorrowDecoder, Decode, Decoder};
@@ -65,6 +67,26 @@ impl<K, V> IntoIterator for Box<TiSlice<K, V>> {
     }
 }
 
+impl<'a, K, V, A: Allocator> IntoIterator for &'a Box<TiSlice<K, V>, A> {
+    type Item = &'a V;
+    type IntoIter = slice::Iter<'a, V>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+impl<'a, K, V, A: Allocator> IntoIterator for &'a mut Box<TiSlice<K, V>, A> {
+    type Item = &'a mut V;
+    type IntoIter = slice::IterMut<'a, V>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter_mut()
+    }
+}
+
 impl<K, V> Default for Box<TiSlice<K, V>> {
     #[inline]
     fn default() -> Self {
@@ -76,6 +98,23 @@ impl<K, V: Copy> From<&TiSlice<K, V>> for Box<TiSlice<K, V>> {
     #[inline]
     fn from(slice: &TiSlice<K, V>) -> Self {
         Box::<[V]>::from(&slice.raw).into()
+    }
+}
+
+impl<K, V: Copy> From<&mut TiSlice<K, V>> for Box<TiSlice<K, V>> {
+    #[inline]
+    fn from(slice: &mut TiSlice<K, V>) -> Self {
+        Box::<[V]>::from(&slice.raw).into()
+    }
+}
+
+impl<K, V: Copy> From<Cow<'_, TiSlice<K, V>>> for Box<TiSlice<K, V>> {
+    #[inline]
+    fn from(cow: Cow<'_, TiSlice<K, V>>) -> Self {
+        match cow {
+            Cow::Borrowed(slice) => Self::from(slice),
+            Cow::Owned(slice) => Self::from(slice),
+        }
     }
 }
 
@@ -175,14 +214,23 @@ mod test {
             &[1, 1, 9, 2, 4, 1, 12345, 12],
         ] {
             let mut cv = (v, TiSlice::from_ref(v));
+
+            let mut mv = (v.to_vec(), v.to_vec());
+            let mut mv = (mv.0.as_mut_slice(), TiSlice::from_mut(mv.1.as_mut_slice()));
+
             assert_eq_api!(
                 cv, v => Box::<TheSlice<u32>>::from(v) == <Box<TheSlice<u32>>>::default()
             );
             assert_eq_api!(cv, v => Box::<TheSlice<_>>::from(v).into_std());
+            assert_eq_api!(mv, v => Box::<TheSlice<_>>::from(v).into_std());
             assert_eq_api!(cv, v => Box::<TheSlice<_>>::from(v).clone().into_std());
             assert_eq_api!(
                 cv, v => Box::<TheSlice<_>>::from(v).clone_from(&Box::<TheSlice<_>>::from(v))
             );
+
+            assert_eq_api!(cv, v => Box::<TheSlice<_>>::from(Cow::Borrowed(v)).into_std());
+            assert_eq_api!(cv, v => Box::<TheSlice<_>>::from(Cow::Owned(v.to_vec())).into_std());
+
             assert_eq_api!(
                 cv, v => Box::<TheSlice<_>>::from(v)
                     .clone_from(&Box::<TheSlice<_>>::from([1].into_tic()))
@@ -195,9 +243,23 @@ mod test {
                 cv, v => Box::<TheSlice<_>>::from(v)
                     .clone_from(&Box::<TheSlice<_>>::from([1, 2, 3].into_tic()))
             );
+
             assert_eq_api!(
                 cv, v => IntoIterator::into_iter(Box::<TheSlice<u32>>::from(v)).collect::<Vec<_>>()
             );
+            assert_eq_api!(
+                cv, v => {
+                    let boxed = Box::<TheSlice<u32>>::from(v);
+                    IntoIterator::into_iter(&boxed).copied().collect::<Vec<_>>()
+                }
+            );
+            assert_eq_api!(
+                cv, v => {
+                    let mut boxed = Box::<TheSlice<u32>>::from(v);
+                    IntoIterator::into_iter(&mut boxed).map(|v| *v).collect::<Vec<_>>()
+                }
+            );
+
             assert_eq_api!(cv, v => TheVec::from(Box::<TheSlice<_>>::from(v)).into_std());
             assert_eq_api!(cv, v => Box::<TheSlice<_>>::from(TheVec::from(v)).into_std());
             assert_eq_api!(cv, v => v.iter().copied().collect::<Box<TheSlice<_>>>().into_std());

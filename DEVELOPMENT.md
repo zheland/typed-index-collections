@@ -251,10 +251,11 @@
 | `ByteStr` | `BorrowMut<[u8]>` | ⛔️ | nightly-only |
 | `ByteString` | `BorrowMut<[u8]>` | ⛔️ | nightly-only |
 | `Box<[T]>` | `From<[T; N]>` | ✅ | `array/boxed.rs` |
-| `Box<[T]>` | `From<&[T]>` | | |
-| `Box<[T]>` | `From<&mut [T]>` | | |
-| `Box<[T]>` | `From<Cow<'_, [T]>>` | | |
-| `Box<[T], A>` | `From<Vec<T, A>>` | | |
+| `Box<[T]>` | `From<&[T]>` | ✅ | `slice/boxed.rs` |
+| `Box<[T]>` | `From<&mut [T]>` | ✅ | `slice/boxed.rs` |
+| `Box<[T]>` | `From<Cow<'_, [T]>>` | ✅ | `slice/boxed.rs` |
+| `Box<[T], A>` | `From<Vec<T, A>>` | ✅ | `slice/boxed.rs` |
+| `Vec<T, A>` | `From<Box<[T], A>>` | ✅ | `slice/boxed.rs` |
 | `Rc<[T]>` | `From<&[T]>` | | |
 | `Rc<[T]>` | `From<&mut [T]>` | | |
 | `Arc<[T]>` | `From<&[T]>` | | |
@@ -262,10 +263,9 @@
 | `Cow<'_, [T]>` | `From<&[T]>` | ✅ | `slice/mod.rs` |
 | `Vec<T>` | `From<&[T]>` | ✅ | `vec.rs` |
 | `Vec<T>` | `From<&mut [T]>` | ✅ | `vec.rs` |
-| `Vec<T, A>` | `From<Box<[T], A>>` | | |
-| `Box<[u8], A>` | `From<Box<str, A>>` | | |
-| `BorrowedBuf<'_, T>` | `From<&mut [MaybeUninit<T>]>` | | |
-| `BorrowedBuf<'_, T>` | `From<&mut [T]>` | | |
+| `Box<[u8], A>` | `From<Box<str, A>>` | ⚠️ | omitted |
+| `BorrowedBuf<'_, T>` | `From<&mut [MaybeUninit<T>]>` | ⛔️ | nightly-only |
+| `BorrowedBuf<'_, T>` | `From<&mut [T]>` | ⛔️ | nightly-only |
 | `Box<[u8]>` | `From<Box<ByteStr>>` | ⛔️ | nightly-only |
 | `Box<ByteStr>` | `From<Box<[u8]>>` | ⛔️ | nightly-only |
 | `&[T; N]` | `TryFrom<&[T]>` | ✅ | `array/mod.rs` |
@@ -282,8 +282,8 @@
 | `&[T]` | `IntoIterator` | ✅ | `slice/mod.rs` |
 | `&mut [T]` | `IntoIterator` | ✅ | `slice/mod.rs` |
 | `Box<[T], A>` | `IntoIterator` | ✅ | `slice/boxed.rs` |
-| `&Box<[T], A>` | `IntoIterator` | | |
-| `&mut Box<[T], A>` | `IntoIterator` | | |
+| `&Box<[T], A>` | `IntoIterator` | ✅ | `slice/boxed.rs` |
+| `&mut Box<[T], A>` | `IntoIterator` | ✅ | `slice/boxed.rs` |
 | `Box<[T]>` | `FromIterator<T>` | ✅ | `slice/boxed.rs` |
 | `ByteString` | `FromIterator<&[u8]>` | ⛔️ | nightly-only |
 | `[T]` | `Index<I>` | ✅ | `slice/mod.rs` |
@@ -292,7 +292,7 @@
 | `&[u8]` | `Read` | ✅ | `slice/mod.rs` |
 | `&[u8]` | `BufRead` | ✅ | `slice/mod.rs` |
 | `&mut [u8]` | `Write` | ✅ | `slice/mod.rs` |
-| `&[SocketAddr]` | `ToSocketAddrs` | | |
+| `&[SocketAddr]` | `ToSocketAddrs` | ⚠️ | omitted |
 | `[u8]` | `AsciiExt` | ⛔️ | deprecated |
 | `&'b [char]` | `Pattern` | ⛔️ | nightly-only |
 | `[S]` | `Join<&OsStr>` | ⛔️ | nightly-only |
@@ -554,8 +554,8 @@
 | `Vec<T>` | `From<&mut [T; N]>` | ✅ | `vec.rs` |
 | `Vec<T>` | `From<&[T]>` | ✅ | `vec.rs` |
 | `Vec<T>` | `From<&mut [T]>` | ✅ | `vec.rs` |
-| `Vec<T, A>` | `From<Box<[T], A>>` | | |
-| `Box<[T], A>` | `From<Vec<T, A>>` | | |
+| `Vec<T, A>` | `From<Box<[T], A>>` | ✅ | `slice/boxed.rs` |
+| `Box<[T], A>` | `From<Vec<T, A>>` | ✅ | `slice/boxed.rs` |
 | `Vec<T>` | `From<Cow<'a, [T]>>` | ✅ | `vec.rs` |
 | `Cow<'_, [T]>` | `From<Vec<T>>` | ✅ | `vec.rs` |
 | `Cow<'_, [T]>` | `From<&Vec<T>>` | ✅ | `vec.rs` |

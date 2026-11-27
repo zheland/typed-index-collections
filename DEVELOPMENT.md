@@ -527,8 +527,8 @@
 | `&[T]` | `PartialEq<Vec<U, A>>` | ✅ | `vec.rs` |
 | `Vec<T, A>` | `PartialEq<&mut [U]>` | ✅ | `vec.rs` |
 | `&mut [T]` | `PartialEq<Vec<U, A>>` | ✅ | `vec.rs` |
-| `Cow<'_, [T]>`| `PartialEq<Vec<U, A>>` | | |
-| `Vec<T, A>` | `PartialEq<Cow<'_, [U]>>` | | |
+| `Cow<'_, [T]>`| `PartialEq<Vec<U, A>>` | ✅ | `vec.rs` |
+| `Vec<T, A>` | `PartialEq<Cow<'_, [U]>>` | ✅ | `vec.rs` |
 | `VecDeque<T, A>` | `PartialEq<Vec<U, A>>` | ⚠️ | omitted |
 | `Vec<u8>` | `PartialEq<ByteStr>` | ⛔️ | nightly-only |
 | `ByteStr` | `PartialEq<Vec<u8>>` | ⛔️ | nightly-only |
@@ -559,20 +559,20 @@
 | `Vec<T>` | `From<Cow<'a, [T]>>` | ✅ | `vec.rs` |
 | `Cow<'_, [T]>` | `From<Vec<T>>` | ✅ | `vec.rs` |
 | `Cow<'_, [T]>` | `From<&Vec<T>>` | ✅ | `vec.rs` |
-| `Rc<[T], A>` | `From<Vec<T, A>>` | | |
-| `Arc<[T], A>` | `From<Vec<T, A>>` | | |
+| `Rc<[T], A>` | `From<Vec<T, A>>` | ⚠️ | omitted |
+| `Arc<[T], A>` | `From<Vec<T, A>>` | ⚠️ | omitted |
 | `Vec<T, A>` | `From<VecDeque<T, A>>` | ⚠️ | omitted |
 | `VecDeque<T, A>` | `From<Vec<T, A>>` | ⚠️ | omitted |
 | `Vec<T, A>` | `From<BinaryHeap<T, A>>` | ⚠️ | omitted |
 | `BinaryHeap<T, A>` | `From<Vec<T, A>>` | ⚠️ | omitted |
-| `CString` | `From<Vec<NonZero<u8>>>` | | |
+| `CString` | `From<Vec<NonZero<u8>>>` | ⚠️ | omitted |
 | `Vec<u8>` | `From<&str>` | ✅ | `vec.rs` |
 | `Vec<u8>` | `From<String>` | ✅ | `vec.rs` |
 | `Vec<u8>` | `From<CString>` | ✅ | `vec.rs` |
 | `Vec<u8>` | `From<ByteString>` | ⛔️ | nightly-only |
 | `[T; N]` | `TryFrom<Vec<T, A>>` | ✅ | `vec.rs` |
 | `Box<[T; N], A>` | `TryFrom<Vec<T, A>>` | ✅ | `vec.rs` |
-| `String` | `TryFrom<Vec<u8>>` | | |
+| `String` | `TryFrom<Vec<u8>>` | ⚠️ | omitted |
 | Vec<T, A>| `IntoIterator` | ✅ | `vec.rs` |
 | &Vec<T, A> | `IntoIterator` | ✅ | `vec.rs` |
 | &mut Vec<T, A> | `IntoIterator`| ✅ | `vec.rs` |

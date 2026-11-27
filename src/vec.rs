@@ -1531,6 +1531,27 @@ where
     }
 }
 
+impl<'a, K, V1, V2, A: Allocator> PartialEq<Cow<'a, TiSlice<K, V2>>> for TiVec<K, V1, A>
+where
+    V1: PartialEq<V2>,
+    V2: Clone,
+{
+    #[inline]
+    fn eq(&self, other: &Cow<'a, TiSlice<K, V2>>) -> bool {
+        *self.raw == other.raw
+    }
+}
+
+impl<K, V1, V2, A: Allocator> PartialEq<TiVec<K, V2, A>> for Cow<'_, TiSlice<K, V1>>
+where
+    V1: PartialEq<V2> + Clone,
+{
+    #[inline]
+    fn eq(&self, other: &TiVec<K, V2, A>) -> bool {
+        self.raw == *other.raw
+    }
+}
+
 impl<K, V, A: Allocator> Ord for TiVec<K, V, A>
 where
     V: Ord,
@@ -1931,6 +1952,11 @@ mod test {
             let vec = [va; 4].into_iter().collect::<TheVec<_>>();
             vec.into_flattened().into_std()
         });
+
+        let v1 = Cow::Borrowed(TiSlice::<Id, _>::from_ref(&va));
+        let v2: TiVec<Id, _> = v1.iter().copied().collect();
+        assert_eq!(v1, v2);
+        assert_eq!(v2, v1);
     }
 
     #[test]

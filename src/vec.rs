@@ -146,6 +146,10 @@ impl<K, V> TiVec<K, V, Global> {
     ///
     /// See [`Vec::with_capacity`] for more details.
     ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity exceeds `isize::MAX` _bytes_.
+    ///
     /// [`Vec::with_capacity`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.with_capacity
     #[inline]
     #[must_use]
@@ -190,6 +194,11 @@ impl<K, V> TiVec<K, V, Global> {
     /// vector and yields the removed items.
     ///
     /// See [`Vec::drain`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the range has `start_bound > end_bound`, or, if the range is
+    /// bounded on either end and past the length of the vector.
     ///
     /// [`Vec::drain`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.drain
     #[inline]
@@ -247,6 +256,11 @@ impl<K, V> TiVec<K, V, Global> {
     /// `range`.
     ///
     /// See [`Vec::splice`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the range has `start_bound > end_bound`, or, if the range is
+    /// bounded on either end and past the length of the vector.
     ///
     /// [`Vec::splice`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.splice
     #[inline]
@@ -308,6 +322,10 @@ impl<K, V, A: Allocator> TiVec<K, V, A> {
     /// Constructs a new, empty `TiVec<K, V, A>` with the specified capacity.
     ///
     /// See [`Vec::with_capacity_in`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity exceeds `isize::MAX` _bytes_.
     ///
     /// [`Vec::with_capacity_in`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.with_capacity_in
     #[inline]
@@ -408,6 +426,10 @@ impl<K, V, A: Allocator> TiVec<K, V, A> {
     ///
     /// See [`Vec::reserve`] for more details.
     ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity exceeds `isize::MAX` _bytes_.
+    ///
     /// [`Vec::reserve`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.reserve
     #[inline]
     pub fn reserve(&mut self, additional: usize) {
@@ -420,6 +442,10 @@ impl<K, V, A: Allocator> TiVec<K, V, A> {
     /// Does nothing if the capacity is already sufficient.
     ///
     /// See [`Vec::reserve_exact`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity exceeds `isize::MAX` _bytes_.
     ///
     /// [`Vec::reserve_exact`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.reserve_exact
     #[inline]
@@ -573,6 +599,10 @@ impl<K, V, A: Allocator> TiVec<K, V, A> {
     ///
     /// See [`Vec::swap_remove`] for more details.
     ///
+    /// # Panics
+    ///
+    /// Panics if `index` is out of bounds.
+    ///
     /// [`Vec::swap_remove`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.swap_remove
     #[inline]
     pub fn swap_remove(&mut self, index: K) -> V
@@ -587,6 +617,10 @@ impl<K, V, A: Allocator> TiVec<K, V, A> {
     ///
     /// See [`Vec::insert`] for more details.
     ///
+    /// # Panics
+    ///
+    /// Panics if `index > len`.
+    ///
     /// [`Vec::insert`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.insert
     #[inline]
     pub fn insert(&mut self, index: K, element: V)
@@ -600,6 +634,10 @@ impl<K, V, A: Allocator> TiVec<K, V, A> {
     /// shifting all elements after it to the left.
     ///
     /// See [`Vec::remove`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `index` is out of bounds.
     ///
     /// [`Vec::remove`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.remove
     #[inline]
@@ -670,6 +708,10 @@ impl<K, V, A: Allocator> TiVec<K, V, A> {
     ///
     /// See [`Vec::push`] for more details.
     ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity exceeds `isize::MAX` _bytes_.
+    ///
     /// [`Vec::push`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.push
     #[inline]
     pub fn push(&mut self, value: V) {
@@ -683,6 +725,10 @@ impl<K, V, A: Allocator> TiVec<K, V, A> {
     /// but is optimized better.
     ///
     /// See [`Vec::push`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity exceeds `isize::MAX` _bytes_.
     ///
     /// # Example
     ///
@@ -796,6 +842,10 @@ impl<K, V, A: Allocator> TiVec<K, V, A> {
     ///
     /// See [`Vec::append`] for more details.
     ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity exceeds `isize::MAX` _bytes_.
+    ///
     /// [`Vec::append`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.append
     #[inline]
     pub fn append(&mut self, other: &mut Self) {
@@ -839,6 +889,10 @@ impl<K, V, A: Allocator> TiVec<K, V, A> {
     ///
     /// See [`Vec::split_off`] for more details.
     ///
+    /// # Panics
+    ///
+    /// Panics if `at > len`.
+    ///
     /// [`Vec::split_off`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.split_off
     #[inline]
     #[must_use = "use `.truncate()` if you don't need the other half"]
@@ -854,6 +908,10 @@ impl<K, V, A: Allocator> TiVec<K, V, A> {
     ///
     /// See [`Vec::resize_with`] for more details.
     ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity exceeds `isize::MAX` _bytes_.
+    ///
     /// [`Vec::resize_with`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.resize_with
     #[inline]
     pub fn resize_with<F>(&mut self, new_len: usize, f: F)
@@ -866,6 +924,10 @@ impl<K, V, A: Allocator> TiVec<K, V, A> {
     /// Resizes the `TiVec` in-place so that `len` is equal to `new_len`.
     ///
     /// See [`Vec::resize`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity exceeds `isize::MAX` _bytes_.
     ///
     /// [`Vec::resize`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.resize
     #[inline]
@@ -911,6 +973,10 @@ impl<K, V, A: Allocator> TiVec<K, V, A> {
     /// Clones and appends all elements in a slice to the `TiVec`.
     ///
     /// See [`Vec::extend_from_slice`] for more details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity exceeds `isize::MAX` _bytes_.
     ///
     /// [`Vec::extend_from_slice`]: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.extend_from_slice
     #[inline]
